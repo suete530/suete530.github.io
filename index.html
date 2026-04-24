@@ -1,135 +1,1143 @@
-
 <!DOCTYPE html>
-<html>
-    <!--mag deli makita-->
+<html lang="en">
 <head>
-
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-
-
-
-
-    
-       <title> My Clone trolling website.Version 1
-       .o</title> 
-         
-    <!--para sa CS languanges-->
-          <style>
-       
-
-    /*para center tanan h1*/
-          h1 {text-align:center;}
-          
-    /*para sa color background */
-          body {background-color:black}
-          
-    /*para sa color text*/
-          body {color: white }
-          
-    /*para sa color orrange hub*/
-          .orange{ color:orange; }
-          
-          
-    /*para center sa clickable words*/  
-          p{text-align: center}
-        p{color:  }
-        
-   /*para  color sa  clickable*/      
-       .clickable{
-         color: orange;
-       }
-        button{
-          display: block;
-          margin: auto;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BSIS-1 · Fines Manager · Crying Emojis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
         }
-  
-        
-            body {
-    font-size: 18px;
-    line-height: 1.6;
-}
-@media (max-width: 600px) {
-    body {
-        font-size: 16px;
+
+        body {
+            background: #9acd32;
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'SF Pro Text', 'Courier New', monospace, system-ui;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        .notebook-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #fffef7;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05);
+            padding: 20px 24px 35px;
+            position: relative;
+            z-index: 15;
+            border: 1px solid #e9e2b3;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-family: 'Courier New', 'SF Mono', monospace;
+            font-weight: 800;
+            font-size: 2rem;
+            text-align: center;
+            border-bottom: 3px dashed #ffb347;
+            display: inline-block;
+            width: auto;
+            margin: 0 auto 12px;
+            padding-bottom: 6px;
+            background: linear-gradient(135deg, #1e2f5e 0%, #2c3e6d 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .title-wrapper {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .date-badge {
+            background: #f3efcf;
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #4a3b1c;
+            border: 1px solid #e2d6a3;
+            margin-top: 5px;
+        }
+
+        .section-selector {
+            background: #e8f4e8;
+            border-radius: 20px;
+            padding: 12px 20px;
+            margin: 10px 0 15px;
+            border-left: 8px solid #28a745;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .section-selector label {
+            font-weight: bold;
+            color: #1e5631;
+            font-size: 0.9rem;
+        }
+
+        .section-selector select {
+            padding: 8px 15px;
+            border-radius: 30px;
+            border: 1px solid #a8d4a8;
+            background: white;
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .btn-add-section {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .btn-add-section:hover {
+            background: #218838;
+        }
+
+        .input-panel {
+            background: #f5f0df;
+            border-radius: 28px;
+            padding: 18px 20px;
+            margin: 10px 0 20px;
+            box-shadow: inset 0 0 0 1px #fff9ea, 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 8px solid #ffaa44;
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .field {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #7b6236;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 60px;
+            border: 1px solid #e2cf9a;
+            background: white;
+            font-family: monospace;
+            font-weight: 500;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .field input:focus, .field select:focus {
+            border-color: #ffaa44;
+            box-shadow: 0 0 0 2px rgba(255,170,68,0.3);
+        }
+
+        button {
+            background: #ffaa44;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 60px;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.15s;
+            color: #2e2b1f;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background: #ff9c2a;
+            transform: scale(0.97);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        .btn-clear {
+            background: #c0b07a;
+            color: #2c2b1f;
+        }
+
+        .btn-clear:hover {
+            background: #b09e64;
+        }
+
+        .search-filter-bar {
+            background: #e8f0f8;
+            border-radius: 20px;
+            padding: 12px 18px;
+            margin: 10px 0 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-left: 8px solid #4682b4;
+        }
+
+        .search-filter-bar input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 14px;
+            border-radius: 30px;
+            border: 1px solid #b8c8d8;
+            font-family: monospace;
+        }
+
+        .search-filter-bar select {
+            padding: 8px 12px;
+            border-radius: 30px;
+            border: 1px solid #b8c8d8;
+            font-family: monospace;
+            background: white;
+        }
+
+        .fines-list-section {
+            background: #fef9e6;
+            border-radius: 28px;
+            padding: 18px 20px;
+            margin: 15px 0 18px;
+            box-shadow: inset 0 0 0 1px #fffce8, 0 6px 12px rgba(0,0,0,0.08);
+            border-left: 8px solid #ffaa44;
+        }
+
+        .stats-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 18px 20px;
+            margin: 10px 0 18px;
+            color: white;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: monospace;
+        }
+
+        .list-header {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #bf5e00;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+            font-family: monospace;
+            border-bottom: 2px dotted #ffcd94;
+            padding-bottom: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export {
+            background: #17a2b8;
+            color: white;
+            font-size: 0.75rem;
+            padding: 6px 12px;
+        }
+
+        .btn-export:hover {
+            background: #138496;
+        }
+
+        .student-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .student-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px dashed #eedbae;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .student-name {
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+
+        .gender-badge {
+            font-size: 0.7rem;
+            background: #d9d0a5;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-weight: normal;
+            color: #3b2e1e;
+        }
+
+        .fine-amount {
+            font-weight: 800;
+            color: #b13e3e;
+            background: #fff0d4;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            box-shadow: none;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border: 1px solid #ddce9a;
+            background: #fff6e5;
+        }
+
+        .icon-btn.del {
+            color: #b13e3e;
+            border-color: #ffbf9a;
+        }
+
+        .icon-btn.edit {
+            color: #2c6e2c;
+        }
+
+        .total-fines {
+            margin-top: 20px;
+            background: #eeddbb;
+            border-radius: 30px;
+            padding: 10px 18px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.2rem;
+            font-family: monospace;
+            color: #2c3e2f;
+        }
+
+        .fines-note {
+            background: #fff1cf;
+            text-align: center;
+            padding: 12px;
+            border-radius: 60px;
+            font-weight: 600;
+            color: #996633;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            border: 1px solid #ffdfa5;
+        }
+
+        .timer-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #5b4c2b;
+            background: #e9e2b3;
+            display: inline-block;
+            width: auto;
+            padding: 5px 14px;
+            border-radius: 60px;
+            font-family: monospace;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            pointer-events: none;
+            z-index: 25;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #b89454;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .notebook-container { padding: 16px; }
+            .student-entry { flex-direction: column; align-items: flex-start; }
+            .entry-actions { align-self: flex-end; }
+            .stats-panel { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="notebook-container">
+    <div class="title-wrapper">
+        <h1>📋 BSIS-1<br>STUDENT FINES</h1>
+        <div class="date-badge" id="date"></div>
+    </div>
+
+    <!-- SECTION SELECTOR -->
+    <div class="section-selector">
+        <label>📚 Class Section:</label>
+        <select id="sectionSelect"></select>
+        <button class="btn-add-section" id="addSectionBtn">➕ New Section</button>
+    </div>
+
+    <!-- STATISTICS PANEL -->
+    <div class="stats-panel" id="statsPanel">
+        <div class="stat-card">
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value" id="statTotalStudents">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Fines</div>
+            <div class="stat-value" id="statTotalFines">₱0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Average Fine</div>
+            <div class="stat-value" id="statAvgFine">₱0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Highest Fine</div>
+            <div class="stat-value" id="statHighestFine">₱0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Paid / Unpaid</div>
+            <div class="stat-value" id="statPaidUnpaid">0/0</div>
+        </div>
+    </div>
+
+    <!-- INPUT PANEL -->
+    <div class="input-panel">
+        <div class="input-group">
+            <div class="field">
+                <label>👤 Full Name</label>
+                <input type="text" id="studentName" placeholder="e.g., Maria Santos" autocomplete="off">
+            </div>
+            <div class="field">
+                <label>⚥ Gender</label>
+                <select id="studentGender">
+                    <option value="male">♂ Male</option>
+                    <option value="female">♀ Female</option>
+                    <option value="non-binary">⚧ Non-binary</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>💰 Fine (₱)</label>
+                <input type="number" id="studentFine" placeholder="0.00" step="0.01" value="0">
+            </div>
+            <div class="field">
+                <label>📊 Status</label>
+                <select id="studentStatus">
+                    <option value="unpaid">Unpaid</option>
+                    <option value="paid">Paid</option>
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button id="addBtn">➕ ADD / UPDATE</button>
+                <button id="clearFormBtn" class="btn-clear">🗑️ Clear</button>
+            </div>
+        </div>
+        <div style="font-size:0.7rem; color:#ab8e4a; text-align:right;">
+            * Click on edit ✏️ to modify, then update using same button.
+        </div>
+    </div>
+
+    <!-- SEARCH & FILTER BAR -->
+    <div class="search-filter-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Search by name...">
+        <select id="filterGender">
+            <option value="all">All Genders</option>
+            <option value="male">♂ Male</option>
+            <option value="female">♀ Female</option>
+            <option value="non-binary">⚧ Non-binary</option>
+        </select>
+        <select id="filterStatus">
+            <option value="all">All Status</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="paid">Paid</option>
+        </select>
+        <select id="sortBy">
+            <option value="name">Sort by Name</option>
+            <option value="fine-high">Fine (High-Low)</option>
+            <option value="fine-low">Fine (Low-High)</option>
+            <option value="status">Sort by Status</option>
+        </select>
+    </div>
+
+    <div class="fines-list-section">
+        <div class="list-header">
+            <span>📌 FINES LEDGER · MANAGEABLE</span> 
+            <div class="header-actions">
+                <button class="btn-export" id="exportCsvBtn">📥 Export CSV</button>
+                <button class="btn-export" id="printBtn">🖨️ Print</button>
+            </div>
+        </div>
+
+        <div class="student-list" id="studentListContainer">
+            <div style="text-align:center; padding:20px; color:#b89454;">Loading student fines...</div>
+        </div>
+
+        <div class="total-fines" id="totalFinesBox">
+            <span>💰 TOTAL FINES COLLECTIBLE</span>
+            <span id="totalAmount">₱ 0.00</span>
+        </div>
+
+        <div class="fines-note">
+            💸 overdue books · late assignments · lost IDs 💸 <br>
+            <span style="font-size:0.75rem;">"magbayad para iwas iyak" · Manage students directly</span>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 8px;">
+        <div class="timer-info" id="timerMessage">
+            😭 This website is dev by Panyo and Jonard
+        </div>
+    </div>
+</div>
+
+<canvas id="emoji-canvas"></canvas>
+
+<script>
+    // ---------- DATE DISPLAY ----------
+    (function() {
+        const today = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const dateElem = document.getElementById("date");
+        if (dateElem) dateElem.innerHTML = today.toLocaleDateString('en-US', options);
+    })();
+
+    // ---------- STUDENT FINANCE MANAGER (CORE) ----------
+    let students = [];
+    let sections = ['BSIS-1A'];
+    let currentSection = 'BSIS-1A';
+    let editModeId = null;
+    let searchQuery = '';
+    let filterGender = 'all';
+    let filterStatus = 'all';
+    let sortBy = 'name';
+
+    // DOM elements
+    const sectionSelect = document.getElementById('sectionSelect');
+    const addSectionBtn = document.getElementById('addSectionBtn');
+    const nameInput = document.getElementById('studentName');
+    const genderSelect = document.getElementById('studentGender');
+    const fineInput = document.getElementById('studentFine');
+    const statusSelect = document.getElementById('studentStatus');
+    const addBtn = document.getElementById('addBtn');
+    const clearFormBtn = document.getElementById('clearFormBtn');
+    const studentListContainer = document.getElementById('studentListContainer');
+    const totalAmountSpan = document.getElementById('totalAmount');
+    const searchInput = document.getElementById('searchInput');
+    const filterGenderSelect = document.getElementById('filterGender');
+    const filterStatusSelect = document.getElementById('filterStatus');
+    const sortBySelect = document.getElementById('sortBy');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const printBtn = document.getElementById('printBtn');
+
+    // LocalStorage helpers
+    function saveToStorage() {
+        const data = { students, sections, currentSection };
+        localStorage.setItem('finesSystemData', JSON.stringify(data));
     }
-}
-          </style>
-       
-</head> 
 
+    function loadFromStorage() {
+        const saved = localStorage.getItem('finesSystemData');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.sections) sections = data.sections;
+                if (data.currentSection) currentSection = data.currentSection;
+                if (data.students) students = data.students;
+            } catch (e) {
+                loadInitialData();
+            }
+        } else {
+            loadInitialData();
+        }
+    }
 
+    function saveCurrentSectionStudents() {
+        const allData = JSON.parse(localStorage.getItem('finesSystemData') || '{"students":[]}');
+        allData.students = students;
+        allData.sections = sections;
+        allData.currentSection = currentSection;
+        localStorage.setItem('finesSystemData', JSON.stringify(allData));
+    }
 
-   <!--mga makita-->       
-<body> 
-   <!--para enter -->       
-       <br>
-   <!--para separate pornhub nya color orange -->       
-       <h1>
-          Porn<span class="orange">hub</span> 
-       </h1> 
-       
-       
-   <!-- para center text -->       
-      <h1 style="text-align: center;">This is an adult website</h1>
-      
-      
-       
-   <!--para sa click2 nga feature-->     
-        <button
-        onclick="firstbutton()">Notice to Users
-        </button>
-         
-   <!--para display imag human click  -->           
-        <script>
-         function  firstbutton() {
-            alert("owagana man ka!!!");
-          } 
-        </script>
-      
-      
-      
-      <p style="text-align: center;">This website contains age-restricted materials including nudity and explicit depictions of sexual activity. By entering, you affirm that you are at least 18 years of age or the age of majority in the jurisdiction you are accessing the website from and you consent to viewing sexually explicit content. </p>
-      
-      <p>
-          <!--clickable nga word -->     
-         <span class="clickable"onclick="showAlert()">Notice To Law Inforcement </span>
-      </p>  
-      
-      <script> 
-      function showAlert(){ alert("ayaw palabi ana ka owagan nimo wa ka!!")}
-      </script>
-      
-      <button onclick="thirdbutton()">I Am 18 or Older-Enter  </button>
-      </button>
-           <script>
-             function thirdbutton(){
-               alert("ITS A PRANK OWAGAN INATAY!!");
-             }
-            
-           </script>
-           
-      <button onclick="secondbutton()"> I am under 18-exit </button>
-         
-           <script>
-             function secondbutton(){
-               alert("Hawa deri yawa mana owagana man ka anga ka!!");
-             }
-           </script>
-       </button>   
-       
-       <h6>Warning: this website is just a experimentation by developer who names "bainanard!!</h6>
-    
-          <script>
-        alert("warning: by DEV bai nanard Bawal Bata ang words this website is just educational purpose,training of copying and designing  of layout --ESPECIAL THANKS FOR -PANYO- FOR ALWAYS WATCHING AND PAYING THE VIP SET!!");
-          </script>
+    // Statistics
+    function updateStats() {
+        const filtered = getFilteredStudents();
+        const totalStudents = filtered.length;
+        const totalFines = filtered.reduce((sum, s) => sum + (parseFloat(s.fine) || 0), 0);
+        const avgFine = totalStudents > 0 ? totalFines / totalStudents : 0;
+        const highestFine = filtered.length > 0 ? Math.max(...filtered.map(s => s.fine || 0)) : 0;
+        const paid = filtered.filter(s => s.status === 'paid').length;
+        const unpaid = filtered.filter(s => s.status !== 'paid').length;
+
+        document.getElementById('statTotalStudents').textContent = totalStudents;
+        document.getElementById('statTotalFines').textContent = '₱' + totalFines.toFixed(0);
+        document.getElementById('statAvgFine').textContent = '₱' + avgFine.toFixed(0);
+        document.getElementById('statHighestFine').textContent = '₱' + highestFine.toFixed(0);
+        document.getElementById('statPaidUnpaid').textContent = paid + '/' + unpaid;
+    }
+
+    // Filter & Search
+    function getFilteredStudents() {
+        let filtered = students.filter(s => s.section === currentSection);
         
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            filtered = filtered.filter(s => s.name.toLowerCase().includes(q));
+        }
+        
+        if (filterGender !== 'all') {
+            filtered = filtered.filter(s => s.gender === filterGender);
+        }
+        
+        if (filterStatus !== 'all') {
+            filtered = filtered.filter(s => s.status === filterStatus);
+        }
+        
+        if (sortBy === 'name') {
+            filtered.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortBy === 'fine-high') {
+            filtered.sort((a, b) => (b.fine || 0) - (a.fine || 0));
+        } else if (sortBy === 'fine-low') {
+            filtered.sort((a, b) => (a.fine || 0) - (b.fine || 0));
+        } else if (sortBy === 'status') {
+            filtered.sort((a, b) => (a.status || 'unpaid').localeCompare(b.status || 'unpaid'));
+        }
+        
+        return filtered;
+    }
+
+    // Render section dropdown
+    function renderSections() {
+        sectionSelect.innerHTML = sections.map(s => 
+            `<option value="${s}" ${s === currentSection ? 'selected' : ''}>${s}</option>`
+        ).join('');
+    }
+
+    // Update total display
+    function updateTotalDisplay() {
+        const filtered = getFilteredStudents();
+        let total = filtered.reduce((sum, s) => sum + (parseFloat(s.fine) || 0), 0);
+        totalAmountSpan.innerHTML = `₱ ${total.toFixed(2)}`;
+    }
+
+    // Render the student list
+    function renderStudentList() {
+        if (!studentListContainer) return;
+        const filtered = getFilteredStudents();
+        
+        if (filtered.length === 0) {
+            studentListContainer.innerHTML = `<div class="no-results">✨ No results found ✨</div>`;
+            updateTotalDisplay();
+            updateStats();
+            return;
+        }
+        
+        let html = '';
+        filtered.forEach(student => {
+            let genderDisplay = '';
+            if (student.gender === 'male') genderDisplay = '♂ male';
+            else if (student.gender === 'female') genderDisplay = '♀ female';
+            else genderDisplay = '⚧ non-binary';
+            
+            let icon = student.gender === 'male' ? '👨' : (student.gender === 'female' ? '👩' : '🧑');
+            let statusBadge = student.status === 'paid' 
+                ? '<span style="background:#28a745;color:white;padding:2px 10px;border-radius:20px;font-size:0.7rem;">✓ Paid</span>'
+                : '<span style="background:#dc3545;color:white;padding:2px 10px;border-radius:20px;font-size:0.7rem;">✗ Unpaid</span>';
+            
+            html += `
+                <div class="student-entry" data-id="${student.id}">
+                    <div class="student-info">
+                        <div class="student-name">${icon} ${escapeHtml(student.name)}</div>
+                        <div class="gender-badge">${genderDisplay}</div>
+                        ${statusBadge}
+                        <div class="fine-amount">₱ ${parseFloat(student.fine).toFixed(2)}</div>
+                    </div>
+                    <div class="entry-actions">
+                        <button class="icon-btn edit" data-id="${student.id}" data-action="edit">✏️ Edit</button>
+                        <button class="icon-btn del" data-id="${student.id}" data-action="delete">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        studentListContainer.innerHTML = html;
+        
+        // Event listeners
+        document.querySelectorAll('.icon-btn.edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'));
+                const student = students.find(s => s.id === id);
+                if (student) {
+                    nameInput.value = student.name;
+                    genderSelect.value = student.gender;
+                    fineInput.value = student.fine;
+                    statusSelect.value = student.status || 'unpaid';
+                    editModeId = student.id;
+                    addBtn.textContent = '✏��� UPDATE STUDENT';
+                    addBtn.style.background = '#ff9f40';
+                }
+            });
+        });
+        
+        document.querySelectorAll('.icon-btn.del').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'));
+                deleteStudentById(id);
+            });
+        });
+        
+        updateTotalDisplay();
+        updateStats();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function addOrUpdateStudent() {
+        let name = nameInput.value.trim();
+        if (name === "") {
+            alert("Please enter student name.");
+            return;
+        }
+        let gender = genderSelect.value;
+        let fine = parseFloat(fineInput.value);
+        let status = statusSelect.value;
+        if (isNaN(fine) || fine < 0) fine = 0;
+        fine = Math.round(fine * 100) / 100;
+        
+        if (editModeId !== null) {
+            const index = students.findIndex(s => s.id === editModeId);
+            if (index !== -1) {
+                students[index].name = name;
+                students[index].gender = gender;
+                students[index].fine = fine;
+                students[index].status = status;
+            }
+            editModeId = null;
+            addBtn.textContent = '➕ ADD / UPDATE';
+            addBtn.style.background = '#ffaa44';
+            clearForm();
+            saveCurrentSectionStudents();
+            renderStudentList();
+        } else {
+            const newId = Date.now() + Math.floor(Math.random() * 10000);
+            const newStudent = {
+                id: newId,
+                name: name,
+                gender: gender,
+                fine: fine,
+                status: status,
+                section: currentSection
+            };
+            students.push(newStudent);
+            clearForm();
+            saveCurrentSectionStudents();
+            renderStudentList();
+        }
+    }
+
+    function deleteStudentById(id) {
+        if (confirm("Remove this fine record? 🧾")) {
+            students = students.filter(s => s.id !== id);
+            if (editModeId === id) {
+                editModeId = null;
+                addBtn.textContent = '➕ ADD / UPDATE';
+                addBtn.style.background = '#ffaa44';
+                clearForm();
+            }
+            saveCurrentSectionStudents();
+            renderStudentList();
+        }
+    }
+
+    function clearForm() {
+        nameInput.value = '';
+        genderSelect.value = 'female';
+        fineInput.value = '0';
+        statusSelect.value = 'unpaid';
+        editModeId = null;
+        addBtn.textContent = '➕ ADD / UPDATE';
+        addBtn.style.background = '#ffaa44';
+    }
+
+    function loadInitialData() {
+        students = [
+            { id: 1001, name: "Student A", gender: "non-binary", fine: 20.00, status: "unpaid", section: "BSIS-1A" },
+            { id: 1002, name: "Lqunng", gender: "female", fine: 30.00, status: "unpaid", section: "BSIS-1A" },
+            { id: 1003, name: "Mark Rivera", gender: "male", fine: 45.00, status: "paid", section: "BSIS-1A" },
+            { id: 1004, name: "Sophia M.", gender: "female", fine: 25.00, status: "unpaid", section: "BSIS-1A" }
+        ];
+        saveCurrentSectionStudents();
+        renderStudentList();
+    }
+
+    // Add new section
+    function addNewSection() {
+        const newSection = prompt('Enter new section name (e.g., BSIS-1B):');
+        if (newSection && !sections.includes(newSection)) {
+            sections.push(newSection);
+            currentSection = newSection;
+            students = students.filter(s => s.section !== newSection);
+            renderSections();
+            saveCurrentSectionStudents();
+            renderStudentList();
+        }
+    }
+
+    // Export to CSV
+    function exportCSV() {
+        const filtered = getFilteredStudents();
+        let csv = 'Name,Gender,Fine,Status,Section\n';
+        filtered.forEach(s => {
+            csv += `"${s.name}","${s.gender}",${s.fine},"${s.status}","${s.section}"\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fines_${currentSection}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Print
+    function printPage() {
+        window.print();
+    }
+
+    // Event listeners
+    sectionSelect.addEventListener('change', (e) => {
+        currentSection = e.target.value;
+        saveCurrentSectionStudents();
+        renderStudentList();
+    });
+
+    addSectionBtn.addEventListener('click', addNewSection);
+    addBtn.addEventListener('click', addOrUpdateStudent);
+    clearFormBtn.addEventListener('click', clearForm);
+    exportCsvBtn.addEventListener('click', exportCSV);
+    printBtn.addEventListener('click', printPage);
+
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderStudentList();
+    });
+
+    filterGenderSelect.addEventListener('change', (e) => {
+        filterGender = e.target.value;
+        renderStudentList();
+    });
+
+    filterStatusSelect.addEventListener('change', (e) => {
+        filterStatus = e.target.value;
+        renderStudentList();
+    });
+
+    sortBySelect.addEventListener('change', (e) => {
+        sortBy = e.target.value;
+        renderStudentList();
+    });
+
+    nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addOrUpdateStudent();
+    });
+    fineInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addOrUpdateStudent();
+    });
+
+    // Initialize
+    renderSections();
+    loadFromStorage();
+    renderStudentList();
+
+    // ---------- CRYING EMOJI ANIMATION ----------
+    (function cryingEmojiAnimation() {
+        const canvas = document.getElementById('emoji-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        const emojiSet = ["😭", "😢", "😿"];
+        let particles = [];
+        let animationFrameId = null;
+        let fadeStartTime = null;
+        let isExpired = false;
+        
+        const GRAVITY = 0.58;
+        const BOUNCE_DAMPING = 0.68;
+        const GROUND_OFFSET_FROM_BOTTOM = 60;
+        const MIN_SIZE = 46;
+        const MAX_SIZE = 64;
+        
+        function initParticles(width, height) {
+            const newParticles = [];
+            for (let i = 0; i < 3; i++) {
+                const size = MIN_SIZE + Math.random() * (MAX_SIZE - MIN_SIZE);
+                const half = size / 2;
+                let x = half + Math.random() * (width - size);
+                let y = 35 + Math.random() * (Math.min(height * 0.45, height - 150));
+                const groundY = (height - GROUND_OFFSET_FROM_BOTTOM) - half;
+                newParticles.push({
+                    emoji: emojiSet[i % emojiSet.length],
+                    size: size,
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 2.5,
+                    vy: Math.random() * 2.2 + 0.5,
+                    groundY: groundY > 0 ? groundY : height - size - 10,
+                });
+            }
+            return newParticles;
+        }
+        
+        function resizeAndResetCanvas() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            canvas.width = w;
+            canvas.height = h;
+            
+            if (isExpired) {
+                if (ctx) ctx.clearRect(0, 0, w, h);
+                return;
+            }
+            
+            if (!particles.length) {
+                particles = initParticles(w, h);
+            } else {
+                for (let p of particles) {
+                    const half = p.size / 2;
+                    p.x = Math.min(w - half, Math.max(half, p.x));
+                    const maxY = h - half - 5;
+                    if (p.y > maxY) p.y = maxY - 15;
+                    if (p.y < half) p.y = half + 10;
+                    p.groundY = (h - GROUND_OFFSET_FROM_BOTTOM) - half;
+                    if (p.groundY + p.size > h) p.groundY = h - p.size;
+                }
+            }
+            
+            for (let p of particles) {
+                const half = p.size/2;
+                const newGround = (canvas.height - GROUND_OFFSET_FROM_BOTTOM) - half;
+                if (newGround > 0) p.groundY = newGround;
+                if (p.y + half > canvas.height) p.y = canvas.height - half - 2;
+                if (p.x + half > canvas.width) p.x = canvas.width - half;
+                if (p.x - half < 0) p.x = half;
+            }
+        }
+        
+        function updatePhysics() {
+            if (isExpired) return;
+            const w = canvas.width;
+            const h = canvas.height;
+            if (w === 0 || h === 0) return;
+            
+            for (let p of particles) {
+                p.vy += GRAVITY;
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                const half = p.size / 2;
+                const floorLimit = (h - GROUND_OFFSET_FROM_BOTTOM) - half;
+                
+                if (p.y + half >= floorLimit && p.vy > 0) {
+                    p.y = floorLimit - half;
+                    p.vy = -p.vy * BOUNCE_DAMPING;
+                    p.vx *= 0.995;
+                    if (Math.abs(p.vy) < 0.5) p.vy = 0;
+                }
+                
+                if (p.y - half <= 0) {
+                    p.y = half;
+                    p.vy = -p.vy * 0.85;
+                    if (Math.abs(p.vy) < 0.3) p.vy = 0.2;
+                }
+                
+                if (p.x - half <= 0) {
+                    p.x = half;
+                    p.vx = -p.vx * 0.92;
+                }
+                
+                if (p.x + half >= w) {
+                    p.x = w - half;
+                    p.vx = -p.vx * 0.92;
+                }
+                
+                if (p.y + half > h) {
+                    p.y = h - half;
+                    p.vy = -p.vy * 0.7;
+                }
+                if (p.y - half < 0) p.y = half;
+                
+                const refreshedGround = (h - GROUND_OFFSET_FROM_BOTTOM) - half;
+                if (refreshedGround > 0) p.groundY = refreshedGround;
+            }
+        }
+        
+        function drawEmojis(alpha) {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (isExpired) return;
+            
+            for (let p of particles) {
+                ctx.save();
+                ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha));
+                ctx.font = `${p.size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = "rgba(0,0,0,0.2)";
+                ctx.fillText(p.emoji, p.x, p.y);
+                ctx.restore();
+            }
+        }
+        
+        function animateFade(timestamp) {
+            if (isExpired) return;
+            
+            if (fadeStartTime === null) {
+                fadeStartTime = timestamp;
+            }
+            
+            const elapsed = timestamp - fadeStartTime;
+            let currentAlpha = 1.0;
+            
+            if (elapsed >= 30000) {
+                currentAlpha = 0;
+                isExpired = true;
+                if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                const msgDiv = document.getElementById("timerMessage");
+                if (msgDiv) msgDiv.innerHTML = "✨ Emojis have faded away after 30 seconds ✨";
+                return;
+            } else if (elapsed > 0) {
+                currentAlpha = 1 - (elapsed / 30000);
+                currentAlpha = Math.min(0.99, Math.max(0, currentAlpha));
+            } else {
+                currentAlpha = 1;
+            }
+            
+            if (currentAlpha > 0.01) {
+                updatePhysics();
+            }
+            drawEmojis(currentAlpha);
+            
+            animationFrameId = requestAnimationFrame(animateFade);
+        }
+        
+        function startAnimation() {
+            if (isExpired) return;
+            resizeAndResetCanvas();
+            fadeStartTime = null;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            animationFrameId = requestAnimationFrame((time) => {
+                fadeStartTime = time;
+                animateFade(time);
+            });
+        }
+        
+        window.addEventListener('resize', () => {
+            if (!isExpired) {
+                resizeAndResetCanvas();
+                if (!animationFrameId && !isExpired) {
+                    startAnimation();
+                }
+            } else {
+                if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
+        
+        startAnimation();
+        
+        window.addEventListener('load', () => {
+            if (!isExpired) {
+                resizeAndResetCanvas();
+                if (!animationFrameId) startAnimation();
+            }
+        });
+    })();
+</script>
 </body>
 </html>
-
-
-
-
-
