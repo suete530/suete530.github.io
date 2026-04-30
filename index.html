@@ -17,6 +17,12 @@
             min-height: 100vh;
             font-family: 'Segoe UI', 'SF Pro Text', 'Courier New', monospace, system-ui;
             padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background: #1a1a2e;
+            color: #e0e0e0;
         }
 
         .header-bar {
@@ -29,8 +35,18 @@
             align-items: center;
         }
 
+        body.dark .header-bar {
+            background: #16213e;
+        }
+
         .header-bar h1 {
             font-size: 1.2rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .logout-btn {
@@ -40,6 +56,46 @@
             border-radius: 20px;
             text-decoration: none;
             font-size: 0.8rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .dark-toggle {
+            background: #555;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .admin-btn {
+            background: #6f42c1;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .viewer-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .admin-badge {
+            background: #28a745;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
         }
 
         .notebook-container {
@@ -49,6 +105,12 @@
             border-radius: 32px;
             padding: 20px 24px 35px;
             border: 1px solid #e9e2b3;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        body.dark .notebook-container {
+            background: #16213e;
+            border-color: #0f3460;
         }
 
         h2 {
@@ -64,6 +126,12 @@
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
+        }
+
+        body.dark h2 {
+            background: linear-gradient(135deg, #82aaff 0%, #c792ea 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
         }
 
         .title-wrapper {
@@ -84,6 +152,12 @@
             margin-top: 5px;
         }
 
+        body.dark .date-badge {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
+        }
+
         .section-selector {
             background: #e8f4e8;
             border-radius: 20px;
@@ -96,9 +170,18 @@
             flex-wrap: wrap;
         }
 
+        body.dark .section-selector {
+            background: #1e3a2f;
+            border-left-color: #2dd573;
+        }
+
         .section-selector label {
             font-weight: bold;
             color: #1e5631;
+        }
+
+        body.dark .section-selector label {
+            color: #2dd573;
         }
 
         .section-selector select {
@@ -108,6 +191,12 @@
             background: white;
             font-family: monospace;
             font-weight: 600;
+        }
+
+        body.dark .section-selector select {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
         }
 
         .btn-add-section {
@@ -128,8 +217,8 @@
             margin: 10px 0 18px;
             color: white;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
         }
 
         .stat-card {
@@ -145,7 +234,7 @@
         }
 
         .stat-card .stat-value {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 800;
         }
 
@@ -155,6 +244,11 @@
             padding: 18px 20px;
             margin: 10px 0 20px;
             border-left: 8px solid #ffaa44;
+        }
+
+        body.dark .input-panel {
+            background: #1e293b;
+            border-left-color: #f59e0b;
         }
 
         .input-group {
@@ -179,6 +273,10 @@
             margin-bottom: 4px;
         }
 
+        body.dark .field label {
+            color: #a78bfa;
+        }
+
         .field input, .field select {
             width: 100%;
             padding: 10px 12px;
@@ -187,6 +285,12 @@
             background: white;
             font-family: monospace;
             font-size: 0.9rem;
+        }
+
+        body.dark .field input, body.dark .field select {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
         }
 
         button {
@@ -220,6 +324,11 @@
             flex-wrap: wrap;
         }
 
+        body.dark .search-filter-bar {
+            background: #1e293b;
+            border-left-color: #60a5fa;
+        }
+
         .search-filter-bar input {
             flex: 1;
             min-width: 120px;
@@ -228,10 +337,22 @@
             border: 1px solid #b8c8d8;
         }
 
+        body.dark .search-filter-bar input {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
+        }
+
         .search-filter-bar select {
             padding: 8px 12px;
             border-radius: 30px;
             border: 1px solid #b8c8d8;
+        }
+
+        body.dark .search-filter-bar select {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
         }
 
         .fines-list-section {
@@ -240,6 +361,11 @@
             padding: 18px 20px;
             margin: 15px 0 18px;
             border-left: 8px solid #ffaa44;
+        }
+
+        body.dark .fines-list-section {
+            background: #1e293b;
+            border-left-color: #f59e0b;
         }
 
         .list-header {
@@ -256,8 +382,20 @@
             padding-bottom: 8px;
         }
 
+        body.dark .list-header {
+            color: #f59e0b;
+            border-bottom-color: #4a3520;
+        }
+
         .btn-export {
             background: #17a2b8;
+            color: white;
+            font-size: 0.75rem;
+            padding: 6px 12px;
+        }
+
+        .btn-payment {
+            background: #6f42c1;
             color: white;
             font-size: 0.75rem;
             padding: 6px 12px;
@@ -278,6 +416,10 @@
             gap: 8px;
         }
 
+        body.dark .student-entry {
+            border-bottom-color: #2d3748;
+        }
+
         .student-name {
             font-weight: 800;
         }
@@ -289,12 +431,21 @@
             border-radius: 30px;
         }
 
+        body.dark .gender-badge {
+            background: #374151;
+        }
+
         .fine-amount {
             font-weight: 800;
             color: #b13e3e;
             background: #fff0d4;
             padding: 4px 14px;
             border-radius: 30px;
+        }
+
+        body.dark .fine-amount {
+            color: #f87171;
+            background: #3b1a1a;
         }
 
         .status-paid {
@@ -323,6 +474,11 @@
             padding: 4px 10px;
             font-size: 0.8rem;
             border: 1px solid #ddce9a;
+            color: inherit;
+        }
+
+        body.dark .icon-btn {
+            border-color: #4a5568;
         }
 
         .total-fines {
@@ -336,10 +492,307 @@
             font-size: 1.2rem;
         }
 
+        body.dark .total-fines {
+            background: #374151;
+        }
+
         .no-results {
             text-align: center;
             padding: 20px;
             color: #b89454;
+        }
+
+        body.dark .no-results {
+            color: #6b7280;
+        }
+
+        /* Login modal */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: #fffef7;
+            border-radius: 28px;
+            padding: 36px 28px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        body.dark .login-box {
+            background: #16213e;
+            color: #e0e0e0;
+        }
+
+        .login-box h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #6f42c1, #17a2b8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: block;
+            border: none;
+        }
+
+        .login-box p {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 2px solid #e2cf9a;
+            font-size: 1rem;
+            font-family: monospace;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 16px;
+        }
+
+        body.dark .login-input {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #6f42c1, #764ba2);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .login-error {
+            color: #dc3545;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .login-viewer-btn {
+            background: none;
+            border: none;
+            color: #4682b4;
+            font-size: 0.8rem;
+            margin-top: 16px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fffef7;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        body.dark .modal {
+            background: #16213e;
+            color: #e0e0e0;
+        }
+
+        .modal h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #2d3e5f;
+        }
+
+        body.dark .modal h3 {
+            color: #82aaff;
+        }
+
+        .modal-close {
+            float: right;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .payment-form label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #7b6236;
+        }
+
+        body.dark .payment-form label {
+            color: #a78bfa;
+        }
+
+        .payment-form input {
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #e2cf9a;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        body.dark .payment-form input {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
+        }
+
+        .payment-history-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .payment-history-entry {
+            padding: 10px;
+            border-bottom: 1px dashed #eedbae;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        body.dark .payment-history-entry {
+            border-bottom-color: #2d3748;
+        }
+
+        .payment-date {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .payment-amount {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .payment-type {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        body.dark .payment-type {
+            background: #1e3a2f;
+            color: #2dd573;
+        }
+
+        .payment-type.partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        body.dark .payment-type.partial {
+            background: #3b3520;
+            color: #f59e0b;
+        }
+
+        .btn-delete-payment {
+            background: transparent;
+            color: #dc3545;
+            border: none;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        /* Change password modal */
+        .pw-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pw-form label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #7b6236;
+        }
+
+        body.dark .pw-form label {
+            color: #a78bfa;
+        }
+
+        .pw-form input {
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #e2cf9a;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        body.dark .pw-form input {
+            background: #0f3460;
+            color: #e0e0e0;
+            border-color: #1a4a7a;
+        }
+
+        /* Admin-only class */
+        .admin-only {
+            display: none !important;
+        }
+
+        body.is-admin .admin-only {
+            display: inherit !important;
+        }
+
+        body.is-admin .admin-flex {
+            display: flex !important;
         }
 
         @media (max-width: 600px) {
@@ -349,9 +802,25 @@
     </style>
 </head>
 <body>
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🔐 Fines Manager</h2>
+            <p>Enter admin password or continue as viewer</p>
+            <input type="password" class="login-input" id="loginPassword" placeholder="••••••••" maxlength="30">
+            <button class="login-btn" id="loginBtn">🔓 Admin Login</button>
+            <div class="login-error" id="loginError">❌ Wrong password!</div>
+            <button class="login-viewer-btn" id="viewAsGuest">👁️ Continue as Viewer (Read Only)</button>
+        </div>
+    </div>
+
     <div class="header-bar">
         <h1>📋 BSIS Fines Manager</h1>
-        <a href="/logout" class="logout-btn">🚪 Logout</a>
+        <div class="header-buttons">
+            <span id="roleBadge" class="viewer-badge">👁️ Viewer</span>
+            <button class="dark-toggle" id="darkToggle">🌙</button>
+            <button class="admin-btn admin-only" id="changePwBtn">🔑 Password</button>
+            <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+        </div>
     </div>
 
     <div class="notebook-container">
@@ -360,15 +829,19 @@
             <div class="date-badge" id="date"></div>
         </div>
 
-        <div class="section-selector">
+        <div class="section-selector admin-only">
             <label>📚 Section:</label>
             <select id="sectionSelect"></select>
             <button class="btn-add-section" id="addSectionBtn">➕ New Section</button>
         </div>
+        <div class="section-selector" style="justify-content:center;">
+            <label>📚 Section:</label>
+            <select id="sectionSelectView"></select>
+        </div>
 
         <div class="stats-panel" id="statsPanel">
             <div class="stat-card">
-                <div class="stat-label">Total Students</div>
+                <div class="stat-label">Students</div>
                 <div class="stat-value" id="statTotalStudents">0</div>
             </div>
             <div class="stat-card">
@@ -387,9 +860,13 @@
                 <div class="stat-label">Paid/Unpaid</div>
                 <div class="stat-value" id="statPaidUnpaid">0/0</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-label">Collected</div>
+                <div class="stat-value" id="statCollected">₱0</div>
+            </div>
         </div>
 
-        <div class="input-panel">
+        <div class="input-panel admin-only">
             <div class="input-group">
                 <div class="field">
                     <label>👤 Full Name</label>
@@ -443,7 +920,10 @@
         <div class="fines-list-section">
             <div class="list-header">
                 <span>📌 FINES LEDGER</span>
-                <button class="btn-export" id="exportCsvBtn">📥 CSV</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-payment" id="exportPaymentsBtn">📥 Payments CSV</button>
+                    <button class="btn-export" id="exportCsvBtn">📥 Fines CSV</button>
+                </div>
             </div>
 
             <div class="student-list" id="studentListContainer">
@@ -457,16 +937,68 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closePaymentModal()">✕</button>
+            <h3 id="paymentModalTitle">💳 Payment History</h3>
+            <div class="payment-form admin-only" id="paymentForm">
+                <label>Payment Amount (₱)</label>
+                <input type="number" id="paymentAmount" step="0.01" placeholder="0.00">
+                <label>Date</label>
+                <input type="date" id="paymentDate">
+                <label>Note (optional)</label>
+                <input type="text" id="paymentNote" placeholder="e.g., Partial payment">
+                <button id="submitPaymentBtn">✅ Add Payment</button>
+            </div>
+            <div class="payment-history-list" id="paymentHistoryList"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="changePwModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeChangePwModal()">✕</button>
+            <h3>🔑 Change Password</h3>
+            <div class="pw-form">
+                <label>Current Password</label>
+                <input type="password" id="currentPw" placeholder="••••••••">
+                <label>New Password</label>
+                <input type="password" id="newPw" placeholder="••••••••">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPw" placeholder="••••••••">
+                <button id="savePwBtn">💾 Save Password</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let isAdmin = false;
         let students = [];
+        let sections = [];
         let currentSectionId = null;
         let editModeId = null;
         let searchQuery = '';
         let filterGender = 'all';
         let filterStatus = 'all';
         let sortBy = 'name';
+        let currentPaymentStudentId = null;
+
+        const loginOverlay = document.getElementById('loginOverlay');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const viewAsGuest = document.getElementById('viewAsGuest');
+        const roleBadge = document.getElementById('roleBadge');
+        const darkToggle = document.getElementById('darkToggle');
+        const changePwBtn = document.getElementById('changePwBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const changePwModal = document.getElementById('changePwModal');
+        const currentPw = document.getElementById('currentPw');
+        const newPw = document.getElementById('newPw');
+        const confirmPw = document.getElementById('confirmPw');
+        const savePwBtn = document.getElementById('savePwBtn');
 
         const sectionSelect = document.getElementById('sectionSelect');
+        const sectionSelectView = document.getElementById('sectionSelectView');
         const addSectionBtn = document.getElementById('addSectionBtn');
         const nameInput = document.getElementById('studentName');
         const genderSelect = document.getElementById('studentGender');
@@ -480,19 +1012,142 @@
         const filterStatusSelect = document.getElementById('filterStatus');
         const sortBySelect = document.getElementById('sortBy');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportPaymentsBtn = document.getElementById('exportPaymentsBtn');
+        const paymentModal = document.getElementById('paymentModal');
+        const paymentAmount = document.getElementById('paymentAmount');
+        const paymentDate = document.getElementById('paymentDate');
+        const paymentNote = document.getElementById('paymentNote');
+        const submitPaymentBtn = document.getElementById('submitPaymentBtn');
+        const paymentHistoryList = document.getElementById('paymentHistoryList');
+        const paymentModalTitle = document.getElementById('paymentModalTitle');
 
-        // Date
         document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', { 
             year: 'numeric', month: 'long', day: 'numeric' 
         });
 
-        // Load sections
-        async function loadSections() {
-            const res = await fetch('/api/sections');
-            const sections = await res.json();
-            sectionSelect.innerHTML = sections.map(s => 
-                `<option value="${s.id}">${s.name}</option>`
+        function getAdminPassword() {
+            return localStorage.getItem('fm_admin_pw') || 'admin123';
+        }
+
+        // Login
+        loginBtn.addEventListener('click', doLogin);
+        loginPassword.addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+        viewAsGuest.addEventListener('click', enterViewer);
+
+        function doLogin() {
+            const pw = loginPassword.value;
+            if (pw === getAdminPassword()) {
+                isAdmin = true;
+                document.body.classList.add('is-admin');
+                loginOverlay.classList.add('hidden');
+                roleBadge.className = 'admin-badge';
+                roleBadge.textContent = '👑 Admin';
+                initApp();
+            } else {
+                loginError.style.display = 'block';
+                loginPassword.value = '';
+            }
+        }
+
+        function enterViewer() {
+            isAdmin = false;
+            document.body.classList.remove('is-admin');
+            loginOverlay.classList.add('hidden');
+            roleBadge.className = 'viewer-badge';
+            roleBadge.textContent = '👁️ Viewer';
+            initApp();
+        }
+
+        logoutBtn.addEventListener('click', () => {
+            isAdmin = false;
+            document.body.classList.remove('is-admin');
+            loginOverlay.classList.remove('hidden');
+            loginPassword.value = '';
+            loginError.style.display = 'none';
+            roleBadge.className = 'viewer-badge';
+            roleBadge.textContent = '👁️ Viewer';
+        });
+
+        // Change password
+        changePwBtn.addEventListener('click', () => {
+            changePwModal.classList.add('active');
+            currentPw.value = '';
+            newPw.value = '';
+            confirmPw.value = '';
+        });
+
+        function closeChangePwModal() {
+            changePwModal.classList.remove('active');
+        }
+
+        savePwBtn.addEventListener('click', () => {
+            if (currentPw.value !== getAdminPassword()) {
+                alert('Current password is wrong!');
+                return;
+            }
+            if (newPw.value.length < 4) {
+                alert('Password must be at least 4 characters!');
+                return;
+            }
+            if (newPw.value !== confirmPw.value) {
+                alert('New passwords do not match!');
+                return;
+            }
+            localStorage.setItem('fm_admin_pw', newPw.value);
+            alert('✅ Password changed!');
+            closeChangePwModal();
+        });
+
+        changePwModal.addEventListener('click', (e) => {
+            if (e.target === changePwModal) closeChangePwModal();
+        });
+
+        // Dark mode
+        function loadDarkMode() {
+            const isDark = localStorage.getItem('fm_dark') === 'true';
+            document.body.classList.toggle('dark', isDark);
+            darkToggle.textContent = isDark ? '☀️' : '🌙';
+        }
+
+        darkToggle.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark');
+            document.body.classList.toggle('dark', isDark);
+            localStorage.setItem('fm_dark', isDark);
+            darkToggle.textContent = isDark ? '☀️' : '🌙';
+        });
+
+        loadDarkMode();
+
+        // localStorage helpers
+        function getSections() {
+            try { return JSON.parse(localStorage.getItem('fm_sections') || '[]'); } catch { return []; }
+        }
+        function saveSections(data) { localStorage.setItem('fm_sections', JSON.stringify(data)); }
+        function getStudents(sectionId) {
+            try { return JSON.parse(localStorage.getItem('fm_students_' + sectionId) || '[]'); } catch { return []; }
+        }
+        function saveStudents(sectionId, data) { localStorage.setItem('fm_students_' + sectionId, JSON.stringify(data)); }
+        function getPayments(studentId) {
+            try { return JSON.parse(localStorage.getItem('fm_payments_' + studentId) || '[]'); } catch { return []; }
+        }
+        function savePayments(studentId, data) { localStorage.setItem('fm_payments_' + studentId, JSON.stringify(data)); }
+        function nextId(arr) { return arr.length > 0 ? Math.max(...arr.map(x => x.id)) + 1 : 1; }
+
+        function initApp() {
+            loadSections();
+        }
+
+        function loadSections() {
+            sections = getSections();
+            if (sections.length === 0) {
+                sections = [{ id: 1, name: 'BSIS-1A' }];
+                saveSections(sections);
+            }
+            const html = sections.map(s => 
+                `<option value="${s.id}">${escapeHtml(s.name)}</option>`
             ).join('');
+            sectionSelect.innerHTML = html;
+            sectionSelectView.innerHTML = html;
             
             if (sections.length > 0 && !currentSectionId) {
                 currentSectionId = sections[0].id;
@@ -500,27 +1155,34 @@
             }
         }
 
-        // Load students
-        async function loadStudents() {
-            const res = await fetch(`/api/students?section_id=${currentSectionId}`);
-            students = await res.json();
+        function loadStudents() {
+            students = getStudents(currentSectionId);
             renderStudentList();
             updateStats();
         }
 
-        // Update stats
-        async function updateStats() {
-            const res = await fetch(`/api/stats?section_id=${currentSectionId}`);
-            const stats = await res.json();
+        function updateStats() {
+            const totalStudents = students.length;
+            const totalFines = students.reduce((sum, s) => sum + s.fine, 0);
+            const avgFine = totalStudents > 0 ? totalFines / totalStudents : 0;
+            const highestFine = totalStudents > 0 ? Math.max(...students.map(s => s.fine)) : 0;
+            const paid = students.filter(s => s.status === 'paid').length;
+            const unpaid = totalStudents - paid;
+
+            let totalCollected = 0;
+            students.forEach(s => {
+                const payments = getPayments(s.id);
+                totalCollected += payments.reduce((sum, p) => sum + p.amount, 0);
+            });
             
-            document.getElementById('statTotalStudents').textContent = stats.totalStudents;
-            document.getElementById('statTotalFines').textContent = '₱' + stats.totalFines.toFixed(0);
-            document.getElementById('statAvgFine').textContent = '₱' + stats.avgFine.toFixed(0);
-            document.getElementById('statHighestFine').textContent = '₱' + stats.highestFine.toFixed(0);
-            document.getElementById('statPaidUnpaid').textContent = stats.paid + '/' + stats.unpaid;
+            document.getElementById('statTotalStudents').textContent = totalStudents;
+            document.getElementById('statTotalFines').textContent = '₱' + totalFines.toFixed(0);
+            document.getElementById('statAvgFine').textContent = '₱' + avgFine.toFixed(0);
+            document.getElementById('statHighestFine').textContent = '₱' + highestFine.toFixed(0);
+            document.getElementById('statPaidUnpaid').textContent = paid + '/' + unpaid;
+            document.getElementById('statCollected').textContent = '₱' + totalCollected.toFixed(0);
         }
 
-        // Filter students
         function getFilteredStudents() {
             let filtered = [...students];
             
@@ -546,7 +1208,6 @@
             return filtered;
         }
 
-        // Render list
         function renderStudentList() {
             const filtered = getFilteredStudents();
             
@@ -561,10 +1222,22 @@
             
             filtered.forEach(s => {
                 total += s.fine;
+                const payments = getPayments(s.id);
+                const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+                const remaining = Math.max(0, s.fine - totalPaid);
                 const genderLabel = s.gender === 'male' ? '♂ male' : s.gender === 'female' ? '♀ female' : '⚧ NB';
                 const icon = s.gender === 'male' ? '👨' : s.gender === 'female' ? '👩' : '🧑';
                 const statusClass = s.status === 'paid' ? 'status-paid' : 'status-unpaid';
                 const statusLabel = s.status === 'paid' ? '✓ Paid' : '✗ Unpaid';
+                const paymentInfo = totalPaid > 0 ? `<div style="font-size:0.65rem;color:#888;margin-top:2px;">Paid: ₱${totalPaid.toFixed(2)} | Remaining: ₱${remaining.toFixed(2)}</div>` : '';
+                
+                const adminButtons = isAdmin ? `
+                    <button class="icon-btn" onclick="openPaymentModal(${s.id})">💳 Pay</button>
+                    <button class="icon-btn" onclick="editStudent(${s.id})">✏️ Edit</button>
+                    <button class="icon-btn" onclick="deleteStudent(${s.id})">🗑️</button>
+                ` : `
+                    <button class="icon-btn" onclick="openPaymentModal(${s.id})">💳 History</button>
+                `;
                 
                 html += `
                     <div class="student-entry">
@@ -573,10 +1246,10 @@
                             <span class="gender-badge">${genderLabel}</span>
                             <span class="${statusClass}">${statusLabel}</span>
                             <span class="fine-amount">₱ ${s.fine.toFixed(2)}</span>
+                            ${paymentInfo}
                         </div>
                         <div class="entry-actions">
-                            <button class="icon-btn" onclick="editStudent(${s.id})">✏️ Edit</button>
-                            <button class="icon-btn" onclick="deleteStudent(${s.id})">🗑️</button>
+                            ${adminButtons}
                         </div>
                     </div>
                 `;
@@ -588,11 +1261,11 @@
 
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m);
+            return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
         }
 
-        // Add student
-        async function addOrUpdateStudent() {
+        function addOrUpdateStudent() {
+            if (!isAdmin) return;
             const name = nameInput.value.trim();
             if (!name) {
                 alert('Please enter student name');
@@ -604,31 +1277,27 @@
                 gender: genderSelect.value,
                 fine: parseFloat(fineInput.value) || 0,
                 status: statusSelect.value,
-                section_id: currentSectionId
             };
             
             if (editModeId) {
-                await fetch(`/api/students/${editModeId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
+                const idx = students.findIndex(s => s.id === editModeId);
+                if (idx !== -1) {
+                    students[idx] = { ...students[idx], ...data };
+                }
                 editModeId = null;
                 addBtn.textContent = '➕ ADD';
             } else {
-                await fetch('/api/students', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
+                data.id = nextId(students);
+                students.push(data);
             }
             
+            saveStudents(currentSectionId, students);
             clearForm();
             loadStudents();
         }
 
-        // Edit student
-        async function editStudent(id) {
+        function editStudent(id) {
+            if (!isAdmin) return;
             const student = students.find(s => s.id === id);
             if (student) {
                 nameInput.value = student.name;
@@ -640,15 +1309,16 @@
             }
         }
 
-        // Delete student
-        async function deleteStudent(id) {
+        function deleteStudent(id) {
+            if (!isAdmin) return;
             if (confirm('Delete this student?')) {
-                await fetch(`/api/students/${id}`, { method: 'DELETE' });
+                students = students.filter(s => s.id !== id);
+                saveStudents(currentSectionId, students);
+                localStorage.removeItem('fm_payments_' + id);
                 loadStudents();
             }
         }
 
-        // Clear form
         function clearForm() {
             nameInput.value = '';
             genderSelect.value = 'male';
@@ -658,33 +1328,197 @@
             addBtn.textContent = '➕ ADD';
         }
 
-        // Add section
-        async function addNewSection() {
+        function addNewSection() {
+            if (!isAdmin) return;
             const name = prompt('Enter section name (e.g., BSIS-1B):');
             if (name) {
-                await fetch('/api/sections', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
-                });
+                sections = getSections();
+                sections.push({ id: nextId(sections), name: name });
+                saveSections(sections);
                 loadSections();
+                currentSectionId = sections[sections.length - 1].id;
+                sectionSelect.value = currentSectionId;
+                sectionSelectView.value = currentSectionId;
+                loadStudents();
             }
         }
 
-        // Export CSV
-        function exportCSV() {
-            window.location.href = `/api/export/${currentSectionId}`;
+        function openPaymentModal(studentId) {
+            currentPaymentStudentId = studentId;
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            const payments = getPayments(studentId);
+            const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+            const remaining = Math.max(0, student.fine - totalPaid);
+
+            paymentModalTitle.textContent = `💳 ${student.name} — Remaining: ₱${remaining.toFixed(2)}`;
+            paymentAmount.value = remaining > 0 ? remaining.toFixed(2) : '0';
+            paymentDate.value = new Date().toISOString().split('T')[0];
+            paymentNote.value = '';
+            paymentAmount.max = remaining;
+
+            renderPaymentHistory(studentId);
+            paymentModal.classList.add('active');
         }
 
-        // Event listeners
+        function closePaymentModal() {
+            paymentModal.classList.remove('active');
+            currentPaymentStudentId = null;
+        }
+
+        function renderPaymentHistory(studentId) {
+            const payments = getPayments(studentId);
+            if (payments.length === 0) {
+                paymentHistoryList.innerHTML = '<div class="no-results">No payments yet</div>';
+                return;
+            }
+
+            let html = '';
+            payments.slice().reverse().forEach((p, i) => {
+                const realIndex = payments.length - 1 - i;
+                const typeClass = p.type === 'full' ? '' : 'partial';
+                const typeLabel = p.type === 'full' ? 'Full' : 'Partial';
+                const deleteBtn = isAdmin ? `<button class="btn-delete-payment" onclick="deletePayment(${studentId}, ${realIndex})">✕</button>` : '';
+                html += `
+                    <div class="payment-history-entry">
+                        <div>
+                            <span class="payment-amount">₱${p.amount.toFixed(2)}</span>
+                            <span class="payment-type ${typeClass}">${typeLabel}</span>
+                            ${p.note ? `<div style="font-size:0.7rem;color:#888;">${escapeHtml(p.note)}</div>` : ''}
+                            <div class="payment-date">${p.date}</div>
+                        </div>
+                        ${deleteBtn}
+                    </div>
+                `;
+            });
+            paymentHistoryList.innerHTML = html;
+        }
+
+        function addPayment() {
+            if (!isAdmin) return;
+            if (!currentPaymentStudentId) return;
+            const student = students.find(s => s.id === currentPaymentStudentId);
+            if (!student) return;
+
+            const amount = parseFloat(paymentAmount.value) || 0;
+            if (amount <= 0) {
+                alert('Enter a valid amount');
+                return;
+            }
+
+            const payments = getPayments(currentPaymentStudentId);
+            const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+            const remaining = student.fine - totalPaid;
+
+            if (amount > remaining + 0.01) {
+                alert('Amount exceeds remaining balance (₱' + remaining.toFixed(2) + ')');
+                return;
+            }
+
+            const paymentType = Math.abs(amount - remaining) < 0.01 ? 'full' : 'partial';
+
+            payments.push({
+                id: nextId(payments),
+                amount: amount,
+                date: paymentDate.value || new Date().toISOString().split('T')[0],
+                note: paymentNote.value.trim(),
+                type: paymentType
+            });
+
+            savePayments(currentPaymentStudentId, payments);
+
+            if (paymentType === 'full') {
+                const idx = students.findIndex(s => s.id === currentPaymentStudentId);
+                if (idx !== -1) {
+                    students[idx].status = 'paid';
+                    saveStudents(currentSectionId, students);
+                }
+            }
+
+            openPaymentModal(currentPaymentStudentId);
+            loadStudents();
+        }
+
+        function deletePayment(studentId, index) {
+            if (!isAdmin) return;
+            if (!confirm('Delete this payment?')) return;
+            const payments = getPayments(studentId);
+            const wasFull = payments[index].type === 'full';
+            payments.splice(index, 1);
+            savePayments(studentId, payments);
+
+            if (wasFull) {
+                const idx = students.findIndex(s => s.id === studentId);
+                if (idx !== -1) {
+                    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+                    students[idx].status = totalPaid >= students[idx].fine ? 'paid' : 'unpaid';
+                    saveStudents(currentSectionId, students);
+                }
+            }
+
+            if (currentPaymentStudentId === studentId) {
+                openPaymentModal(studentId);
+            }
+            loadStudents();
+        }
+
+        submitPaymentBtn.addEventListener('click', addPayment);
+        paymentModal.addEventListener('click', (e) => {
+            if (e.target === paymentModal) closePaymentModal();
+        });
+
+        function exportCSV() {
+            const section = sections.find(s => s.id === currentSectionId);
+            const sectionName = section ? section.name : 'section';
+            let csv = 'Name,Gender,Fine,Status\n';
+            students.forEach(s => {
+                csv += `"${s.name}",${s.gender},${s.fine.toFixed(2)},${s.status}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = sectionName + '_fines.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportPaymentsCSV() {
+            const section = sections.find(s => s.id === currentSectionId);
+            const sectionName = section ? section.name : 'section';
+            let csv = 'Student Name,Amount,Date,Type,Note\n';
+            students.forEach(s => {
+                const payments = getPayments(s.id);
+                payments.forEach(p => {
+                    csv += `"${s.name}",${p.amount.toFixed(2)},${p.date},${p.type},"${p.note || ''}"\n`;
+                });
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = sectionName + '_payments.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        exportCsvBtn.addEventListener('click', exportCSV);
+        exportPaymentsBtn.addEventListener('click', exportPaymentsCSV);
+
         sectionSelect.addEventListener('change', () => {
             currentSectionId = parseInt(sectionSelect.value);
+            sectionSelectView.value = currentSectionId;
+            loadStudents();
+        });
+        sectionSelectView.addEventListener('change', () => {
+            currentSectionId = parseInt(sectionSelectView.value);
+            sectionSelect.value = currentSectionId;
             loadStudents();
         });
         addSectionBtn.addEventListener('click', addNewSection);
         addBtn.addEventListener('click', addOrUpdateStudent);
         clearFormBtn.addEventListener('click', clearForm);
-        exportCsvBtn.addEventListener('click', exportCSV);
         
         searchInput.addEventListener('input', () => { searchQuery = searchInput.value; renderStudentList(); });
         filterGenderSelect.addEventListener('change', () => { filterGender = filterGenderSelect.value; renderStudentList(); });
@@ -692,9 +1526,6 @@
         sortBySelect.addEventListener('change', () => { sortBy = sortBySelect.value; renderStudentList(); });
 
         nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addOrUpdateStudent(); });
-        
-        // Init
-        loadSections();
     </script>
 </body>
 </html>
