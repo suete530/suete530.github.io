@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BSIS-1 · Fines Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #0a0e1a; min-height: 100vh; color: #e0e0e0;
+            font-family: 'Segoe UI', 'SF Pro Text', 'Courier New', monospace, system-ui;
+            padding: 20px; transition: background 0.3s, color 0.3s;
+        }
+        body.dark { background: #050810; }
+        .header-bar {
+            background: linear-gradient(135deg, #0d1b2a, #1b2838); color: #e0e0e0; padding: 15px 20px;
+            margin: -20px -20px 20px -20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #00d4ff33;
+        }
+        body.dark .header-bar { background: linear-gradient(135deg, #050a15, #0d1520); border-bottom-color: #00d4ff22; }
+        .header-bar h1 { font-size: 1.2rem; color: #00d4ff; }
+        .header-buttons { display: flex; gap: 8px; align-items: center; }
+        .logout-btn {
+            background: #ff4757; color: white; padding: 8px 16px;
+            border-radius: 20px; text-decoration: none; font-size: 0.8rem;
+            cursor: pointer; border: none;
+        }
+        .dark-toggle {
+            background: #2a3a4a; color: #f59e0b; padding: 8px 14px;
+            border-radius: 20px; font-size: 1rem; cursor: pointer; border: none;
+        }
+        .admin-btn {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; padding: 8px 14px;
+            border-radius: 20px; font-size: 0.75rem; cursor: pointer; border: none;
+        }
+        .viewer-badge {
+            background: linear-gradient(135deg, #00d4ff, #0891b2); color: #fff; padding: 6px 14px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: bold;
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 6px 14px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: bold;
+        }
+        .notebook-container {
+            max-width: 750px; margin: 0 auto; background: #111827;
+            border-radius: 24px; padding: 20px 24px 35px;
+            border: 1px solid #1e293b; transition: background 0.3s, border-color 0.3s;
+        }
+        body.dark .notebook-container { background: #0c1222; border-color: #1a2332; }
+        h2 {
+            font-family: 'Courier New', monospace; font-weight: 800; font-size: 1.8rem;
+            text-align: center; border-bottom: 3px solid #7c3aed; display: inline-block;
+            margin: 0 auto 12px; padding-bottom: 6px;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            background-clip: text; -webkit-background-clip: text; color: transparent;
+        }
+        body.dark h2 {
+            background: linear-gradient(135deg, #00d4ff, #a78bfa);
+            background-clip: text; -webkit-background-clip: text;
+        }
+        .title-wrapper { text-align: center; margin-bottom: 20px; }
+        .date-badge {
+            background: #1a2332; display: inline-block; padding: 6px 20px;
+            border-radius: 40px; font-family: monospace; font-weight: bold;
+            font-size: 0.85rem; color: #00d4ff; border: 1px solid #1e293b; margin-top: 5px;
+        }
+        body.dark .date-badge { background: #0f1923; color: #00d4ff; border-color: #1a2332; }
+        .section-selector {
+            background: #1a2332; border-radius: 20px; padding: 12px 20px;
+            margin: 10px 0 15px; border-left: 8px solid #10b981;
+            display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+        }
+        body.dark .section-selector { background: #0f1923; border-left-color: #34d399; }
+        .section-selector label { font-weight: bold; color: #34d399; }
+        body.dark .section-selector label { color: #34d399; }
+        .section-selector select {
+            padding: 8px 15px; border-radius: 30px; border: 1px solid #1e293b;
+            background: #111827; font-family: monospace; font-weight: 600; color: #e0e0e0;
+        }
+        body.dark .section-selector select {
+            background: #0c1222; color: #e0e0e0; border-color: #1a2332;
+        }
+        .btn-add-section {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 8px 15px;
+            border-radius: 30px; font-weight: bold; font-size: 0.8rem; cursor: pointer;
+        }
+        .stats-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px; padding: 18px 20px; margin: 10px 0 18px;
+            color: white; display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1); border-radius: 15px; padding: 12px; text-align: center;
+        }
+        .stat-card .stat-label { font-size: 0.7rem; opacity: 0.9; }
+        .stat-card .stat-value { font-size: 1.2rem; font-weight: 800; }
+        .input-panel {
+            background: #1a2332; border-radius: 20px; padding: 18px 20px;
+            margin: 10px 0 20px; border-left: 8px solid #f59e0b;
+        }
+        body.dark .input-panel { background: #0f1923; border-left-color: #fbbf24; }
+        .input-group {
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 15px;
+        }
+        .field { flex: 1; min-width: 120px; }
+        .field label {
+            display: block; font-size: 0.7rem; font-weight: bold;
+            text-transform: uppercase; color: #f59e0b; margin-bottom: 4px;
+        }
+        body.dark .field label { color: #fbbf24; }
+        .field input, .field select {
+            width: 100%; padding: 10px 12px; border-radius: 60px;
+            border: 1px solid #1e293b; background: #111827; color: #e0e0e0;
+            font-family: monospace; font-size: 0.9rem;
+        }
+        body.dark .field input, body.dark .field select {
+            background: #0c1222; color: #e0e0e0; border-color: #1a2332;
+        }
+        button {
+            background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 10px 18px;
+            border-radius: 60px; font-weight: bold; font-family: monospace;
+            font-size: 0.9rem; cursor: pointer;
+        }
+        .btn-clear { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .action-buttons { display: flex; gap: 12px; }
+        .search-filter-bar {
+            background: #1a2332; border-radius: 20px; padding: 12px 18px;
+            margin: 10px 0 15px; border-left: 8px solid #00d4ff;
+            display: flex; gap: 10px; flex-wrap: wrap;
+        }
+        body.dark .search-filter-bar { background: #0f1923; border-left-color: #00d4ff; }
+        .search-filter-bar input {
+            flex: 1; min-width: 120px; padding: 8px 14px;
+            border-radius: 30px; border: 1px solid #1e293b; background: #111827; color: #e0e0e0;
+        }
+        body.dark .search-filter-bar input {
+            background: #0c1222; color: #e0e0e0; border-color: #1a2332;
+        }
+        .search-filter-bar select {
+            padding: 8px 12px; border-radius: 30px; border: 1px solid #1e293b;
+            background: #111827; color: #e0e0e0;
+        }
+        body.dark .search-filter-bar select {
+            background: #0c1222; color: #e0e0e0; border-color: #1a2332;
+        }
+        .fines-list-section {
+            background: #1a2332; border-radius: 20px; padding: 18px 20px;
+            margin: 15px 0 18px; border-left: 8px solid #f59e0b;
+        }
+        body.dark .fines-list-section { background: #0f1923; border-left-color: #fbbf24; }
+        .list-header {
+            font-size: 1.3rem; font-weight: bold; color: #f59e0b;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
+            border-bottom: 2px solid #1e293b; padding-bottom: 8px;
+        }
+        body.dark .list-header { color: #fbbf24; border-bottom-color: #1a2332; }
+        .btn-export { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; font-size: 0.75rem; padding: 6px 12px; }
+        .btn-payment { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-size: 0.75rem; padding: 6px 12px; }
+        .student-list { max-height: 350px; overflow-y: auto; }
+        .student-entry {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 8px; border-bottom: 1px solid #1e293b;
+            flex-wrap: wrap; gap: 8px;
+        }
+        body.dark .student-entry { border-bottom-color: #1a2332; }
+        .student-avatar {
+            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+            border: 2px solid #1e293b; vertical-align: middle; margin-right: 10px;
+            flex-shrink: 0; cursor: pointer; transition: transform 0.15s;
+        }
+        .student-avatar:hover { transform: scale(1.05); }
+        body.dark .student-avatar { border-color: #1a2332; }
+        .student-avatar-placeholder {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #1a2332; display: inline-flex; align-items: center;
+            justify-content: center; font-size: 1.4rem; font-weight: bold; color: #00d4ff;
+            border: 2px dashed #1e293b; vertical-align: middle; margin-right: 10px; flex-shrink: 0; cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .student-avatar-placeholder:hover { background: #1e293b; transform: scale(1.05); }
+        body.dark .student-avatar-placeholder { background: #141e2e; color: #a78bfa; border-color: #1a2332; }
+        .status-indicator { display: flex; align-items: center; justify-content: center; margin-top: 2px; font-size: 0.45rem; gap: 3px; }
+        .status-dot { width: 5px; height: 5px; border-radius: 50%; }
+        .status-dot.online { background: #22c55e; box-shadow: 0 0 4px #22c55e; }
+        .status-dot.offline { background: #9ca3af; }
+        .student-name { font-weight: 600; font-size: 0.8rem; color: #e0e0e0; }
+        .gender-badge {
+            font-size: 0.55rem; font-weight: 400; background: #1e293b; color: #00d4ff; padding: 1px 8px; border-radius: 30px;
+        }
+        body.dark .gender-badge { background: #141e2e; color: #00d4ff; }
+        .fine-amount {
+            font-weight: 500; color: #f87171; background: #1c1917;
+            padding: 2px 10px; border-radius: 30px; font-size: 0.75rem;
+        }
+        body.dark .fine-amount { color: #f87171; background: #1a1210; }
+        .status-paid {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 1px 7px;
+            border-radius: 20px; font-size: 0.55rem; font-weight: 400;
+        }
+        .status-unpaid {
+            background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 1px 7px;
+            border-radius: 20px; font-size: 0.55rem; font-weight: 400;
+        }
+        .entry-actions { display: flex; gap: 8px; }
+        .icon-btn {
+            background: transparent; padding: 4px 10px; font-size: 0.8rem;
+            border: 1px solid #1e293b; color: #e0e0e0;
+        }
+        body.dark .icon-btn { border-color: #1a2332; }
+        .total-fines {
+            margin-top: 20px; background: linear-gradient(135deg, #1e293b, #1a2332); border-radius: 20px;
+            padding: 10px 18px; display: flex; justify-content: space-between;
+            font-weight: bold; font-size: 1.2rem; color: #f59e0b;
+        }
+        body.dark .total-fines { background: linear-gradient(135deg, #141e2e, #0f1923); }
+        .credits {
+            text-align: center; padding: 14px 10px; font-size: 0.75rem;
+            color: #6b7280; border-top: 1px solid #1e293b; margin-top: 18px;
+        }
+        body.dark .credits { color: #6b7280; border-top-color: #1a2332; }
+        .credits span { font-weight: bold; color: #a78bfa; }
+        body.dark .credits span { color: #a78bfa; }
+        .no-results { text-align: center; padding: 20px; color: #6b7280; }
+        body.dark .no-results { color: #6b7280; }
+        .loading-msg { text-align: center; padding: 20px; color: #00d4ff; font-size: 1rem; }
+        .login-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 2000;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .login-overlay.hidden { display: none; }
+        .login-box {
+            background: #111827; border-radius: 28px; padding: 36px 28px;
+            max-width: 380px; width: 100%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #1e293b;
+        }
+        body.dark .login-box { background: #0c1222; border-color: #1a2332; }
+        .login-box h2 {
+            font-size: 1.5rem; margin-bottom: 8px;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            background-clip: text; -webkit-background-clip: text; color: transparent;
+            display: block; border: none;
+        }
+        .login-box p { font-size: 0.85rem; color: #9ca3af; margin-bottom: 24px; }
+        .login-input {
+            width: 100%; padding: 14px 18px; border-radius: 16px;
+            border: 2px solid #1e293b; background: #1a2332; color: #e0e0e0;
+            font-size: 1rem; font-family: monospace;
+            text-align: center; letter-spacing: 4px; margin-bottom: 16px;
+        }
+        body.dark .login-input {
+            background: #0f1923; color: #e0e0e0; border-color: #1a2332;
+        }
+        .login-btn {
+            width: 100%; padding: 14px; border-radius: 16px;
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white; font-size: 1rem; font-weight: bold; border: none; cursor: pointer;
+        }
+        .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 12px; display: none; }
+        .login-viewer-btn {
+            background: none; border: none; color: #00d4ff; font-size: 0.8rem;
+            margin-top: 16px; cursor: pointer; text-decoration: underline;
+        }
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 1000;
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #111827; border-radius: 24px; padding: 24px;
+            max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 1px solid #1e293b;
+        }
+        body.dark .modal { background: #0c1222; border-color: #1a2332; }
+        .modal h3 { font-size: 1.2rem; margin-bottom: 16px; color: #00d4ff; }
+        body.dark .modal h3 { color: #00d4ff; }
+        .modal-close {
+            float: right; background: #ef4444; color: white; border: none;
+            border-radius: 50%; width: 30px; height: 30px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; justify-content: center;
+        }
+        .payment-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+        .payment-form label {
+            font-size: 0.75rem; font-weight: bold; text-transform: uppercase; color: #f59e0b;
+        }
+        body.dark .payment-form label { color: #fbbf24; }
+        .payment-form input {
+            padding: 10px; border-radius: 12px; border: 1px solid #1e293b;
+            background: #1a2332; color: #e0e0e0; font-family: monospace; font-size: 0.9rem;
+        }
+        body.dark .payment-form input {
+            background: #0f1923; color: #e0e0e0; border-color: #1a2332;
+        }
+        .payment-history-list { max-height: 250px; overflow-y: auto; }
+        .payment-history-entry {
+            padding: 10px; border-bottom: 1px solid #1e293b;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        body.dark .payment-history-entry { border-bottom-color: #1a2332; }
+        .payment-date { font-size: 0.7rem; color: #6b7280; }
+        .payment-amount { font-weight: bold; color: #10b981; }
+        .payment-type {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+            background: #0f1923; color: #10b981; border: 1px solid #1e293b;
+        }
+        body.dark .payment-type { background: #0c1222; color: #10b981; border-color: #1a2332; }
+        .payment-type.partial { background: #1a1910; color: #f59e0b; border-color: #1e293b; }
+        body.dark .payment-type.partial { background: #141310; color: #fbbf24; border-color: #1a2332; }
+        .btn-delete-payment {
+            background: transparent; color: #ef4444; border: none;
+            padding: 2px 6px; font-size: 0.7rem; cursor: pointer; border-radius: 10px;
+        }
+        .pw-form { display: flex; flex-direction: column; gap: 12px; }
+        .pw-form label {
+            font-size: 0.75rem; font-weight: bold; text-transform: uppercase; color: #f59e0b;
+        }
+        body.dark .pw-form label { color: #fbbf24; }
+        .pw-form input {
+            padding: 10px; border-radius: 12px; border: 1px solid #1e293b;
+            background: #1a2332; color: #e0e0e0; font-family: monospace; font-size: 0.9rem;
+        }
+        body.dark .pw-form input {
+            background: #0f1923; color: #e0e0e0; border-color: #1a2332;
+        }
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: inherit !important; }
+        body.is-admin .admin-flex { display: flex !important; }
+        .student-only { display: inherit !important; }
+        body.is-admin .student-only { display: none !important; }
+        .suggestion-card {
+            background: #1a2332; border-radius: 16px; padding: 14px;
+            margin: 8px 0; border-left: 6px solid #f59e0b;
+        }
+        body.dark .suggestion-card { background: #0f1923; border-left-color: #fbbf24; }
+        .suggestion-text { font-size: 0.85rem; line-height: 1.5; color: #e0e0e0; }
+        .suggestion-meta { font-size: 0.7rem; color: #6b7280; margin-top: 6px; }
+        .suggestion-input {
+            width: 100%; padding: 12px; border-radius: 12px;
+            border: 2px solid #1e293b; background: #1a2332; color: #e0e0e0; font-size: 0.9rem; font-family: monospace;
+            resize: vertical; min-height: 80px; margin-bottom: 12px;
+        }
+        body.dark .suggestion-input { background: #0f1923; color: #e0e0e0; border-color: #1a2332; }
+        .suggestion-name-input {
+            width: 100%; padding: 10px 12px; border-radius: 12px;
+            border: 2px solid #1e293b; background: #1a2332; color: #e0e0e0; font-size: 0.9rem; font-family: monospace;
+            margin-bottom: 12px;
+        }
+        body.dark .suggestion-name-input { background: #0f1923; color: #e0e0e0; border-color: #1a2332; }
+        .suggestion-author {
+            font-size: 0.75rem; font-weight: bold; color: #00d4ff; margin-bottom: 4px;
+        }
+        body.dark .suggestion-author { color: #00d4ff; }
+        .gcash-info-main {
+            background: linear-gradient(135deg, #0891b2, #0e7490);
+            border-radius: 16px; padding: 14px; margin: 10px 0 18px; color: white;
+            text-align: center; box-shadow: 0 4px 15px rgba(8,145,178,0.3);
+        }
+        .gcash-info-main .gcash-label { font-size: 0.75rem; opacity: 0.9; }
+        .gcash-info-main .gcash-number { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; margin: 4px 0; }
+        .gcash-info-main .gcash-name { font-size: 0.8rem; opacity: 0.85; }
+        body.dark .gcash-info-main { background: linear-gradient(135deg, #065f75, #0c4a5e); }
+        .gcash-info {
+            background: linear-gradient(135deg, #0891b2, #0e7490);
+            border-radius: 16px; padding: 14px; margin-bottom: 14px; color: white; text-align: center;
+        }
+        .gcash-info .gcash-label { font-size: 0.7rem; opacity: 0.9; }
+        .gcash-info .gcash-number { font-size: 1.3rem; font-weight: 800; letter-spacing: 2px; margin: 4px 0; }
+        .gcash-info .gcash-name { font-size: 0.75rem; opacity: 0.85; }
+        .gcash-instructions {
+            font-size: 0.7rem; color: #9ca3af; margin-bottom: 12px;
+            background: #1a2332; border-radius: 10px; padding: 8px 12px;
+        }
+        body.dark .gcash-instructions { background: #0f1923; color: #9ca3af; }
+        .ref-input {
+            width: 100%; padding: 10px 12px; border-radius: 12px;
+            border: 2px solid #1e293b; background: #1a2332; color: #e0e0e0; font-size: 0.9rem; font-family: monospace; letter-spacing: 1px;
+        }
+        body.dark .ref-input { background: #0f1923; color: #e0e0e0; border-color: #1a2332; }
+        .custom-alert-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .custom-alert-overlay.hidden { display: none; }
+        .custom-alert-box {
+            background: #111827; border-radius: 20px; padding: 24px;
+            max-width: 340px; width: 100%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #1e293b;
+        }
+        body.dark .custom-alert-box { background: #0c1222; border-color: #1a2332; }
+        .custom-alert-title {
+            font-size: 1rem; font-weight: bold; color: #00d4ff;
+            margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #1e293b;
+        }
+        body.dark .custom-alert-title { color: #00d4ff; border-bottom-color: #1a2332; }
+        .custom-alert-msg { font-size: 0.85rem; margin-bottom: 18px; line-height: 1.5; color: #e0e0e0; }
+        .custom-alert-input {
+            width: 100%; padding: 10px 14px; border-radius: 12px;
+            border: 2px solid #1e293b; background: #1a2332; color: #e0e0e0; font-size: 0.85rem; font-family: monospace;
+            margin-bottom: 14px; text-align: center;
+        }
+        body.dark .custom-alert-input { background: #0f1923; color: #e0e0e0; border-color: #1a2332; }
+        .custom-alert-btns { display: flex; gap: 10px; justify-content: center; }
+        .custom-alert-btn { padding: 8px 24px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; }
+        .custom-alert-ok { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; }
+        .custom-alert-cancel { background: #4b5563; color: #e0e0e0; }
+        .snake-segment {
+            position: fixed; width: 10px; height: 10px; border-radius: 50%;
+            z-index: 1; pointer-events: none; opacity: 0.9;
+        }
+        .snake-head { width: 14px; height: 14px; background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.7); z-index: 2; }
+        .snake-head::before {
+            content: ''; position: absolute; top: 2px; left: 3px;
+            width: 3px; height: 3px; background: #fff; border-radius: 50%;
+            box-shadow: 5px 0 0 #fff;
+        }
+        .snake-head::after {
+            content: ''; position: absolute; top: 5px; left: -4px;
+            width: 6px; height: 2px; background: #ef4444;
+            animation: tongueFlick 1.5s ease-in-out infinite;
+            transform-origin: right center;
+        }
+        @keyframes tongueFlick {
+            0%, 70%, 100% { transform: scaleX(0) rotate(0deg); opacity: 0; }
+            75% { transform: scaleX(1) rotate(-15deg); opacity: 1; }
+            80% { transform: scaleX(1) rotate(15deg); opacity: 1; }
+            85% { transform: scaleX(1) rotate(-10deg); opacity: 1; }
+            90% { transform: scaleX(0) rotate(0deg); opacity: 0; }
+        }
+        .runner { position: fixed; z-index: 2; pointer-events: none; }
+        #coupleRunner { animation: runPath 22s linear -2s infinite; }
+        .man-figure, .woman-figure {
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .man-figure { animation-delay: 0.3s; }
+        .woman-figure { animation-delay: 0.3s; }
+        .runner-head { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; }
+        .runner-body { width: 6px; height: 12px; border-radius: 2px; }
+        .runner-legs { width: 6px; height: 10px; position: relative; }
+        .runner-legs::before, .runner-legs::after {
+            content: ''; position: absolute; top: 0; width: 2px; height: 100%;
+            border-radius: 2px; animation: legMove 0.3s ease-in-out infinite alternate;
+        }
+        .runner-legs::before { left: 0; background: #92400e; transform-origin: top; }
+        .runner-legs::after { right: 0; background: #92400e; transform-origin: top; animation-delay: 0.15s; }
+        .runner-arms { width: 18px; height: 3px; position: relative; }
+        .runner-arms::before, .runner-arms::after {
+            content: ''; position: absolute; top: 0; width: 10px; height: 3px;
+            border-radius: 2px; animation: armSwing 0.3s ease-in-out infinite alternate;
+        }
+        .runner-arms::before { left: -10px; background: #fbbf24; transform-origin: right center; }
+        .runner-arms::after { right: -10px; background: #fbbf24; transform-origin: left center; animation-delay: 0.15s; }
+        @keyframes legMove {
+            0% { transform: rotate(-20deg); }
+            100% { transform: rotate(20deg); }
+        }
+        @keyframes armSwing {
+            0% { transform: rotate(-15deg); }
+            100% { transform: rotate(15deg); }
+        }
+        @keyframes runPath {
+            0%   { left: 30px; top: 26px; }
+            6%   { left: 20vw; top: 30px; }
+            12%  { left: 40vw; top: 24px; }
+            18%  { left: 60vw; top: 30px; }
+            24%  { left: 80vw; top: 24px; }
+            24.9%{ left: calc(100vw - 30px); top: 28px; }
+            25%  { left: calc(100vw - 30px); top: 26px; }
+            31%  { left: calc(100vw - 34px); top: 20vh; }
+            37%  { left: calc(100vw - 28px); top: 40vh; }
+            43%  { left: calc(100vw - 34px); top: 60vh; }
+            49%  { left: calc(100vw - 28px); top: 80vh; }
+            49.9%{ left: calc(100vw - 32px); top: calc(100vh - 26px); }
+            50%  { left: calc(100vw - 30px); top: calc(100vh - 26px); }
+            56%  { left: 80vw; top: calc(100vh - 30px); }
+            62%  { left: 60vw; top: calc(100vh - 24px); }
+            68%  { left: 40vw; top: calc(100vh - 30px); }
+            74%  { left: 20vw; top: calc(100vh - 24px); }
+            74.9%{ left: 30px; top: calc(100vh - 28px); }
+            75%  { left: 30px; top: calc(100vh - 26px); }
+            81%  { left: 34px; top: 80vh; }
+            87%  { left: 28px; top: 60vh; }
+            93%  { left: 34px; top: 40vh; }
+            99%  { left: 28px; top: 20vh; }
+            99.9%{ left: 30px; top: 26px; }
+            100% { left: 30px; top: 26px; }
+        }
+        @keyframes runBounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-4px); }
+        }
+        .bird { position: fixed; z-index: 1; pointer-events: none; }
+        .bird { width: 24px; height: 8px; animation: flyBird 6s linear infinite; }
+        .bird::before, .bird::after {
+            content: ''; position: absolute; top: 0; width: 12px; height: 3px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 50% 50% 0 0;
+        }
+        .bird::before { left: 0; transform-origin: bottom right; animation: flapWing 0.4s ease-in-out infinite alternate; }
+        .bird::after { right: 0; transform-origin: bottom left; animation: flapWing 0.4s ease-in-out infinite alternate reverse; }
+        .bird:nth-of-type(1) { top: 60px; animation-delay: 0s; }
+        .bird:nth-of-type(2) { top: 120px; animation-delay: 2s; animation-duration: 5s; }
+        .bird:nth-of-type(3) { top: 180px; animation-delay: 4s; animation-duration: 7s; }
+        @keyframes flapWing {
+            0% { transform: rotateX(0deg) translateY(0); }
+            100% { transform: rotateX(30deg) translateY(-4px); }
+        }
+        @keyframes flyBird {
+            0%   { left: -30px; transform: translateY(0) scaleX(1); opacity: 0; }
+            5%   { opacity: 1; }
+            25%  { transform: translateY(-12px) scaleX(1); }
+            50%  { transform: translateY(6px) scaleX(1); }
+            75%  { transform: translateY(-8px) scaleX(1); }
+            95%  { opacity: 1; }
+            100% { left: calc(100vw + 30px); transform: translateY(0) scaleX(1); opacity: 0; }
+        }
+        .snake-body { width: 10px; height: 10px; background: #16a34a; box-shadow: 0 0 4px rgba(22,163,74,0.5); }
+        .snake-tail { width: 6px; height: 6px; background: #15803d; opacity: 0.6; }
+        .snake-segment { animation: snakePath 22s linear infinite; }
+        .snake-s0  { animation-delay: 0s; }
+        .snake-s1  { animation-delay: 0.1s; }
+        .snake-s2  { animation-delay: 0.2s; }
+        .snake-s3  { animation-delay: 0.3s; }
+        .snake-s4  { animation-delay: 0.4s; }
+        .snake-s5  { animation-delay: 0.5s; }
+        .snake-s6  { animation-delay: 0.6s; }
+        .snake-s7  { animation-delay: 0.7s; }
+        .snake-s8  { animation-delay: 0.8s; }
+        .snake-s9  { animation-delay: 0.9s; }
+        .snake-s10 { animation-delay: 1.0s; }
+        .snake-s11 { animation-delay: 1.1s; }
+        .snake-s12 { animation-delay: 1.2s; }
+        .snake-s13 { animation-delay: 1.3s; }
+        .snake-s14 { animation-delay: 1.4s; }
+        @keyframes snakePath {
+            0%   { left: 10px; top: 10px; }
+            6%   { left: 20vw; top: 14px; }
+            12%  { left: 40vw; top: 8px; }
+            18%  { left: 60vw; top: 14px; }
+            24%  { left: 80vw; top: 8px; }
+            24.9%{ left: calc(100vw - 10px); top: 12px; }
+            25%  { left: calc(100vw - 10px); top: 10px; }
+            31%  { left: calc(100vw - 14px); top: 20vh; }
+            37%  { left: calc(100vw - 8px); top: 40vh; }
+            43%  { left: calc(100vw - 14px); top: 60vh; }
+            49%  { left: calc(100vw - 8px); top: 80vh; }
+            49.9%{ left: calc(100vw - 12px); top: calc(100vh - 10px); }
+            50%  { left: calc(100vw - 10px); top: calc(100vh - 10px); }
+            56%  { left: 80vw; top: calc(100vh - 14px); }
+            62%  { left: 60vw; top: calc(100vh - 8px); }
+            68%  { left: 40vw; top: calc(100vh - 14px); }
+            74%  { left: 20vw; top: calc(100vh - 8px); }
+            74.9%{ left: 10px; top: calc(100vh - 12px); }
+            75%  { left: 10px; top: calc(100vh - 10px); }
+            81%  { left: 14px; top: 80vh; }
+            87%  { left: 8px; top: 60vh; }
+            93%  { left: 14px; top: 40vh; }
+            99%  { left: 8px; top: 20vh; }
+            99.9%{ left: 10px; top: 10px; }
+            100% { left: 10px; top: 10px; }
+        }
+        .star {
+            position: fixed; width: 3px; height: 3px; background: #fbbf24; border-radius: 50%;
+            z-index: 0; pointer-events: none; opacity: 0;
+            box-shadow: 0 0 6px 2px rgba(251,191,36,0.5);
+        }
+        .star:nth-child(1)  { left: 2%; animation: fallStar 8s linear 0s infinite; }
+        .star:nth-child(2)  { left: 5%; animation: fallStar 12s linear 2s infinite; }
+        .star:nth-child(3)  { left: 8%; animation: fallStar 10s linear 4s infinite; }
+        .star:nth-child(4)  { left: 12%; animation: fallStar 9s linear 1s infinite; }
+        .star:nth-child(5)  { left: 16%; animation: fallStar 11s linear 3s infinite; }
+        .star:nth-child(6)  { left: 20%; animation: fallStar 10s linear 5s infinite; }
+        .star:nth-child(7)  { left: 26%; animation: fallStar 8s linear 0.5s infinite; }
+        .star:nth-child(8)  { left: 32%; animation: fallStar 13s linear 2.5s infinite; }
+        .star:nth-child(9)  { left: 38%; animation: fallStar 9s linear 4.5s infinite; }
+        .star:nth-child(10) { left: 42%; animation: fallStar 11s linear 1.5s infinite; }
+        .star:nth-child(11) { left: 48%; animation: fallStar 10s linear 3.5s infinite; }
+        .star:nth-child(12) { left: 54%; animation: fallStar 12s linear 0.8s infinite; }
+        .star:nth-child(13) { left: 60%; animation: fallStar 9s linear 2.2s infinite; }
+        .star:nth-child(14) { left: 66%; animation: fallStar 11s linear 5.5s infinite; }
+        .star:nth-child(15) { left: 72%; animation: fallStar 10s linear 1.8s infinite; }
+        .star:nth-child(16) { left: 78%; animation: fallStar 8s linear 3.2s infinite; }
+        .star:nth-child(17) { left: 83%; animation: fallStar 13s linear 0.3s infinite; }
+        .star:nth-child(18) { left: 88%; animation: fallStar 9s linear 4.8s infinite; }
+        .star:nth-child(19) { left: 93%; animation: fallStar 11s linear 2.7s infinite; }
+        .star:nth-child(20) { left: 97%; animation: fallStar 10s linear 1.2s infinite; }
+        @keyframes fallStar {
+            0%   { top: -10px; opacity: 0; }
+            10%  { opacity: 1; }
+            80%  { opacity: 0.8; }
+            100% { top: 110vh; opacity: 0; transform: translateX(30px); }
+        }
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .student-entry { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    <div class="bird">🐦</div>
+    <div class="bird">🐦</div>
+    <div class="bird">🐦</div>
+    <div class="runner" id="coupleRunner">
+        <div style="display:flex;align-items:center;font-size:1.2rem;line-height:1;">
+            <span style="animation:runBounce 0.3s ease-in-out infinite alternate;">🏃</span>
+            <span style="animation:runBounce 0.3s ease-in-out infinite alternate 0.15s;">🏃‍♀️</span>
+        </div>
+    </div>
+    <div class="snake-segment snake-head snake-s0"></div>
+    <div class="snake-segment snake-body snake-s1"></div>
+    <div class="snake-segment snake-body snake-s2"></div>
+    <div class="snake-segment snake-body snake-s3"></div>
+    <div class="snake-segment snake-body snake-s4"></div>
+    <div class="snake-segment snake-body snake-s5"></div>
+    <div class="snake-segment snake-body snake-s6"></div>
+    <div class="snake-segment snake-body snake-s7"></div>
+    <div class="snake-segment snake-body snake-s8"></div>
+    <div class="snake-segment snake-body snake-s9"></div>
+    <div class="snake-segment snake-body snake-s10"></div>
+    <div class="snake-segment snake-body snake-s11"></div>
+    <div class="snake-segment snake-body snake-s12"></div>
+    <div class="snake-segment snake-body snake-s13"></div>
+    <div class="snake-segment snake-tail snake-s14"></div>
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🔐 Fines Manager</h2>
+            <p>Enter admin password or continue as student</p>
+            <input type="password" class="login-input" id="loginPassword" placeholder="••••••••" maxlength="30">
+            <button class="login-btn" id="loginBtn">🔓 Admin Login</button>
+            <div class="login-error" id="loginError">❌ Wrong password!</div>
+            <button class="login-viewer-btn" id="viewAsGuest">👨‍🎓 Continue as Student</button>
+        </div>
+    </div>
+
+    <div class="header-bar">
+        <h1>📋 BSIS Fines Manager</h1>
+        <div class="header-buttons">
+            <span id="roleBadge" class="viewer-badge">👨‍🎓 Student</span>
+            <button class="dark-toggle" id="darkToggle">🌙</button>
+            <button class="admin-btn admin-only" id="changePwBtn">🔑 Password</button>
+            <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="title-wrapper">
+            <h2>STUDENT FINES</h2>
+            <div class="date-badge" id="date"></div>
+        </div>
+
+        <div class="section-selector admin-only">
+            <label>📚 Section:</label>
+            <select id="sectionSelect"></select>
+            <button class="btn-add-section" id="addSectionBtn">➕ New Section</button>
+        </div>
+        <div class="section-selector" style="justify-content:center;">
+            <label>📚 Section:</label>
+            <select id="sectionSelectView"></select>
+        </div>
+
+        <div class="gcash-info-main" id="mainGcashBox">
+            <div class="gcash-label">💳 Bayad gamit GCash!!</div>
+            <div class="gcash-number" id="mainGcashNumber">09XXXXXXXXX</div>
+            <div class="gcash-name" id="mainGcashName">Secretary</div>
+            <div style="font-size:0.75rem;margin-top:5px;opacity:0.9;">Send payment → Copy Ref# → Show to Secretary</div>
+        </div>
+
+        <div class="stats-panel" id="statsPanel">
+            <div class="stat-card"><div class="stat-label">Students</div><div class="stat-value" id="statTotalStudents">0</div></div>
+            <div class="stat-card"><div class="stat-label">Total Fines</div><div class="stat-value" id="statTotalFines">₱0</div></div>
+            <div class="stat-card"><div class="stat-label">Average</div><div class="stat-value" id="statAvgFine">₱0</div></div>
+            <div class="stat-card"><div class="stat-label">Highest</div><div class="stat-value" id="statHighestFine">₱0</div></div>
+            <div class="stat-card"><div class="stat-label">Paid/Unpaid</div><div class="stat-value" id="statPaidUnpaid">0/0</div></div>
+            <div class="stat-card"><div class="stat-label">Collected</div><div class="stat-value" id="statCollected">₱0</div></div>
+        </div>
+
+        <div class="input-panel admin-only">
+            <div class="input-group">
+                <div class="field"><label>👤 Full Name</label><input type="text" id="studentName" placeholder="e.g., Maria Santos"></div>
+                <div class="field"><label>⚥ Gender</label><select id="studentGender"><option value="male">♂ Male</option><option value="female">♀ Female</option><option value="non-binary">⚧ Non-binary</option></select></div>
+                <div class="field"><label>💰 Fine (₱)</label><input type="number" id="studentFine" placeholder="0.00" step="0.01" value="0"></div>
+                <div class="field"><label>📊 Status</label><select id="studentStatus"><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div>
+                <div class="action-buttons"><button id="addBtn">➕ ADD</button><button id="clearFormBtn" class="btn-clear">🗑️ Clear</button></div>
+            </div>
+        </div>
+
+        <div class="search-filter-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Search...">
+            <select id="filterGender"><option value="all">All Genders</option><option value="male">Male</option><option value="female">Female</option></select>
+            <select id="filterStatus"><option value="all">All Status</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select>
+            <select id="sortBy"><option value="name">Name</option><option value="fine-high">Fine ↓</option><option value="fine-low">Fine ↑</option></select>
+        </div>
+
+        <div class="fines-list-section">
+            <div class="list-header">
+                <span>📌 FINES LEDGER</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-payment" id="exportPaymentsBtn">📥 Payments CSV</button>
+                    <button class="btn-export" id="exportCsvBtn">📥 Fines CSV</button>
+                </div>
+            </div>
+            <div class="student-list" id="studentListContainer"><div class="loading-msg">Loading...</div></div>
+            <div class="total-fines"><span>💰 TOTAL FINES</span><span id="totalAmount">₱ 0.00</span></div>
+            <div style="text-align:center;margin-top:14px;">
+                <button class="btn-payment" id="openSuggestionsBtn" style="font-size:0.85rem;padding:10px 22px;">💡 Feature Suggestions</button>
+            </div>
+            <div class="credits">Credits: Website Developer: <span>Jonard Suete</span></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closePaymentModal()">✕</button>
+            <h3 id="paymentModalTitle">💳 Payment History</h3>
+            <div class="gcash-info" id="gcashInfoBox">
+                <div class="gcash-label">Send payment to GCash</div>
+                <div class="gcash-number" id="gcashNumber">09XXXXXXXXX</div>
+                <div class="gcash-name" id="gcashName">Secretary</div>
+            </div>
+            <div class="gcash-instructions">
+                1️⃣ Open GCash app → Send Money → Enter number above<br>
+                2️⃣ Enter exact amount → Copy Reference Number<br>
+                3️⃣ Paste reference number below
+            </div>
+            <div class="payment-form student-only" id="paymentForm">
+                <label>Payment Amount (₱)</label><input type="number" id="paymentAmount" step="0.01" placeholder="0.00">
+                <label>GCash Reference Number</label><input type="text" id="paymentRef" placeholder="e.g., 123456789012" maxlength="20" class="ref-input">
+                <label>Date</label><input type="date" id="paymentDate">
+                <label>Note (optional)</label><input type="text" id="paymentNote" placeholder="e.g., Partial payment">
+                <button id="submitPaymentBtn">✅ Complete Payment</button>
+            </div>
+            <div class="payment-history-list" id="paymentHistoryList"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="changePwModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeChangePwModal()">✕</button>
+            <h3>🔑 Change Password</h3>
+            <div class="pw-form">
+                <label>Current Password</label><input type="password" id="currentPw" placeholder="••••••••">
+                <label>New Password</label><input type="password" id="newPw" placeholder="••••••••">
+                <label>Confirm New Password</label><input type="password" id="confirmPw" placeholder="••••••••">
+                <button id="savePwBtn">💾 Save Password</button>
+                <div style="border-top:2px dashed #e9e2b3;margin:14px 0;"></div>
+                <h4 style="font-size:0.85rem;margin-bottom:8px;color:#2d3e5f;">💳 GCash Settings</h4>
+                <label>GCash Number</label><input type="text" id="settingsGcashNumber" placeholder="09XXXXXXXXX" maxlength="11">
+                <label>GCash Account Name</label><input type="text" id="settingsGcashName" placeholder="e.g., Juan Dela Cruz">
+                <button id="saveGcashBtn">💾 Save GCash Info</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="suggestionModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeSuggestionModal()">✕</button>
+            <h3>💡 Feature Suggestions</h3>
+            <p style="font-size:0.8rem;color:#888;margin-bottom:14px;">Share your ideas! What features do you want to see next?</p>
+            <input type="text" class="suggestion-name-input" id="suggestionName" placeholder="👤 Your Name" maxlength="50">
+            <textarea class="suggestion-input" id="suggestionText" placeholder="e.g., Add attendance tracker, export to PDF, etc." maxlength="500"></textarea>
+            <button id="submitSuggestionBtn" style="width:100%;padding:12px;border-radius:12px;font-size:0.95rem;margin-bottom:16px;">📤 Submit Suggestion</button>
+            <h4 style="font-size:0.9rem;margin-bottom:10px;color:#2d3e5f;">📋 All Suggestions</h4>
+            <div id="suggestionsList" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div class="custom-alert-overlay hidden" id="customAlertOverlay">
+        <div class="custom-alert-box">
+            <div class="custom-alert-title">Jonard Suete</div>
+            <div class="custom-alert-msg" id="customAlertMsg"></div>
+            <input type="text" class="custom-alert-input" id="customAlertInput" style="display:none;">
+            <div class="custom-alert-btns" id="customAlertBtns"></div>
+        </div>
+    </div>
+
+    <input type="file" id="photoUploadInput" accept="image/*" style="display:none;">
+
+    <script>
+    // Login handlers — run immediately, no Firebase dependency
+    (function() {
+        var overlay = document.getElementById('loginOverlay');
+        var pwInput = document.getElementById('loginPassword');
+        var loginBtn = document.getElementById('loginBtn');
+        var guestBtn = document.getElementById('viewAsGuest');
+        var errEl = document.getElementById('loginError');
+        var badge = document.getElementById('roleBadge');
+
+        function getPw() { return localStorage.getItem('fm_admin_pw') || 'admin123'; }
+
+        function enterApp(admin) {
+            window.__isAdmin = admin;
+            overlay.classList.add('hidden');
+            badge.className = admin ? 'admin-badge' : 'viewer-badge';
+            badge.textContent = admin ? '👑 Admin' : '👨‍🎓 Student';
+            errEl.style.display = 'none';
+            document.body.classList.toggle('is-admin', admin);
+            if (window.__fireLogin) window.__fireLogin();
+        }
+
+        loginBtn.addEventListener('click', function() {
+            if (pwInput.value === getPw()) enterApp(true);
+            else { errEl.style.display = 'block'; pwInput.value = ''; }
+        });
+        pwInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') loginBtn.click(); });
+        guestBtn.addEventListener('click', function() { enterApp(false); });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            window.__isAdmin = false;
+            document.body.classList.remove('is-admin');
+            if (window.__unsubscribeAll) window.__unsubscribeAll();
+            overlay.classList.remove('hidden');
+            pwInput.value = '';
+            errEl.style.display = 'none';
+            badge.className = 'viewer-badge';
+            badge.textContent = '👨‍🎓 Student';
+        });
+    })();
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDsIdF5cgxBsvgNvkOWeoo_iatRVXWxJb8",
+            authDomain: "jonarddatabase.firebaseapp.com",
+            projectId: "jonarddatabase",
+            storageBucket: "jonarddatabase.firebasestorage.app",
+            messagingSenderId: "248860715226",
+            appId: "1:248860715226:web:d38098372124b87780dde3",
+            measurementId: "G-QJR22WRHN1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let students = [];
+        let sections = [];
+        let currentSectionId = null;
+        let editModeId = null;
+        let searchQuery = '';
+        let filterGender = 'all';
+        let filterStatus = 'all';
+        let sortBy = 'name';
+        let currentPaymentStudentId = null;
+        let unsubscribeSections = null;
+        let unsubscribeStudents = null;
+        let unsubscribeSuggestions = null;
+        let suggestions = [];
+        let photoUploadStudentId = null;
+
+        const loginOverlay = document.getElementById('loginOverlay');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const viewAsGuest = document.getElementById('viewAsGuest');
+        const roleBadge = document.getElementById('roleBadge');
+        const darkToggle = document.getElementById('darkToggle');
+        const changePwBtn = document.getElementById('changePwBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const changePwModal = document.getElementById('changePwModal');
+        const currentPw = document.getElementById('currentPw');
+        const newPw = document.getElementById('newPw');
+        const confirmPw = document.getElementById('confirmPw');
+        const savePwBtn = document.getElementById('savePwBtn');
+        const settingsGcashNumber = document.getElementById('settingsGcashNumber');
+        const settingsGcashName = document.getElementById('settingsGcashName');
+        const saveGcashBtn = document.getElementById('saveGcashBtn');
+        const sectionSelect = document.getElementById('sectionSelect');
+        const sectionSelectView = document.getElementById('sectionSelectView');
+        const addSectionBtn = document.getElementById('addSectionBtn');
+        const nameInput = document.getElementById('studentName');
+        const genderSelect = document.getElementById('studentGender');
+        const fineInput = document.getElementById('studentFine');
+        const statusSelect = document.getElementById('studentStatus');
+        const addBtn = document.getElementById('addBtn');
+        const clearFormBtn = document.getElementById('clearFormBtn');
+        const studentListContainer = document.getElementById('studentListContainer');
+        const searchInput = document.getElementById('searchInput');
+        const filterGenderSelect = document.getElementById('filterGender');
+        const filterStatusSelect = document.getElementById('filterStatus');
+        const sortBySelect = document.getElementById('sortBy');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportPaymentsBtn = document.getElementById('exportPaymentsBtn');
+        const paymentModal = document.getElementById('paymentModal');
+        const paymentAmount = document.getElementById('paymentAmount');
+        const paymentDate = document.getElementById('paymentDate');
+        const paymentNote = document.getElementById('paymentNote');
+        const paymentRef = document.getElementById('paymentRef');
+        const gcashNumber = document.getElementById('gcashNumber');
+        const gcashName = document.getElementById('gcashName');
+        const mainGcashNumber = document.getElementById('mainGcashNumber');
+        const mainGcashName = document.getElementById('mainGcashName');
+        const submitPaymentBtn = document.getElementById('submitPaymentBtn');
+        const paymentHistoryList = document.getElementById('paymentHistoryList');
+        const paymentModalTitle = document.getElementById('paymentModalTitle');
+        const suggestionModal = document.getElementById('suggestionModal');
+        const suggestionName = document.getElementById('suggestionName');
+        const suggestionText = document.getElementById('suggestionText');
+        const submitSuggestionBtn = document.getElementById('submitSuggestionBtn');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const openSuggestionsBtn = document.getElementById('openSuggestionsBtn');
+        const customAlertOverlay = document.getElementById('customAlertOverlay');
+        const customAlertMsg = document.getElementById('customAlertMsg');
+        const customAlertInput = document.getElementById('customAlertInput');
+        const customAlertBtns = document.getElementById('customAlertBtns');
+        const photoUploadInput = document.getElementById('photoUploadInput');
+
+        document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Use getIsAdmin() from inline script
+        function getIsAdmin() { return window.__isAdmin === true; }
+        function getAdminPassword() { return localStorage.getItem('fm_admin_pw') || 'admin123'; }
+
+        function showAlert(msg) {
+            return new Promise((resolve) => {
+                customAlertMsg.textContent = msg;
+                customAlertInput.style.display = 'none';
+                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caOk">OK</button>';
+                customAlertOverlay.classList.remove('hidden');
+                document.getElementById('caOk').onclick = () => { customAlertOverlay.classList.add('hidden'); resolve(); };
+            });
+        }
+
+        function showConfirm(msg) {
+            return new Promise((resolve) => {
+                customAlertMsg.textContent = msg;
+                customAlertInput.style.display = 'none';
+                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="caNo">Cancel</button><button class="custom-alert-btn custom-alert-ok" id="caYes">OK</button>';
+                customAlertOverlay.classList.remove('hidden');
+                document.getElementById('caYes').onclick = () => { customAlertOverlay.classList.add('hidden'); resolve(true); };
+                document.getElementById('caNo').onclick = () => { customAlertOverlay.classList.add('hidden'); resolve(false); };
+            });
+        }
+
+        function showPrompt(msg, defaultVal = '') {
+            return new Promise((resolve) => {
+                customAlertMsg.textContent = msg;
+                customAlertInput.style.display = 'block';
+                customAlertInput.value = defaultVal;
+                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="caCancel">Cancel</button><button class="custom-alert-btn custom-alert-ok" id="caSubmit">OK</button>';
+                customAlertOverlay.classList.remove('hidden');
+                customAlertInput.focus();
+                document.getElementById('caCancel').onclick = () => { customAlertOverlay.classList.add('hidden'); resolve(null); };
+                document.getElementById('caSubmit').onclick = () => { customAlertOverlay.classList.add('hidden'); resolve(customAlertInput.value); };
+                customAlertInput.onkeypress = (e) => { if (e.key === 'Enter') { customAlertOverlay.classList.add('hidden'); resolve(customAlertInput.value); } };
+            });
+        }
+
+        // Called by inline login script after successful login/guest entry
+        window.__fireLogin = function() {
+            document.body.classList.toggle('is-admin', getIsAdmin());
+            initApp();
+        };
+
+        // Auto-init if user already logged in before module loaded
+        if (window.__isAdmin === true || window.__isAdmin === false) {
+            document.body.classList.toggle('is-admin', getIsAdmin());
+            initApp();
+        }
+
+        changePwBtn.addEventListener('click', () => {
+            changePwModal.classList.add('active');
+            currentPw.value = ''; newPw.value = ''; confirmPw.value = '';
+            settingsGcashNumber.value = localStorage.getItem('fm_gcash_number') || '';
+            settingsGcashName.value = localStorage.getItem('fm_gcash_name') || '';
+        });
+
+        savePwBtn.addEventListener('click', async () => {
+            if (currentPw.value !== getAdminPassword()) { await showAlert('Current password is wrong!'); return; }
+            if (newPw.value.length < 4) { await showAlert('Password must be at least 4 characters!'); return; }
+            if (newPw.value !== confirmPw.value) { await showAlert('New passwords do not match!'); return; }
+            localStorage.setItem('fm_admin_pw', newPw.value);
+            await showAlert('✅ Password changed!');
+            closeChangePwModal();
+        });
+
+        saveGcashBtn.addEventListener('click', async () => {
+            const num = settingsGcashNumber.value.trim();
+            const name = settingsGcashName.value.trim();
+            if (!num || num.length < 11) { await showAlert('Enter a valid 11-digit GCash number'); return; }
+            if (!name) { await showAlert('Enter the GCash account name'); return; }
+            localStorage.setItem('fm_gcash_number', num);
+            localStorage.setItem('fm_gcash_name', name);
+            await showAlert('✅ GCash info saved!');
+            updateMainGcash();
+        });
+
+        function closeChangePwModal() { changePwModal.classList.remove('active'); }
+        window.closeChangePwModal = closeChangePwModal;
+        changePwModal.addEventListener('click', (e) => { if (e.target === changePwModal) closeChangePwModal(); });
+
+        function loadDarkMode() {
+            const isDark = localStorage.getItem('fm_dark') === 'true';
+            document.body.classList.toggle('dark', isDark);
+            darkToggle.textContent = isDark ? '☀️' : '🌙';
+        }
+        darkToggle.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark');
+            document.body.classList.toggle('dark', isDark);
+            localStorage.setItem('fm_dark', isDark);
+            darkToggle.textContent = isDark ? '☀️' : '🌙';
+        });
+        loadDarkMode();
+
+        function nextId(arr) { return arr.length > 0 ? Math.max(...arr.map(x => x.id)) + 1 : 1; }
+
+        function updateMainGcash() {
+            const num = localStorage.getItem('fm_gcash_number') || '09XXXXXXXXX';
+            const name = localStorage.getItem('fm_gcash_name') || 'Secretary';
+            if (mainGcashNumber) mainGcashNumber.textContent = num;
+            if (mainGcashName) mainGcashName.textContent = name;
+        }
+
+        function initApp() {
+            updateMainGcash();
+            loadSections();
+            if (!getIsAdmin()) updateStudentLastOnline();
+        }
+
+        let heartbeatInterval = null;
+        function updateStudentLastOnline() {
+            const sid = localStorage.getItem('fm_student_session_id');
+            if (!sid) return;
+            updateDoc(doc(db, 'students', sid), { lastOnline: Date.now() }).catch(() => {});
+        }
+        function startHeartbeat(sid) {
+            localStorage.setItem('fm_student_session_id', sid);
+            updateDoc(doc(db, 'students', sid), { lastOnline: Date.now() }).catch(() => {});
+            heartbeatInterval = setInterval(updateStudentLastOnline, 30000);
+        }
+        function stopHeartbeat() {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            localStorage.removeItem('fm_student_session_id');
+        }
+        window.__startStudentSession = function(studentId) {
+            stopHeartbeat();
+            startHeartbeat(studentId);
+        };
+
+        window.__unsubscribeAll = function() {
+            if (unsubscribeSections) unsubscribeSections();
+            if (unsubscribeStudents) unsubscribeStudents();
+            if (unsubscribeSuggestions) unsubscribeSuggestions();
+            stopHeartbeat();
+        };
+
+        function loadSections() {
+            if (unsubscribeSections) unsubscribeSections();
+            const q = query(collection(db, 'sections'), orderBy('order'));
+            unsubscribeSections = onSnapshot(q, (snapshot) => {
+                sections = [];
+                snapshot.forEach((d) => sections.push({ id: parseInt(d.id), ...d.data() }));
+                if (sections.length === 0) {
+                    const defaultId = Date.now();
+                    setDoc(doc(db, 'sections', String(defaultId)), { name: 'BSIS-1A', order: 0 });
+                }
+                const html = sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+                sectionSelect.innerHTML = html;
+                sectionSelectView.innerHTML = html;
+                if (sections.length > 0 && !currentSectionId) {
+                    currentSectionId = sections[0].id;
+                    loadStudents();
+                }
+            });
+        }
+
+        function loadStudents() {
+            if (unsubscribeStudents) unsubscribeStudents();
+            studentListContainer.innerHTML = '<div class="loading-msg">Loading students...</div>';
+            const q = query(collection(db, 'students'), orderBy('name'));
+            let prompted = false;
+            unsubscribeStudents = onSnapshot(q, (snapshot) => {
+                students = [];
+                snapshot.forEach((d) => students.push({ id: parseInt(d.id), ...d.data() }));
+                students = students.filter(s => s.section_id === currentSectionId);
+                renderStudentList();
+                updateStats();
+                if (!getIsAdmin() && !prompted) {
+                    prompted = true;
+                    const sid = localStorage.getItem('fm_student_session_id');
+                    const pw = sid ? localStorage.getItem('fm_student_pw_' + sid) : null;
+                    if (sid && students.find(s => String(s.id) === String(sid)) && pw) {
+                        startHeartbeat(sid);
+                    } else if (students.length > 0) {
+                        stopHeartbeat();
+                        promptStudentSelect();
+                    }
+                }
+            });
+        }
+
+        function promptStudentSelect() {
+            const activeSid = localStorage.getItem('fm_student_session_id');
+            document.querySelector('.custom-alert-title').textContent = 'Jonard Suete says!!';
+            customAlertMsg.innerHTML = `
+                <label style="font-size:0.8rem;font-weight:bold;display:block;">👤 Search your name:</label>
+                <input type="text" id="studentSessionInput" placeholder="Type your name..." style="width:100%;padding:8px;margin-top:6px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
+                <div id="sessionMatches" style="max-height:120px;overflow-y:auto;margin-top:6px;"></div>
+            `;
+            customAlertInput.style.display = 'none';
+            customAlertBtns.innerHTML = '';
+            customAlertOverlay.classList.remove('hidden');
+            const inp = document.getElementById('studentSessionInput');
+            const matchBox = document.getElementById('sessionMatches');
+            inp.focus();
+            inp.addEventListener('input', function() {
+                const q = inp.value.toLowerCase();
+                if (!q) { matchBox.innerHTML = ''; return; }
+                const matches = students.filter(s => s.name.toLowerCase().includes(q));
+                if (matches.length === 0) { matchBox.innerHTML = '<div style="padding:8px;font-size:0.75rem;color:#999;">No matches found</div>'; return; }
+                matchBox.innerHTML = matches.slice(0, 8).map(s => `<div onclick="window.__pickSession('${s.id}')" style="padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer;font-size:0.8rem;border-radius:6px;${String(s.id) === String(activeSid) ? 'background:#e8f4e8;font-weight:bold;' : ''}">${escapeHtml(s.name)}${String(s.id) === String(activeSid) ? ' ✓' : ''}</div>`).join('');
+            });
+        }
+        window.__pickSession = function(id) {
+            customAlertOverlay.classList.add('hidden');
+            promptStudentPassword(id);
+        };
+        function promptStudentPassword(studentId) {
+            const student = students.find(s => String(s.id) === String(studentId));
+            if (!student) return;
+            const existingPw = localStorage.getItem('fm_student_pw_' + studentId);
+            document.querySelector('.custom-alert-title').textContent = '🔐 ' + student.name;
+            if (existingPw) {
+                customAlertMsg.innerHTML = `
+                    <label style="font-size:0.75rem;font-weight:bold;display:block;">Enter your password:</label>
+                    <input type="password" id="studentPwInput" placeholder="••••••••" style="width:100%;padding:10px;margin-top:6px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
+                    <div style="text-align:center;margin-top:8px;"><a id="forgotPwLink" style="font-size:0.7rem;color:#4682b4;cursor:pointer;text-decoration:underline;">🔑 Forgot password? Create new one</a></div>
+                `;
+                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caPwOk">🔓 Enter</button>';
+                customAlertInput.style.display = 'none';
+                customAlertOverlay.classList.remove('hidden');
+                const pwIn = document.getElementById('studentPwInput');
+                pwIn.focus();
+                const checkPw = () => {
+                    if (pwIn.value === existingPw) {
+                        customAlertOverlay.classList.add('hidden');
+                        document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
+                        startHeartbeat(studentId);
+                    } else {
+                        pwIn.style.borderColor = '#dc3545';
+                        pwIn.value = '';
+                        pwIn.placeholder = 'Wrong! Try again';
+                        setTimeout(() => { pwIn.style.borderColor = '#e2cf9a'; pwIn.placeholder = '••••••••'; }, 1500);
+                    }
+                };
+                document.getElementById('caPwOk').onclick = checkPw;
+                pwIn.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); checkPw(); } });
+                document.getElementById('forgotPwLink').onclick = function() {
+                    customAlertOverlay.classList.add('hidden');
+                    promptCreateNewPassword(studentId);
+                };
+            } else {
+                customAlertMsg.innerHTML = `
+                    <p style="font-size:0.75rem;color:#888;margin-bottom:10px;">No password yet. Create one for your account:</p>
+                    <input type="password" id="newStudentPw" placeholder="New password (4+ chars)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
+                    <input type="password" id="confirmStudentPw" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
+                    <div id="createPwError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
+                `;
+                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caCreatePw">✅ Create</button>';
+                customAlertInput.style.display = 'none';
+                customAlertOverlay.classList.remove('hidden');
+                const newPw = document.getElementById('newStudentPw');
+                const confPw = document.getElementById('confirmStudentPw');
+                const errEl = document.getElementById('createPwError');
+                newPw.focus();
+                const doCreate = function() {
+                    const p1 = newPw.value;
+                    const p2 = confPw.value;
+                    if (p1.length < 4) { errEl.textContent = 'Password must be at least 4 characters!'; errEl.style.display = 'block'; return; }
+                    if (p1 !== p2) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
+                    localStorage.setItem('fm_student_pw_' + studentId, p1);
+                    customAlertOverlay.classList.add('hidden');
+                    document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
+                    startHeartbeat(studentId);
+                    customAlertMsg.textContent = '✅ Password created successfully!';
+                    customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caOk">OK</button>';
+                    customAlertInput.style.display = 'none';
+                    customAlertOverlay.classList.remove('hidden');
+                    document.getElementById('caOk').onclick = function() { customAlertOverlay.classList.add('hidden'); };
+                };
+                document.getElementById('caCreatePw').onclick = doCreate;
+                confPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doCreate(); } });
+                newPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); confPw.focus(); } });
+            }
+        }
+        function promptCreateNewPassword(studentId) {
+            const student = students.find(s => String(s.id) === String(studentId));
+            if (!student) return;
+            document.querySelector('.custom-alert-title').textContent = '🔐 Reset ' + student.name;
+            customAlertMsg.innerHTML = `
+                <p style="font-size:0.7rem;color:#888;margin-bottom:10px;">Create a new password (old one will be deleted):</p>
+                <input type="password" id="newStudentPw2" placeholder="New password (4+ chars)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
+                <input type="password" id="confirmStudentPw2" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
+                <div id="resetPwError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
+            `;
+            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caResetPw">✅ Reset</button>';
+            customAlertInput.style.display = 'none';
+            customAlertOverlay.classList.remove('hidden');
+            const newPw = document.getElementById('newStudentPw2');
+            const confPw = document.getElementById('confirmStudentPw2');
+            const errEl = document.getElementById('resetPwError');
+            newPw.focus();
+            const doReset = function() {
+                const p1 = newPw.value;
+                const p2 = confPw.value;
+                if (p1.length < 4) { errEl.textContent = 'Password must be at least 4 characters!'; errEl.style.display = 'block'; return; }
+                if (p1 !== p2) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
+                localStorage.setItem('fm_student_pw_' + studentId, p1);
+                customAlertOverlay.classList.add('hidden');
+                document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
+                startHeartbeat(studentId);
+                customAlertMsg.textContent = '✅ Password created successfully!';
+                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caOk">OK</button>';
+                customAlertInput.style.display = 'none';
+                customAlertOverlay.classList.remove('hidden');
+                document.getElementById('caOk').onclick = function() { customAlertOverlay.classList.add('hidden'); };
+            };
+            document.getElementById('caResetPw').onclick = doReset;
+            confPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doReset(); } });
+            newPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); confPw.focus(); } });
+        }
+
+        function updateStats() {
+            const totalStudents = students.length;
+            const totalFines = students.reduce((sum, s) => sum + (s.fine || 0), 0);
+            const avgFine = totalStudents > 0 ? totalFines / totalStudents : 0;
+            const highestFine = totalStudents > 0 ? Math.max(...students.map(s => s.fine || 0)) : 0;
+            const paid = students.filter(s => s.status === 'paid').length;
+            const unpaid = totalStudents - paid;
+            let totalCollected = 0;
+            students.forEach(s => { totalCollected += (s.totalPaid || 0); });
+            document.getElementById('statTotalStudents').textContent = totalStudents;
+            document.getElementById('statTotalFines').textContent = '₱' + totalFines.toFixed(0);
+            document.getElementById('statAvgFine').textContent = '₱' + avgFine.toFixed(0);
+            document.getElementById('statHighestFine').textContent = '₱' + highestFine.toFixed(0);
+            document.getElementById('statPaidUnpaid').textContent = paid + '/' + unpaid;
+            document.getElementById('statCollected').textContent = '₱' + totalCollected.toFixed(0);
+        }
+
+        function getFilteredStudents() {
+            let filtered = [...students];
+            if (searchQuery) filtered = filtered.filter(s => (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+            if (filterGender !== 'all') filtered = filtered.filter(s => s.gender === filterGender);
+            if (filterStatus !== 'all') filtered = filtered.filter(s => s.status === filterStatus);
+            if (sortBy === 'fine-high') filtered.sort((a, b) => (b.fine || 0) - (a.fine || 0));
+            else if (sortBy === 'fine-low') filtered.sort((a, b) => (a.fine || 0) - (b.fine || 0));
+            else filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            return filtered;
+        }
+
+        function renderStudentList() {
+            const filtered = getFilteredStudents();
+            if (filtered.length === 0) {
+                studentListContainer.innerHTML = '<div class="no-results">✨ No results ✨</div>';
+                document.getElementById('totalAmount').textContent = '₱ 0.00';
+                return;
+            }
+            let total = 0;
+            let html = '';
+            const now = Date.now();
+            filtered.forEach(s => {
+                total += (s.fine || 0);
+                const totalPaid = s.totalPaid || 0;
+                const remaining = Math.max(0, (s.fine || 0) - totalPaid);
+                const genderLabel = s.gender === 'male' ? '♂ M' : s.gender === 'female' ? '♀ F' : '⚧ NB';
+                const icon = s.gender === 'male' ? '👨' : s.gender === 'female' ? '👩' : '🧑';
+                const statusClass = s.status === 'paid' ? 'status-paid' : 'status-unpaid';
+                const statusLabel = s.status === 'paid' ? '✓ Paid' : '✗ Unpaid';
+                const paymentInfo = totalPaid > 0 ? `<div style="font-size:0.55rem;color:#888;margin-top:2px;">Paid: ₱${totalPaid.toFixed(2)} | Remaining: ₱${remaining.toFixed(2)}</div>` : '';
+                const lastOnline = s.lastOnline || 0;
+                const diff = now - lastOnline;
+                const online = diff < 5 * 60 * 1000;
+                const dotClass = online ? 'online' : 'offline';
+                let timeLabel = online ? 'Online' : '';
+                if (!online && lastOnline > 0) {
+                    const mins = Math.floor(diff / 60000);
+                    const hrs = Math.floor(mins / 60);
+                    const days = Math.floor(hrs / 24);
+                    if (days > 0) timeLabel = days + 'd ago';
+                    else if (hrs > 0) timeLabel = hrs + 'h ago';
+                    else if (mins > 0) timeLabel = mins + 'm ago';
+                    else timeLabel = 'just now';
+                }
+                if (!lastOnline) timeLabel = '';
+                const statusIndicator = timeLabel ? `<div class="status-indicator"><span class="status-dot ${dotClass}"></span><span>${timeLabel}</span></div>` : '';
+                const avatarHtml = s.photoUrl ? `<div style="text-align:center;cursor:pointer;" onclick="window.uploadPhoto(${s.id})"><img src="${s.photoUrl}" class="student-avatar">${statusIndicator}</div>` : `<div style="text-align:center;cursor:pointer;" onclick="window.uploadPhoto(${s.id})"><div class="student-avatar-placeholder">+</div>${statusIndicator}</div>`;
+                const adminButtons = getIsAdmin() ? `<button class="icon-btn" onclick="window.openPaymentModal(${s.id})">💳 History</button><button class="icon-btn" onclick="window.editStudent(${s.id})">✏️ Edit</button><button class="icon-btn" onclick="window.deleteStudent(${s.id})">🗑️</button>` : `<button class="icon-btn" onclick="window.openPaymentModal(${s.id})">💳 Pay</button>`;
+                html += `<div class="student-entry"><div style="display:flex;align-items:flex-start;">${avatarHtml}<span class="student-name">${escapeHtml(s.name)}</span><span class="gender-badge">${genderLabel}</span><span class="${statusClass}">${statusLabel}</span><span class="fine-amount">₱ ${(s.fine || 0).toFixed(2)}</span>${paymentInfo}</div><div class="entry-actions">${adminButtons}</div></div>`;
+            });
+            studentListContainer.innerHTML = html;
+            document.getElementById('totalAmount').textContent = '₱ ' + total.toFixed(2);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 150;
+                        let w = img.width, h = img.height;
+                        if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
+                        else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function addOrUpdateStudent() {
+            if (!getIsAdmin()) return;
+            const name = nameInput.value.trim();
+            if (!name) { await showAlert('Please enter student name'); return; }
+            const data = { name, gender: genderSelect.value, fine: parseFloat(fineInput.value) || 0, status: statusSelect.value, section_id: currentSectionId, photoUrl: '' };
+            if (editModeId) {
+                const existing = students.find(s => s.id === editModeId);
+                if (existing && existing.photoUrl) data.photoUrl = existing.photoUrl;
+                await updateDoc(doc(db, 'students', String(editModeId)), data);
+                editModeId = null; addBtn.textContent = '➕ ADD';
+            } else {
+                const newId = nextId(students);
+                data.id = newId; data.totalPaid = 0; data.order = newId;
+                await setDoc(doc(db, 'students', String(newId)), data);
+            }
+            clearForm();
+        }
+
+        async function editStudent(id) {
+            if (!getIsAdmin()) return;
+            const student = students.find(s => s.id === id);
+            if (student) {
+                nameInput.value = student.name; genderSelect.value = student.gender;
+                fineInput.value = student.fine; statusSelect.value = student.status;
+                editModeId = id; addBtn.textContent = '✏️ UPDATE';
+            }
+        }
+
+        async function deleteStudent(id) {
+            if (!getIsAdmin()) return;
+            if (!await showConfirm('Delete this student?')) return;
+            await deleteDoc(doc(db, 'students', String(id)));
+            const payments = await getDocs(collection(db, 'students', String(id), 'payments'));
+            await Promise.all(payments.docs.map(d => deleteDoc(doc(db, 'students', String(id), 'payments', d.id))));
+        }
+
+        function clearForm() {
+            nameInput.value = ''; genderSelect.value = 'male'; fineInput.value = '0'; statusSelect.value = 'unpaid'; editModeId = null; addBtn.textContent = '➕ ADD';
+        }
+
+        async function addNewSection() {
+            if (!getIsAdmin()) return;
+            const name = await showPrompt('Enter section name (e.g., BSIS-1B):');
+            if (name) { const newId = nextId(sections); await setDoc(doc(db, 'sections', String(newId)), { name, order: newId }); }
+        }
+
+        async function openPaymentModal(studentId) {
+            currentPaymentStudentId = studentId;
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            const totalPaid = student.totalPaid || 0;
+            const remaining = Math.max(0, (student.fine || 0) - totalPaid);
+            paymentModalTitle.textContent = `💳 ${student.name} — Remaining: ₱${remaining.toFixed(2)}`;
+            paymentAmount.value = remaining > 0 ? remaining.toFixed(2) : '0';
+            paymentRef.value = ''; paymentDate.value = new Date().toISOString().split('T')[0]; paymentNote.value = '';
+            gcashNumber.textContent = localStorage.getItem('fm_gcash_number') || 'Not set';
+            gcashName.textContent = localStorage.getItem('fm_gcash_name') || 'Secretary';
+            renderPaymentHistory(studentId);
+            paymentModal.classList.add('active');
+        }
+
+        window.closePaymentModal = function() { paymentModal.classList.remove('active'); currentPaymentStudentId = null; };
+
+        async function renderPaymentHistory(studentId) {
+            const snapshot = await getDocs(query(collection(db, 'students', String(studentId), 'payments'), orderBy('date', 'desc')));
+            const payments = [];
+            snapshot.forEach((d) => payments.push({ id: d.id, ...d.data() }));
+            if (payments.length === 0) { paymentHistoryList.innerHTML = '<div class="no-results">No payments yet</div>'; return; }
+            let html = '';
+            payments.forEach((p) => {
+                const typeClass = p.type === 'full' ? '' : 'partial';
+                const typeLabel = p.type === 'full' ? 'Full' : 'Partial';
+                const deleteBtn = getIsAdmin() ? `<button class="btn-delete-payment" onclick="window.deletePayment(${studentId}, '${p.id}')">✕</button>` : '';
+                const refDisplay = p.refNum ? `<div style="font-size:0.7rem;color:#4682b4;font-family:monospace;">📱 Ref#: ${escapeHtml(p.refNum)}</div>` : '';
+                html += `<div class="payment-history-entry"><div><span class="payment-amount">₱${(p.amount || 0).toFixed(2)}</span><span class="payment-type ${typeClass}">${typeLabel}</span>${refDisplay}${p.note ? `<div style="font-size:0.7rem;color:#888;">${escapeHtml(p.note)}</div>` : ''}<div class="payment-date">${p.date || ''}</div></div>${deleteBtn}</div>`;
+            });
+            paymentHistoryList.innerHTML = html;
+        }
+
+        async function addPayment() {
+            if (!currentPaymentStudentId) return;
+            const student = students.find(s => s.id === currentPaymentStudentId);
+            if (!student) return;
+            const amount = parseFloat(paymentAmount.value) || 0;
+            const refNum = paymentRef.value.trim();
+            if (amount <= 0) { await showAlert('Enter a valid amount'); return; }
+            if (!refNum) { await showAlert('Enter the GCash Reference Number'); return; }
+            const totalPaid = student.totalPaid || 0;
+            const remaining = (student.fine || 0) - totalPaid;
+            if (amount > remaining + 0.01) { await showAlert('Amount exceeds remaining balance (₱' + remaining.toFixed(2) + ')'); return; }
+            const paymentType = Math.abs(amount - remaining) < 0.01 ? 'full' : 'partial';
+            const paymentData = { amount, date: paymentDate.value || new Date().toISOString().split('T')[0], note: paymentNote.value.trim(), type: paymentType, refNum, gcashNumber: localStorage.getItem('fm_gcash_number') || '' };
+            await setDoc(doc(collection(db, 'students', String(currentPaymentStudentId), 'payments')), paymentData);
+            const updateData = { totalPaid: totalPaid + amount };
+            if (paymentType === 'full') updateData.status = 'paid';
+            await updateDoc(doc(db, 'students', String(currentPaymentStudentId)), updateData);
+            openPaymentModal(currentPaymentStudentId);
+        }
+
+        async function deletePayment(studentId, paymentId) {
+            if (!getIsAdmin()) return;
+            if (!await showConfirm('Delete this payment?')) return;
+            const paymentSnap = await getDoc(doc(db, 'students', String(studentId), 'payments', paymentId));
+            if (!paymentSnap.exists()) return;
+            const paymentData = paymentSnap.data();
+            const wasFull = paymentData.type === 'full';
+            const amount = paymentData.amount || 0;
+            await deleteDoc(doc(db, 'students', String(studentId), 'payments', paymentId));
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                const newTotal = Math.max(0, (student.totalPaid || 0) - amount);
+                const updateData = { totalPaid: newTotal };
+                if (wasFull && newTotal < (student.fine || 0)) updateData.status = 'unpaid';
+                await updateDoc(doc(db, 'students', String(studentId)), updateData);
+            }
+            openPaymentModal(studentId);
+        }
+
+        submitPaymentBtn.addEventListener('click', addPayment);
+        paymentModal.addEventListener('click', (e) => { if (e.target === paymentModal) closePaymentModal(); });
+
+        openSuggestionsBtn.addEventListener('click', () => { suggestionModal.classList.add('active'); loadSuggestions(); });
+
+        submitSuggestionBtn.addEventListener('click', async () => {
+            const name = suggestionName.value.trim();
+            const text = suggestionText.value.trim();
+            if (!name) { await showAlert('Please enter your name!'); return; }
+            if (!text) { await showAlert('Please enter your suggestion!'); return; }
+            const newId = suggestions.length > 0 ? Math.max(...suggestions.map(s => s.id)) + 1 : 1;
+            await setDoc(doc(db, 'suggestions', String(newId)), { id: newId, name, text, date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), timestamp: Date.now() });
+            suggestionName.value = ''; suggestionText.value = '';
+        });
+
+        window.closeSuggestionModal = function() { suggestionModal.classList.remove('active'); };
+
+        function loadSuggestions() {
+            if (unsubscribeSuggestions) unsubscribeSuggestions();
+            const q = query(collection(db, 'suggestions'), orderBy('timestamp', 'desc'));
+            unsubscribeSuggestions = onSnapshot(q, (snapshot) => {
+                suggestions = [];
+                snapshot.forEach((d) => suggestions.push({ id: parseInt(d.id), ...d.data() }));
+                renderSuggestions();
+            });
+        }
+
+        function renderSuggestions() {
+            if (suggestions.length === 0) { suggestionsList.innerHTML = '<div class="no-results">No suggestions yet. Be the first! 💡</div>'; return; }
+            let html = '';
+            suggestions.forEach((s) => {
+                const deleteBtn = getIsAdmin() ? `<button class="btn-delete-payment" onclick="window.deleteSuggestion(${s.id})" style="float:right;">✕</button>` : '';
+                html += `<div class="suggestion-card">${deleteBtn}<div class="suggestion-author">👤 ${escapeHtml(s.name || 'Anonymous')}</div><div class="suggestion-text">${escapeHtml(s.text)}</div><div class="suggestion-meta">📅 ${s.date || ''}</div></div>`;
+            });
+            suggestionsList.innerHTML = html;
+        }
+
+        async function deleteSuggestion(id) {
+            if (!getIsAdmin()) return;
+            if (!await showConfirm('Delete this suggestion?')) return;
+            await deleteDoc(doc(db, 'suggestions', String(id)));
+        }
+
+        suggestionModal.addEventListener('click', (e) => { if (e.target === suggestionModal) closeSuggestionModal(); });
+
+        window.uploadPhoto = async function(studentId) {
+            if (getIsAdmin()) {
+                photoUploadStudentId = studentId;
+                photoUploadInput.click();
+                return;
+            }
+            const currentId = localStorage.getItem('fm_student_session_id');
+            if (String(studentId) !== String(currentId)) {
+                await showAlert('⛔ Hindi mo ito pwedeng baguhin. Sarili mong profile lang.');
+                return;
+            }
+            photoUploadStudentId = studentId;
+            photoUploadInput.click();
+        };
+
+        photoUploadInput.addEventListener('change', async () => {
+            if (!photoUploadStudentId || !photoUploadInput.files[0]) return;
+            const student = students.find(s => s.id === photoUploadStudentId);
+            if (!student) return;
+            const photoUrl = await readFileAsBase64(photoUploadInput.files[0]);
+            await updateDoc(doc(db, 'students', String(photoUploadStudentId)), { photoUrl });
+            await showAlert('✅ Profile photo updated!');
+            photoUploadInput.value = ''; photoUploadStudentId = null;
+        });
+
+        function exportCSV() {
+            const section = sections.find(s => s.id === currentSectionId);
+            const sectionName = section ? section.name : 'section';
+            let csv = 'Name,Gender,Fine,Status\n';
+            students.forEach(s => { csv += `"${s.name}",${s.gender},${(s.fine||0).toFixed(2)},${s.status}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = sectionName + '_fines.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function exportPaymentsCSV() {
+            const section = sections.find(s => s.id === currentSectionId);
+            const sectionName = section ? section.name : 'section';
+            let csv = 'Student Name,Amount,Date,Type,Note\n';
+            students.forEach(async (s) => {
+                const snap = await getDocs(collection(db, 'students', String(s.id), 'payments'));
+                snap.forEach((d) => { const p = d.data(); csv += `"${s.name}",${(p.amount||0).toFixed(2)},${p.date},${p.type},"${p.note||''}"\n`; });
+            });
+            setTimeout(() => {
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = sectionName + '_payments.csv';
+                a.click(); URL.revokeObjectURL(a.href);
+            }, 1000);
+        }
+
+        exportCsvBtn.addEventListener('click', exportCSV);
+        exportPaymentsBtn.addEventListener('click', exportPaymentsCSV);
+        sectionSelect.addEventListener('change', () => { currentSectionId = parseInt(sectionSelect.value); sectionSelectView.value = currentSectionId; loadStudents(); });
+        sectionSelectView.addEventListener('change', () => { currentSectionId = parseInt(sectionSelectView.value); sectionSelect.value = currentSectionId; loadStudents(); });
+        addSectionBtn.addEventListener('click', addNewSection);
+        addBtn.addEventListener('click', addOrUpdateStudent);
+        clearFormBtn.addEventListener('click', clearForm);
+        searchInput.addEventListener('input', () => { searchQuery = searchInput.value; renderStudentList(); });
+        filterGenderSelect.addEventListener('change', () => { filterGender = filterGenderSelect.value; renderStudentList(); });
+        filterStatusSelect.addEventListener('change', () => { filterStatus = filterStatusSelect.value; renderStudentList(); });
+        sortBySelect.addEventListener('change', () => { sortBy = sortBySelect.value; renderStudentList(); });
+        nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addOrUpdateStudent(); });
+
+        window.editStudent = editStudent;
+        window.deleteStudent = deleteStudent;
+        window.openPaymentModal = openPaymentModal;
+        window.deletePayment = deletePayment;
+        window.deleteSuggestion = deleteSuggestion;
+        window.closePaymentModal = window.closePaymentModal;
+        window.closeSuggestionModal = window.closeSuggestionModal;
+        window.uploadPhoto = window.uploadPhoto;
+    </script>
+</body>
+</html>
