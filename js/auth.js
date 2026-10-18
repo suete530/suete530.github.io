@@ -41,8 +41,10 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot } from "https:/
             if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'Wrong email or password!';
             if (code === 'auth/too-many-requests') return 'Too many attempts. Wait a moment and try again.';
             if (code === 'auth/network-request-failed') return 'Network error. Check your connection.';
+            if (code === 'auth/operation-not-allowed') return 'Email/Password sign-in is turned off. Enable it in Firebase Console → Authentication → Sign-in method.';
+            if (code === 'auth/configuration-not-found') return 'Firebase Auth is not set up yet. Enable Email/Password in Firebase Console.';
             if (code === 'auth/not-admin') return 'This account is not the registered admin.';
-            return 'Login failed. Please try again.';
+            return 'Login failed' + (code ? ' (' + code + ')' : '') + '. Please try again.';
         }
         export function showLoginError(msg) {
             errEl.textContent = msg;
