@@ -3,9 +3,11 @@ import { getIsAdmin, students } from './state.js';
 import { auth } from './firebase.js';
 import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline } from './auth.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal } from './db.js';
-import { renderFinePresets, updateMainGcash } from './ui.js';
+import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js';
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';
 import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+        initPasswordToggles();
 
         await new Promise((resolve) => {
             const un = onAuthStateChanged(auth, () => { un(); resolve(); });

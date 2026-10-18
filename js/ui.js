@@ -554,3 +554,45 @@ import { collection, doc, getDocs, updateDoc, query, orderBy } from "https://www
         export let filterStatus = 'all';
         export let sortBy = 'name';
         export let photoUploadStudentId = null;
+
+        export function enhancePasswordField(input) {
+            if (!input || input.dataset.pwEnhanced) return;
+            input.dataset.pwEnhanced = '1';
+            const wrap = document.createElement('span');
+            wrap.className = 'pw-wrap';
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(input);
+            if (getComputedStyle(input).textAlign !== 'center') input.style.paddingRight = '38px';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pw-eye';
+            btn.tabIndex = -1;
+            btn.setAttribute('aria-label', 'Show password');
+            btn.textContent = '👁️';
+            btn.addEventListener('click', function() {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.textContent = show ? '🙈' : '👁️';
+                btn.classList.toggle('active', show);
+            });
+            wrap.appendChild(btn);
+            const sync = function() {
+                wrap.style.display = getComputedStyle(input).display === 'none' ? 'none' : '';
+            };
+            new MutationObserver(sync).observe(input, { attributes: true, attributeFilter: ['style', 'class'] });
+            sync();
+        }
+
+        export function initPasswordToggles() {
+            document.querySelectorAll('input[type="password"]').forEach(enhancePasswordField);
+            const obs = new MutationObserver(function(muts) {
+                for (const m of muts) {
+                    m.addedNodes.forEach(function(node) {
+                        if (node.nodeType !== 1) return;
+                        if (node.matches && node.matches('input[type="password"]')) enhancePasswordField(node);
+                        else if (node.querySelectorAll) node.querySelectorAll('input[type="password"]').forEach(enhancePasswordField);
+                    });
+                }
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+        }
