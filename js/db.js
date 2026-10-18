@@ -1,4 +1,4 @@
-import { addBtn, addSectionBtn, clearFormBtn, fineInput, gcashName, gcashNumber, genderSelect, nameInput, openSuggestionsBtn, paymentAmount, paymentDate, paymentHistoryList, paymentModal, paymentModalTitle, paymentNote, paymentRef, relationStatusSelect, sectionSelect, sectionSelectView, statusSelect, studentListContainer, submitPaymentBtn, submitSuggestionBtn, suggestionModal, suggestionName, suggestionText, suggestionsList } from './dom.js';
+        import { addBtn, addSectionBtn, clearFormBtn, fineInput, gcashName, gcashNumber, genderSelect, nameInput, openSuggestionsBtn, paymentAmount, paymentDate, paymentHistoryList, paymentModal, paymentModalTitle, paymentNote, paymentRef, relationStatusSelect, requestsBadge, requestsBtn, requestsList, requestsModal, sectionSelect, sectionSelectView, statusSelect, studentListContainer, submitPaymentBtn, submitSuggestionBtn, suggestionModal, suggestionName, suggestionText, suggestionsList } from './dom.js';
 import { currentSectionId, getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, studentPrompted, students, unsubscribeStudents } from './state.js';
 import { db } from './firebase.js';
 import { escapeHtml, nextId } from './utils.js';
@@ -333,3 +333,98 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
         addBtn.addEventListener('click', addOrUpdateStudent);
         clearFormBtn.addEventListener('click', clearForm);
         nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addOrUpdateStudent(); });
+
+        export let pendingRequests = [];
+        export let unsubscribeRequests = null;
+
+        export function startRequestsListener() {
+            if (unsubscribeRequests) unsubscribeRequests();
+            const q = query(collection(db, 'account_requests'), orderBy('requestedAt'));
+            unsubscribeRequests = onSnapshot(q, (snapshot) => {
+                pendingRequests = [];
+                snapshot.forEach(d => pendingRequests.push({ id: d.id, ...d.data() }));
+                updateRequestsBadge();
+                if (requestsModal && requestsModal.classList.contains('active')) renderRequestsList();
+            }, () => {});
+        }
+
+        export function stopRequestsListener() {
+            if (unsubscribeRequests) { unsubscribeRequests(); unsubscribeRequests = null; }
+            pendingRequests = [];
+            updateRequestsBadge();
+        }
+
+        export function updateRequestsBadge() {
+            const n = pendingRequests.length;
+            if (requestsBadge) {
+                requestsBadge.style.display = n > 0 ? 'inline-block' : 'none';
+                requestsBadge.textContent = n;
+            }
+        }
+
+        export function renderRequestsList() {
+            if (!requestsList) return;
+            if (pendingRequests.length === 0) {
+                requestsList.innerHTML = '<div class="no-results">No pending requests.</div>';
+                return;
+            }
+            requestsList.innerHTML = pendingRequests.map(r => {
+                const when = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : '';
+                return `<div style="background:#0f1923;border:1px solid #1e293b;border-radius:14px;padding:12px;">
+                    <div style="font-weight:bold;font-size:0.9rem;color:#e0e0e0;">${escapeHtml(r.name || 'Unknown')}</div>
+                    <div style="font-size:0.72rem;color:#9ca3af;margin-top:2px;">📚 ${escapeHtml(r.sectionName || 'No section')}</div>
+                    <div style="font-size:0.65rem;color:#6b7280;margin-top:2px;">🕒 ${escapeHtml(when)}</div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button onclick="window.__acceptReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">✅ Accept</button>
+                        <button onclick="window.__rejectReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">❌ Reject</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        export function closeRequestsModal() { if (requestsModal) requestsModal.classList.remove('active'); }
+        window.closeRequestsModal = closeRequestsModal;
+        window.__acceptReq = async function(reqId) {
+            if (!getIsAdmin()) return;
+            const req = pendingRequests.find(r => String(r.id) === String(reqId));
+            if (!req) return;
+            if (!await showConfirm('Approve account for "' + req.name + '"?')) return;
+            try {
+                const all = await getDocs(collection(db, 'students'));
+                let maxId = 0;
+                all.forEach(d => { const v = parseInt(d.id); if (!isNaN(v) && v > maxId) maxId = v; });
+                const newId = maxId + 1;
+                await setDoc(doc(db, 'students', String(newId)), {
+                    id: newId,
+                    name: req.name,
+                    gender: '',
+                    relationStatus: 'Single',
+                    fine: 0,
+                    status: 'unpaid',
+                    section_id: req.section_id,
+                    photoUrl: '',
+                    totalPaid: 0,
+                    order: newId,
+                    pw: req.pw || null
+                });
+                await deleteDoc(doc(db, 'account_requests', String(reqId)));
+                logActivity('student_add', 'Account request approved', req.name, 0);
+                playSound('add');
+                renderRequestsList();
+                await showAlert('✅ Account approved for ' + req.name + '!');
+            } catch (e) {
+                await showAlert('❌ Could not approve this request. ' + (e && e.message ? e.message : ''));
+            }
+        };
+        window.__rejectReq = async function(reqId) {
+            if (!getIsAdmin()) return;
+            const req = pendingRequests.find(r => String(r.id) === String(reqId));
+            if (!req) return;
+            if (!await showConfirm('Reject request from "' + req.name + '"?')) return;
+            try {
+                await deleteDoc(doc(db, 'account_requests', String(reqId)));
+                renderRequestsList();
+            } catch (e) {}
+        };
+        if (requestsBtn) requestsBtn.addEventListener('click', () => { renderRequestsList(); requestsModal.classList.add('active'); });
+        if (requestsModal) requestsModal.addEventListener('click', (e) => { if (e.target === requestsModal) closeRequestsModal(); });

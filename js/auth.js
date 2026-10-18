@@ -1,12 +1,12 @@
 import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
-import { getIsAdmin, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
+import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { hashPassword, verifyPassword } from './crypto.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
-import { unsubscribeSections, unsubscribeSuggestions } from './db.js';
+import { unsubscribeSections, unsubscribeSuggestions, stopRequestsListener } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
 import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function updateAdminNameDisplay() {
             adminNameDisplay.textContent = adminName;
@@ -158,6 +158,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
             document.body.classList.remove('is-admin');
             if (window.__unsubscribeAll) window.__unsubscribeAll();
             if (window._inboxUnsub) { window._inboxUnsub(); window._inboxUnsub = null; }
+            stopRequestsListener();
             setCurrentSectionId(null);
             setStudentPrompted(false);
             overlay.classList.remove('hidden');
@@ -512,20 +513,88 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
                 <label style="font-size:0.8rem;font-weight:bold;display:block;">👤 Search your name:</label>
                 <input type="text" id="studentSessionInput" placeholder="Type your name..." style="width:100%;padding:8px;margin-top:6px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
                 <div id="sessionMatches" style="max-height:120px;overflow-y:auto;margin-top:6px;"></div>
+                <div style="text-align:center;margin-top:10px;border-top:1px dashed #e2cf9a;padding-top:10px;">
+                    <a id="requestAccountLink" style="font-size:0.75rem;color:#4682b4;cursor:pointer;text-decoration:underline;">🙋 Not in the list? Request an account</a>
+                </div>
             `;
             customAlertInput.style.display = 'none';
             customAlertBtns.innerHTML = '';
             customAlertOverlay.classList.remove('hidden');
             const inp = document.getElementById('studentSessionInput');
             const matchBox = document.getElementById('sessionMatches');
+            document.getElementById('requestAccountLink').onclick = function() {
+                customAlertOverlay.classList.add('hidden');
+                promptAccountRequest();
+            };
             inp.focus();
             inp.addEventListener('input', function() {
                 const q = inp.value.toLowerCase();
                 if (!q) { matchBox.innerHTML = ''; return; }
                 const matches = students.filter(s => s.name.toLowerCase().includes(q));
-                if (matches.length === 0) { matchBox.innerHTML = '<div style="padding:8px;font-size:0.75rem;color:#999;">No matches found</div>'; return; }
+                if (matches.length === 0) { matchBox.innerHTML = '<div style="padding:8px;font-size:0.75rem;color:#999;">No matches found — you can request an account below.</div>'; return; }
                 matchBox.innerHTML = matches.slice(0, 8).map(s => `<div onclick="window.__pickSession('${s.id}')" style="padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer;font-size:0.8rem;border-radius:6px;${String(s.id) === String(activeSid) ? 'background:#e8f4e8;font-weight:bold;' : ''}">${escapeHtml(s.name)}${String(s.id) === String(activeSid) ? ' ✓' : ''}</div>`).join('');
             });
+        }
+        export function promptAccountRequest() {
+            document.querySelector('.custom-alert-title').textContent = '📩 Request Account';
+            const sectionOpts = sections.length
+                ? sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')
+                : '<option value="">No section available</option>';
+            customAlertMsg.innerHTML = `
+                <p style="font-size:0.72rem;color:#888;margin-bottom:10px;">Not on the list? Fill this up — the admin will review and approve your account.</p>
+                <input type="text" id="reqName" placeholder="Full name" maxlength="60" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
+                <label style="font-size:0.7rem;font-weight:bold;display:block;text-align:left;">📚 Section</label>
+                <select id="reqSection" style="width:100%;padding:10px;margin:4px 0 8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;">${sectionOpts}</select>
+                <input type="password" id="reqPw" placeholder="Password (4+ chars)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
+                <input type="password" id="reqPw2" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
+                <div id="reqError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
+            `;
+            customAlertInput.style.display = 'none';
+            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="reqCancel">Cancel</button><button class="custom-alert-btn custom-alert-ok" id="reqSubmit">📩 Send Request</button>';
+            customAlertOverlay.classList.remove('hidden');
+            const nameEl = document.getElementById('reqName');
+            const secEl = document.getElementById('reqSection');
+            const pwEl = document.getElementById('reqPw');
+            const pw2El = document.getElementById('reqPw2');
+            const errEl = document.getElementById('reqError');
+            nameEl.focus();
+            document.getElementById('reqCancel').onclick = function() {
+                customAlertOverlay.classList.add('hidden');
+                promptStudentSelect();
+            };
+            document.getElementById('reqSubmit').onclick = async function() {
+                const name = nameEl.value.trim();
+                const sectionId = secEl.value;
+                const p1 = pwEl.value;
+                const p2 = pw2El.value;
+                const fail = function(m) { errEl.textContent = m; errEl.style.display = 'block'; };
+                errEl.style.display = 'none';
+                if (name.length < 2) return fail('Please enter your full name.');
+                if (!sectionId) return fail('Please choose your section.');
+                if (p1.length < 4) return fail('Password must be at least 4 characters.');
+                if (p1 !== p2) return fail('Passwords do not match.');
+                if (students.some(s => s.name.trim().toLowerCase() === name.toLowerCase())) return fail('That name already exists. Please search your name instead.');
+                const btn = document.getElementById('reqSubmit');
+                btn.disabled = true; btn.textContent = 'Sending...';
+                try {
+                    const record = await hashPassword(p1);
+                    const sec = sections.find(s => String(s.id) === String(sectionId));
+                    await addDoc(collection(db, 'account_requests'), {
+                        name: name,
+                        section_id: isNaN(parseInt(sectionId)) ? sectionId : parseInt(sectionId),
+                        sectionName: sec ? sec.name : '',
+                        pw: record,
+                        status: 'pending',
+                        requestedAt: Date.now()
+                    });
+                    customAlertOverlay.classList.add('hidden');
+                    await showAlert('✅ Request sent! Please wait for the admin to approve your account.');
+                } catch (e) {
+                    btn.disabled = false; btn.textContent = '📩 Send Request';
+                    fail('Could not send request. Please try again.');
+                }
+            };
+            pw2El.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('reqSubmit').click(); } });
         }
         window.__pickSession = function(id) {
             customAlertOverlay.classList.add('hidden');

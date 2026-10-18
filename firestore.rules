@@ -73,6 +73,15 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Students who are not yet on the class list can request an account here.
+    // Anyone signed in may submit a request; only the admin can read and act
+    // on them (approve creates the student account, reject removes it).
+    match /account_requests/{reqId} {
+      allow read: if isAdmin();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
     match /chats/{chatId} {
       allow read, create, update: if signedIn();
       allow delete: if isAdmin();

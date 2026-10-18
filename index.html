@@ -61,6 +61,7 @@
             <button class="dark-toggle" id="langToggle" style="background:#1a2332;color:var(--accent);font-size:0.7rem;padding:6px 10px;">🇵🇭</button>
             <button class="dark-toggle" id="darkToggle">🌙</button>
             <button class="admin-btn" id="activityLogBtn" style="background:linear-gradient(135deg,#0891b2,#0e7490);" data-i18n="btnActivity">📋 Activity</button>
+            <button class="admin-btn admin-only" id="requestsBtn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);position:relative;">📥 Requests<span id="requestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
             <button class="admin-btn admin-only" id="changePwBtn" data-i18n="btnPassword">🔑 Password</button>
             <button class="logout-btn" id="logoutBtn" data-i18n="btnLogout">🚪 Logout</button>
         </div>
@@ -311,6 +312,16 @@
             </div>
             <div id="activityLogList" style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
                 <div class="no-results" data-i18n="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="requestsModal">
+        <div class="modal" style="max-width:550px;">
+            <button class="modal-close" onclick="closeRequestsModal()">✕</button>
+            <h3 data-i18n="requestsTitle">📥 Account Requests</h3>
+            <div id="requestsList" style="max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+                <div class="no-results" data-i18n="noRequests">No pending requests.</div>
             </div>
         </div>
     </div>

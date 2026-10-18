@@ -86,3 +86,7 @@
         export const setupNote = document.getElementById('setupNote');
         export const errEl = document.getElementById('loginError');
         export const badge = document.getElementById('roleBadge');
+        export const requestsBtn = document.getElementById('requestsBtn');
+        export const requestsBadge = document.getElementById('requestsBadge');
+        export const requestsModal = document.getElementById('requestsModal');
+        export const requestsList = document.getElementById('requestsList');
