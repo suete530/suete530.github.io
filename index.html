@@ -66,6 +66,7 @@
             border: 1px solid #1e293b; transition: background 0.3s, border-color 0.3s;
         }
         body.dark .notebook-container { background: #0c1222; border-color: #1a2332; }
+        #topAnnouncements { max-width: 750px; }
         h2 {
             font-family: 'Courier New', monospace; font-weight: 800; font-size: 1.8rem;
             text-align: center; border-bottom: 3px solid var(--secondary); display: inline-block;
@@ -103,6 +104,8 @@
             background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 8px 15px;
             border-radius: 30px; font-weight: bold; font-size: 0.8rem; cursor: pointer;
         }
+        .sections-grid { display: grid; grid-template-columns: 1fr; }
+        .top-grid { display: grid; grid-template-columns: 1fr; }
         .stats-panel {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 20px; padding: 18px 20px; margin: 10px 0 18px;
@@ -441,6 +444,7 @@
         }
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: inherit !important; }
+        body.is-admin .section-selector.admin-only { display: flex !important; }
         body.is-admin .admin-flex { display: flex !important; }
         .student-only { display: inherit !important; }
         body.is-admin .student-only { display: none !important; }
@@ -852,6 +856,17 @@
         80%  { opacity: 0.8; }
         100% { top: 110vh; opacity: 0; transform: translateX(30px); }
     }
+        @media (min-width: 900px) {
+            .notebook-container { max-width: 1180px; padding: 24px 28px 40px; }
+            #topAnnouncements { max-width: 1180px; }
+            .student-profile-bar { max-width: 1180px; }
+            body.is-admin .sections-grid { grid-template-columns: 1fr 1fr; column-gap: 20px; }
+            .top-grid { grid-template-columns: minmax(250px, 350px) 1fr; column-gap: 20px; align-items: stretch; }
+            .top-grid > * { min-width: 0; }
+            .student-list { max-height: 560px; }
+            .login-box { max-width: 420px; }
+            .search-filter-bar select { flex-shrink: 0; }
+        }
         @media (max-width: 600px) {
             body { padding: 12px; }
             .student-entry { flex-direction: column; align-items: flex-start; }
@@ -1109,7 +1124,7 @@
         <span id="studentProfileFine" style="margin-left:auto;font-size:0.8rem;font-weight:700;color:var(--amber);background:#1c1917;padding:4px 12px;border-radius:30px;white-space:nowrap;">₱0.00</span>
     </div>
 
-    <div id="topAnnouncements" style="max-width:750px;margin:0 auto 16px;display:none;background:#111827;border-radius:24px;padding:16px 20px;border:1px solid #1e293b;">
+    <div id="topAnnouncements" style="margin:0 auto 16px;display:none;background:#111827;border-radius:24px;padding:16px 20px;border:1px solid #1e293b;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
             <span style="font-size:0.7rem;font-weight:bold;color:var(--accent);letter-spacing:1px;">📢 ANNOUNCEMENTS</span>
             <span id="announceDot" style="width:5px;height:5px;border-radius:50%;background:#10b981;display:none;"></span>
@@ -1123,32 +1138,36 @@
             <div class="date-badge" id="date"></div>
         </div>
 
-        <div class="section-selector admin-only">
-            <label data-i18n="lblSection">📚 Section:</label>
-            <select id="sectionSelect"></select>
-            <button class="btn-add-section" id="addSectionBtn" data-i18n="btnNewSection">➕ New Section</button>
-        </div>
-        <div class="section-selector" style="justify-content:center;">
-            <label data-i18n="lblSection">📚 Section:</label>
-            <select id="sectionSelectView"></select>
-        </div>
-
-        <div class="gcash-info-main" id="mainGcashBox">
-            <div class="gcash-label" data-i18n="gcashLabel">💳 Bayad gamit GCash!!</div>
-            <div class="gcash-number" id="mainGcashNumber">09XXXXXXXXX</div>
-            <div class="gcash-name" id="mainGcashName">Secretary</div>
-            <div id="mainGcashQR" style="margin:8px auto 0;background:#fff;padding:8px;border-radius:10px;width:110px;height:110px;display:flex;align-items:center;justify-content:center;"></div>
-            <div style="font-size:0.7rem;margin-top:4px;opacity:0.85;" data-i18n="gcashScan">📷 Scan QR to get GCash number</div>
-            <div style="font-size:0.75rem;margin-top:5px;opacity:0.9;" data-i18n="gcashSteps">Send payment → Copy Ref# → Show to Secretary</div>
+        <div class="sections-grid">
+            <div class="section-selector admin-only">
+                <label data-i18n="lblSection">📚 Section:</label>
+                <select id="sectionSelect"></select>
+                <button class="btn-add-section" id="addSectionBtn" data-i18n="btnNewSection">➕ New Section</button>
+            </div>
+            <div class="section-selector" style="justify-content:center;">
+                <label data-i18n="lblSection">📚 Section:</label>
+                <select id="sectionSelectView"></select>
+            </div>
         </div>
 
-        <div class="stats-panel" id="statsPanel">
-            <div class="stat-card"><div class="stat-label" data-i18n="statStudents">Students</div><div class="stat-value" id="statTotalStudents">0</div></div>
-            <div class="stat-card"><div class="stat-label" data-i18n="statTotalFines">Total Fines</div><div class="stat-value" id="statTotalFines">₱0</div></div>
-            <div class="stat-card"><div class="stat-label" data-i18n="statAverage">Average</div><div class="stat-value" id="statAvgFine">₱0</div></div>
-            <div class="stat-card"><div class="stat-label" data-i18n="statHighest">Highest</div><div class="stat-value" id="statHighestFine">₱0</div></div>
-            <div class="stat-card"><div class="stat-label" data-i18n="statPaidUnpaid">Paid/Unpaid</div><div class="stat-value" id="statPaidUnpaid">0/0</div></div>
-            <div class="stat-card"><div class="stat-label" data-i18n="statCollected">Collected</div><div class="stat-value" id="statCollected">₱0</div></div>
+        <div class="top-grid">
+            <div class="gcash-info-main" id="mainGcashBox">
+                <div class="gcash-label" data-i18n="gcashLabel">💳 Bayad gamit GCash!!</div>
+                <div class="gcash-number" id="mainGcashNumber">09XXXXXXXXX</div>
+                <div class="gcash-name" id="mainGcashName">Secretary</div>
+                <div id="mainGcashQR" style="margin:8px auto 0;background:#fff;padding:8px;border-radius:10px;width:110px;height:110px;display:flex;align-items:center;justify-content:center;"></div>
+                <div style="font-size:0.7rem;margin-top:4px;opacity:0.85;" data-i18n="gcashScan">📷 Scan QR to get GCash number</div>
+                <div style="font-size:0.75rem;margin-top:5px;opacity:0.9;" data-i18n="gcashSteps">Send payment → Copy Ref# → Show to Secretary</div>
+            </div>
+
+            <div class="stats-panel" id="statsPanel">
+                <div class="stat-card"><div class="stat-label" data-i18n="statStudents">Students</div><div class="stat-value" id="statTotalStudents">0</div></div>
+                <div class="stat-card"><div class="stat-label" data-i18n="statTotalFines">Total Fines</div><div class="stat-value" id="statTotalFines">₱0</div></div>
+                <div class="stat-card"><div class="stat-label" data-i18n="statAverage">Average</div><div class="stat-value" id="statAvgFine">₱0</div></div>
+                <div class="stat-card"><div class="stat-label" data-i18n="statHighest">Highest</div><div class="stat-value" id="statHighestFine">₱0</div></div>
+                <div class="stat-card"><div class="stat-label" data-i18n="statPaidUnpaid">Paid/Unpaid</div><div class="stat-value" id="statPaidUnpaid">0/0</div></div>
+                <div class="stat-card"><div class="stat-label" data-i18n="statCollected">Collected</div><div class="stat-value" id="statCollected">₱0</div></div>
+            </div>
         </div>
 
         <div id="collectionProgress" style="background:#1a2332;border-radius:16px;padding:14px 18px;margin:10px 0 18px;border-left:6px solid #10b981;">
