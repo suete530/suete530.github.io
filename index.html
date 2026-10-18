@@ -1458,6 +1458,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, deleteField, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1471,6 +1472,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         async function sha256(text) {
@@ -1736,6 +1738,7 @@
             adminPhotoInput.value = '';
         });
 
+        try { await signInAnonymously(auth); } catch (e) { console.warn('Anonymous auth unavailable:', e.message); }
         await loadAdminSettings();
         startSettingsListener();
         trackVisitor();
