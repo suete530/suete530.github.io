@@ -1,0 +1,86 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailUser() {
+      return request.auth != null && 'email' in request.auth.token;
+    }
+
+    function isAdmin() {
+      let cfg = get(/databases/$(database)/documents/settings/admin).data;
+      let registered = cfg.get('adminEmail', '');
+      return registered != '' && isEmailUser() && request.auth.token.email == registered;
+    }
+
+    function visitorCountOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['visitorCount']);
+    }
+
+    function selfEditableStudentFields() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['name', 'gender', 'relationStatus', 'lastOnline', 'pw', 'photoUrl']);
+    }
+
+    // Admin profile / app settings. The admin password hash no longer lives
+    // here: authentication is handled by Firebase Auth (email + password),
+    // verified on Firebase's servers. adminEmail below only records WHICH
+    // Firebase account is the admin; the password itself is never stored.
+    match /settings/admin {
+      allow read: if signedIn();
+      // First-time setup: a brand-new email/password account bootstraps the
+      // doc. After adminRegistered is true, only the registered admin can write.
+      allow create: if isEmailUser();
+      allow update: if (isEmailUser() && resource.data.get('adminRegistered', false) != true)
+                    || visitorCountOnly()
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sections/{sectionId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /students/{studentId} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      // Students may update only their own profile fields (self-edit,
+      // photo, password, last-online heartbeat). Fines, payments, status
+      // and section stay admin-only.
+      allow update: if selfEditableStudentFields() || isAdmin();
+      allow delete: if isAdmin();
+
+      match /payments/{paymentId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    match /announcements/{announceId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /suggestions/{suggestId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /chats/{chatId} {
+      allow read, create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /activity_logs/{logId} {
+      allow read, create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+  }
+}

@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="987f11c095cb904fba2dc56af3efedbe302e22c7" content="987f11c095cb904fba2dc56af3efedbe302e22c7">
     <title>BSIS-1 · Fines Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
@@ -37,10 +36,16 @@
                 <div class="admin-name-display" id="adminNameDisplay">Zeraldin Cauba</div>
                 <div class="secretary-role" id="secretaryRole">BSIS-1 Secretary</div>
             </div>
-            <p data-i18n="loginDesc">Enter secretary password or continue as student</p>
-            <input type="password" class="login-input" id="loginPassword" placeholder="••••••••" maxlength="30">
+            <p data-i18n="loginDesc">Enter secretary email &amp; password or continue as student</p>
+            <input type="email" class="login-input" id="loginEmail" placeholder="secretary@email.com" maxlength="60" autocomplete="username" style="margin-bottom:8px;">
+            <input type="password" class="login-input" id="loginPassword" placeholder="••••••••" maxlength="64" autocomplete="current-password">
+            <input type="password" class="login-input" id="loginConfirmPassword" placeholder="Confirm password" maxlength="64" autocomplete="new-password" style="display:none;margin-top:8px;">
+            <div id="setupNote" style="display:none;font-size:0.68rem;color:#fbbf24;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:8px 10px;margin-top:8px;text-align:center;line-height:1.4;">
+                First-time setup: your email + password will become the admin account. Do this once, right after deploying, and keep the credentials secret.
+            </div>
             <button class="login-btn" id="loginBtn" data-i18n="btnLogin">🔓 Secretary Login</button>
             <div class="login-error" id="loginError">❌ Wrong password!</div>
+            <button class="login-viewer-btn" id="setupAdminBtn" style="display:none;">🛠️ First time? Create admin account</button>
             <button class="login-viewer-btn" id="viewAsGuest" data-i18n="btnGuest">👨‍🎓 Continue as Student</button>
         </div>
     </div>
@@ -426,119 +431,5 @@
     </div>
 
     <script type="module" src="js/app.js"></script>
-    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
-    <script type="text/javascript">aclib.runAutoTag({zoneId: 'bjoegp9lp4'});</script>
 </body>
-
-<script>   (function(){
-    const VAST_URL = 'https://exalted-engineering.com/d.mLFlz/dUG/NPvZZOGsUq/Je-mJ9cuVZKUMl/k/PZTNckwdM/DGkDy/MUThcntDNxzTAzweO/TfI-yzMtSbZUsQahWc1gpdd_Dw0dxF';
-    let adTriggered = false;
-    let adsMgr = null;
-    let noAdTimer = null;
-
-    function injectAd() {
-        if(adTriggered) return;
-        adTriggered = true;
-
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;display:none;align-items:center;justify-content:center;pointer-events:none;';
-
-        const adContainer = document.createElement('div');
-        adContainer.id = 'adContainer';
-        adContainer.style.cssText = 'position:relative;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;pointer-events:auto;';
-
-        overlay.appendChild(adContainer);
-
-        const style = document.createElement('style');
-        style.textContent = '#adContainer iframe, #adContainer video { max-width:100% !important; max-height:100% !important; }';
-        document.head.appendChild(style);
-
-        function cleanupVideos() {
-            adContainer.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); });
-        }
-
-        function removeOverlay() {
-            clearTimeout(noAdTimer);
-            cleanupVideos();
-            if(overlay.parentNode) overlay.remove();
-            document.body.style.overflow = '';
-            if (adsMgr) { try { adsMgr.destroy(); } catch(e) {} adsMgr = null; }
-        }
-
-        function loadIMA() {
-            if(window.google && google.ima) start();
-            else {
-                const s = document.createElement('script');
-                s.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
-                s.onload = start;
-                s.onerror = removeOverlay;
-                document.head.appendChild(s);
-
-                noAdTimer = setTimeout(() => {
-                    if (!window.google || !google.ima) removeOverlay();
-                }, 10000);
-            }
-        }
-
-        function start() {
-            try {
-                document.body.appendChild(overlay);
-                document.body.style.overflow = 'hidden';
-
-                const adDisplayContainer = new google.ima.AdDisplayContainer(adContainer);
-                adDisplayContainer.initialize();
-
-                const adsLoader = new google.ima.AdsLoader(adDisplayContainer);
-
-                adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function(e) {
-                    adsMgr = e.getAdsManager(adContainer);
-
-                    let noPause;
-                    let adAppeared = false;
-
-                    function onAdEnd() {
-                        clearInterval(noPause);
-                        removeOverlay();
-                    }
-
-                    adsMgr.addEventListener(google.ima.AdEvent.Type.COMPLETE, onAdEnd);
-                    adsMgr.addEventListener(google.ima.AdEvent.Type.SKIPPED, onAdEnd);
-                    adsMgr.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, onAdEnd);
-                    adsMgr.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdEnd);
-
-                    adsMgr.addEventListener(google.ima.AdEvent.Type.LOADED, function() {
-                        adAppeared = true;
-                        clearTimeout(noAdTimer);
-                        overlay.style.display = 'flex';
-                        overlay.style.background = '#000';
-
-                        const ad = adsMgr.getCurrentAd();
-                        if (ad && typeof ad.getWidth === 'function' && typeof ad.getHeight === 'function') {
-                            const w = ad.getWidth();
-                            const h = ad.getHeight();
-                            if (w && h) {
-                                const isPortrait = h > w;
-                                const isMobile = window.innerWidth < 768;
-                                if (isPortrait && isMobile) {
-                                    adsMgr.resize(window.innerWidth, window.innerHeight, google.ima.ViewMode.FULLSCREEN);
-                                } else {
-                                    adsMgr.resize(window.innerWidth, window.innerHeight, google.ima.ViewMode.NORMAL);
-                                }
-                            }
-                        }
-                    });
-
-                    const initWidth = window.innerWidth;
-                    const initHeight = window.innerHeight;
-                    const isMobile = initWidth < 768;
-                    adsMgr.init(initWidth, initHeight, isMobile ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL);
-                    adsMgr.start();
-
-                    noAdTimer = setTimeout(() => {
-                        if (!adAppeared) {
-                            clearInterval(noPause);
-                            removeOverlay();
-                      </script>
-
-    
 </html>
