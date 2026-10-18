@@ -591,7 +591,10 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
                     await showAlert('✅ Request sent! Please wait for the admin to approve your account.');
                 } catch (e) {
                     btn.disabled = false; btn.textContent = '📩 Send Request';
-                    fail('Could not send request. Please try again.');
+                    const code = (e && e.code) ? e.code : '';
+                    fail(code === 'permission-denied'
+                        ? 'Nag-fail: hindi pa naka-set ang security rules para sa requests. Ipa-publish muna ng admin.'
+                        : 'Could not send request. Please try again.' + (code ? ' (' + code + ')' : ''));
                 }
             };
             pw2El.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('reqSubmit').click(); } });
