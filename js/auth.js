@@ -670,16 +670,25 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
         export let loginBgUrl = '';
 
         export function applyLoginBg() {
-            if (loginBgUrl) {
-                loginOverlay.style.backgroundImage = "linear-gradient(rgba(5,8,16,0.55), rgba(5,8,16,0.55)), url('" + loginBgUrl + "')";
-                loginOverlay.style.backgroundSize = 'cover';
-                loginOverlay.style.backgroundPosition = 'center';
-                loginOverlay.style.backgroundRepeat = 'no-repeat';
-            } else {
-                loginOverlay.style.backgroundImage = '';
-                loginOverlay.style.backgroundSize = '';
-                loginOverlay.style.backgroundPosition = '';
-                loginOverlay.style.backgroundRepeat = '';
+            const tint = loginBgUrl
+                ? "linear-gradient(rgba(5,8,16,0.55), rgba(5,8,16,0.55)), url('" + loginBgUrl + "')"
+                : '';
+            const overlays = [loginOverlay, customAlertOverlay, document.getElementById('welcomeOverlay')];
+            overlays.forEach(function(el) {
+                if (!el) return;
+                el.style.backgroundImage = tint;
+                el.style.backgroundSize = tint ? 'cover' : '';
+                el.style.backgroundPosition = tint ? 'center' : '';
+                el.style.backgroundRepeat = tint ? 'no-repeat' : '';
+            });
+            if (!localStorage.getItem('fm_wallpaper')) {
+                if (loginBgUrl) {
+                    document.body.style.backgroundImage = "url('" + loginBgUrl + "')";
+                    document.body.classList.add('wp');
+                } else {
+                    document.body.style.backgroundImage = '';
+                    document.body.classList.remove('wp');
+                }
             }
             if (deleteBgBtn) deleteBgBtn.style.display = loginBgUrl ? 'block' : 'none';
         }
