@@ -1458,7 +1458,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, deleteField, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDsIdF5cgxBsvgNvkOWeoo_iatRVXWxJb8",
@@ -1473,7 +1473,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let adminPassword = 'admin123';
+        async function sha256(text) {
+            const buf = new TextEncoder().encode(text);
+            const hash = await crypto.subtle.digest('SHA-256', buf);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        function isHashed(s) { return typeof s === 'string' && /^[a-f0-9]{64}$/.test(s); }
+
+        let adminPasswordHash = '';
         let adminName = 'Zeraldin Cauba';
         let adminPhotoUrl = '';
         let gcashQRUrl = '';
@@ -1544,8 +1551,8 @@
             if (window.__fireLogin) window.__fireLogin();
         }
 
-        loginBtnEl.addEventListener('click', function() {
-            if (pwInput.value === adminPassword) enterApp(true);
+        loginBtnEl.addEventListener('click', async function() {
+            if (await sha256(pwInput.value) === adminPasswordHash) enterApp(true);
             else { errEl.style.display = 'block'; pwInput.value = ''; }
         });
         pwInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') loginBtnEl.click(); });
@@ -1571,7 +1578,15 @@
                 const settingsDoc = await getDoc(doc(db, 'settings', 'admin'));
                 if (settingsDoc.exists()) {
                     const data = settingsDoc.data();
-                    adminPassword = data.adminPw || 'admin123';
+                    if (data.adminPwHash) {
+                        adminPasswordHash = data.adminPwHash;
+                    } else if (data.adminPw) {
+                        adminPasswordHash = await sha256(data.adminPw);
+                        await setDoc(doc(db, 'settings', 'admin'), { adminPwHash: adminPasswordHash, adminPw: deleteField() }, { merge: true });
+                    } else {
+                        adminPasswordHash = await sha256('admin123');
+                        await setDoc(doc(db, 'settings', 'admin'), { adminPwHash: adminPasswordHash }, { merge: true });
+                    }
                     adminName = data.adminName || 'Zeraldin Cauba';
                     adminPhotoUrl = data.adminPhoto || '';
                     gcashQRUrl = data.gcashQR || '';
@@ -1581,12 +1596,20 @@
                     updateAdminNameDisplay();
                     updateAdminAvatarDisplay();
                 } else {
-                    await setDoc(doc(db, 'settings', 'admin'), { adminPw: 'admin123', adminName: 'Zeraldin Cauba', adminPhoto: '', gcashQR: '', allowStudentEdit: false, visitorCount: 0 });
+                    adminPasswordHash = await sha256('admin123');
+                    await setDoc(doc(db, 'settings', 'admin'), { adminPwHash: adminPasswordHash, adminName: 'Zeraldin Cauba', adminPhoto: '', gcashQR: '', allowStudentEdit: false, visitorCount: 0 });
                     updateAdminNameDisplay();
                     updateAdminAvatarDisplay();
                 }
             } catch (e) {
-                adminPassword = localStorage.getItem('fm_admin_pw') || 'admin123';
+                const legacyPw = localStorage.getItem('fm_admin_pw');
+                if (legacyPw) {
+                    adminPasswordHash = await sha256(legacyPw);
+                    localStorage.setItem('fm_admin_pw_hash', adminPasswordHash);
+                    localStorage.removeItem('fm_admin_pw');
+                } else {
+                    adminPasswordHash = localStorage.getItem('fm_admin_pw_hash') || await sha256('admin123');
+                }
                 adminName = localStorage.getItem('fm_admin_name') || 'Zeraldin Cauba';
                 adminPhotoUrl = localStorage.getItem('fm_admin_photo') || '';
                 gcashQRUrl = localStorage.getItem('fm_gcash_qr') || '';
@@ -1601,10 +1624,15 @@
 
         function startSettingsListener() {
             if (unsubscribeSettings) unsubscribeSettings();
-            unsubscribeSettings = onSnapshot(doc(db, 'settings', 'admin'), (settingsDoc) => {
+            unsubscribeSettings = onSnapshot(doc(db, 'settings', 'admin'), async (settingsDoc) => {
                 if (settingsDoc.exists()) {
                     const data = settingsDoc.data();
-                    adminPassword = data.adminPw || 'admin123';
+                    if (data.adminPwHash) {
+                        adminPasswordHash = data.adminPwHash;
+                    } else if (data.adminPw) {
+                        adminPasswordHash = await sha256(data.adminPw);
+                        await setDoc(doc(db, 'settings', 'admin'), { adminPwHash: adminPasswordHash, adminPw: deleteField() }, { merge: true });
+                    }
                     adminName = data.adminName || 'Zeraldin Cauba';
                     adminPhotoUrl = data.adminPhoto || '';
                     gcashQRUrl = data.gcashQR || '';
@@ -1793,7 +1821,7 @@
 
         // Use getIsAdmin() from inline script
         function getIsAdmin() { return window.__isAdmin === true; }
-        function getAdminPassword() { return adminPassword; }
+        function getAdminPasswordHash() { return adminPasswordHash; }
 
         function showAlert(msg) {
             return new Promise((resolve) => {
@@ -1941,12 +1969,14 @@
         });
 
         savePwBtn.addEventListener('click', async () => {
-            if (currentPw.value !== getAdminPassword()) { await showAlert('Current password is wrong!'); return; }
+            if (await sha256(currentPw.value) !== getAdminPasswordHash()) { await showAlert('Current password is wrong!'); return; }
             if (newPw.value.length < 4) { await showAlert('Password must be at least 4 characters!'); return; }
             if (newPw.value !== confirmPw.value) { await showAlert('New passwords do not match!'); return; }
-            adminPassword = newPw.value;
-            localStorage.setItem('fm_admin_pw', newPw.value);
-            try { await updateDoc(doc(db, 'settings', 'admin'), { adminPw: newPw.value }); } catch(e) {}
+            const newHash = await sha256(newPw.value);
+            adminPasswordHash = newHash;
+            localStorage.setItem('fm_admin_pw_hash', newHash);
+            localStorage.removeItem('fm_admin_pw');
+            try { await updateDoc(doc(db, 'settings', 'admin'), { adminPwHash: newHash, adminPw: deleteField() }); } catch(e) {}
             await showAlert('✅ Password changed!');
             closeChangePwModal();
         });
@@ -2274,8 +2304,20 @@
                 customAlertOverlay.classList.remove('hidden');
                 const pwIn = document.getElementById('studentPwInput');
                 pwIn.focus();
-                const checkPw = () => {
-                    if (pwIn.value === existingPw) {
+                const checkPw = async () => {
+                    let match = false;
+                    if (isHashed(existingPw)) {
+                        match = (await sha256(pwIn.value)) === existingPw;
+                    } else {
+                        match = pwIn.value === existingPw;
+                        if (match) {
+                            const h = await sha256(pwIn.value);
+                            await updateDoc(doc(db, 'students', String(studentId)), { pw: h });
+                            const migIdx = students.findIndex(s => String(s.id) === String(studentId));
+                            if (migIdx !== -1) students[migIdx].pw = h;
+                        }
+                    }
+                    if (match) {
                         customAlertOverlay.classList.add('hidden');
                         document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
                         startHeartbeat(studentId);
@@ -2312,10 +2354,11 @@
                     const p2 = confPw.value;
                     if (p1.length < 4) { errEl.textContent = 'Password must be at least 4 characters!'; errEl.style.display = 'block'; return; }
                     if (p1 !== p2) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
-                    localStorage.setItem('fm_student_pw_' + studentId, p1);
-                    await updateDoc(doc(db, 'students', String(studentId)), { pw: p1 });
+                    const h = await sha256(p1);
+                    localStorage.setItem('fm_student_pw_' + studentId, h);
+                    await updateDoc(doc(db, 'students', String(studentId)), { pw: h });
                     const idx = students.findIndex(s => String(s.id) === String(studentId));
-                    if (idx !== -1) students[idx].pw = p1;
+                    if (idx !== -1) students[idx].pw = h;
                     const studentName = student.name;
                     customAlertOverlay.classList.add('hidden');
                     document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
@@ -2354,10 +2397,11 @@
                 const p2 = confPw.value;
                 if (p1.length < 4) { errEl.textContent = 'Password must be at least 4 characters!'; errEl.style.display = 'block'; return; }
                 if (p1 !== p2) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
-                localStorage.setItem('fm_student_pw_' + studentId, p1);
-                await updateDoc(doc(db, 'students', String(studentId)), { pw: p1 });
+                const h = await sha256(p1);
+                localStorage.setItem('fm_student_pw_' + studentId, h);
+                await updateDoc(doc(db, 'students', String(studentId)), { pw: h });
                 const idx2 = students.findIndex(s => String(s.id) === String(studentId));
-                if (idx2 !== -1) students[idx2].pw = p1;
+                if (idx2 !== -1) students[idx2].pw = h;
                 const studentName2 = student.name;
                 customAlertOverlay.classList.add('hidden');
                 document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
