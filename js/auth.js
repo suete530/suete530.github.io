@@ -1,8 +1,8 @@
-import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadQrBtn } from './dom.js';
+import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { hashPassword, verifyPassword } from './crypto.js';
-import { escapeHtml, readFileAsBase64 } from './utils.js';
+import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
 import { unsubscribeSections, unsubscribeSuggestions } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
 import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -172,6 +172,8 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
         });
 
         export async function loadAdminSettings() {
+            loginBgUrl = localStorage.getItem('fm_login_bg') || '';
+            applyLoginBg();
             try {
                 const settingsDoc = await getDoc(doc(db, 'settings', 'admin'));
                 if (settingsDoc.exists()) {
@@ -180,6 +182,9 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
                     adminRegisteredEmail = data.adminEmail || '';
                     adminName = data.adminName || 'Zeraldin Cauba';
                     adminPhotoUrl = data.adminPhoto || '';
+                    loginBgUrl = data.loginBg || '';
+                    localStorage.setItem('fm_login_bg', loginBgUrl);
+                    applyLoginBg();
                     gcashQRUrl = data.gcashQR || '';
                     allowStudentEdit = data.allowStudentEdit || false;
                     document.getElementById('allowStudentEditToggle').checked = allowStudentEdit;
@@ -204,6 +209,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
                 document.getElementById('visitorCountNum').textContent = visitorCount;
                 updateAdminNameDisplay();
                 updateAdminAvatarDisplay();
+                applyLoginBg();
             }
         }
 
@@ -218,6 +224,9 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
                     adminPhotoUrl = data.adminPhoto || '';
                     gcashQRUrl = data.gcashQR || '';
                     allowStudentEdit = data.allowStudentEdit || false;
+                    loginBgUrl = data.loginBg || '';
+                    localStorage.setItem('fm_login_bg', loginBgUrl);
+                    applyLoginBg();
                     document.getElementById('allowStudentEditToggle').checked = allowStudentEdit;
                     updateEditProfileBtnVisibility();
                     visitorCount = data.visitorCount || 0;
@@ -320,6 +329,39 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
             localStorage.setItem('fm_admin_photo', adminPhotoUrl);
             try { await updateDoc(doc(db, 'settings', 'admin'), { adminPhoto: adminPhotoUrl }); } catch(e) {}
             adminPhotoInput.value = '';
+        });
+
+        uploadBgBtn.addEventListener('click', function() {
+            if (!isAdminSession()) return;
+            loginBgInput.click();
+        });
+
+        loginBgInput.addEventListener('change', async function() {
+            if (!isAdminSession()) { loginBgInput.value = ''; return; }
+            if (!loginBgInput.files[0]) return;
+            const dataUrl = await readImageAsBase64(loginBgInput.files[0], 1600, 0.78);
+            loginBgInput.value = '';
+            if (!dataUrl) { await showAlert('Could not read that image. Try another file.'); return; }
+            if (dataUrl.length > 950000) { await showAlert('Image is too large. Please choose a smaller or simpler photo.'); return; }
+            loginBgUrl = dataUrl;
+            localStorage.setItem('fm_login_bg', loginBgUrl);
+            applyLoginBg();
+            try {
+                await updateDoc(doc(db, 'settings', 'admin'), { loginBg: loginBgUrl });
+                await showAlert('✅ Login background updated!');
+            } catch(e) {
+                await showAlert('❌ Could not save background. Make sure you are logged in as admin.');
+            }
+        });
+
+        deleteBgBtn.addEventListener('click', async function() {
+            if (!isAdminSession()) return;
+            if (!await showConfirm('Remove the login page background?')) return;
+            loginBgUrl = '';
+            localStorage.removeItem('fm_login_bg');
+            applyLoginBg();
+            try { await updateDoc(doc(db, 'settings', 'admin'), { loginBg: '' }); } catch(e) {}
+            await showAlert('🗑️ Login background removed!');
         });
 
         customAlertClose.addEventListener('click', function() {
@@ -625,6 +667,22 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } fr
         export let unsubscribeSettings = null;
         export let allowStudentEdit = false;
         export let visitorCount = 0;
+        export let loginBgUrl = '';
+
+        export function applyLoginBg() {
+            if (loginBgUrl) {
+                loginOverlay.style.backgroundImage = "linear-gradient(rgba(5,8,16,0.55), rgba(5,8,16,0.55)), url('" + loginBgUrl + "')";
+                loginOverlay.style.backgroundSize = 'cover';
+                loginOverlay.style.backgroundPosition = 'center';
+                loginOverlay.style.backgroundRepeat = 'no-repeat';
+            } else {
+                loginOverlay.style.backgroundImage = '';
+                loginOverlay.style.backgroundSize = '';
+                loginOverlay.style.backgroundPosition = '';
+                loginOverlay.style.backgroundRepeat = '';
+            }
+            if (deleteBgBtn) deleteBgBtn.style.display = loginBgUrl ? 'block' : 'none';
+        }
 
         window.__startStudentSession = function(studentId) {
             stopHeartbeat();

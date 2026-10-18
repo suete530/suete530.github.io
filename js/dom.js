@@ -3,6 +3,9 @@
         export const loginAvatarCircle = document.getElementById('loginAvatarCircle');
         export const adminPhotoInput = document.getElementById('adminPhotoInput');
         export const adminPhotoBtn = document.getElementById('adminPhotoBtn');
+        export const loginBgInput = document.getElementById('loginBgInput');
+        export const uploadBgBtn = document.getElementById('uploadBgBtn');
+        export const deleteBgBtn = document.getElementById('deleteBgBtn');
         export const settingsAvatarImg = document.getElementById('settingsAvatarImg');
         export const settingsAvatarInitial = document.getElementById('settingsAvatarInitial');
         export const adminNameDisplay = document.getElementById('adminNameDisplay');

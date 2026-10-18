@@ -28,6 +28,30 @@ import { currentSectionId, sections } from './state.js';
             });
         }
 
+        export function readImageAsBase64(file, maxSize, quality) {
+            maxSize = maxSize || 1600;
+            quality = quality || 0.78;
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onerror = () => resolve('');
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => resolve('');
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > h) { if (w > maxSize) { h *= maxSize / w; w = maxSize; } }
+                        else { if (h > maxSize) { w *= maxSize / h; h = maxSize; } }
+                        canvas.width = Math.round(w); canvas.height = Math.round(h);
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         export function formatMoney(n) { return '₱' + Number(n).toFixed(2); }
         export function getCurrentSectionName() {
             const sec = sections.find(s => s.id === currentSectionId);
