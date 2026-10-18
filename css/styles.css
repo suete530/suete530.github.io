@@ -309,6 +309,9 @@
         background-size: 10px; background-position: center; background-repeat: no-repeat;
     }
     .admin-avatar-circle.has-photo::after { display: none; }
+    .admin-profile-section .admin-avatar-circle { cursor: default; }
+    .admin-profile-section .admin-avatar-circle:hover { border-color: var(--secondary); box-shadow: 0 0 20px rgba(124,58,237,0.25); }
+    .admin-profile-section .admin-avatar-circle::after { display: none; }
     .admin-name-display {
         font-size: 0.85rem; color: #a78bfa; margin-bottom: 4px;
         padding: 4px 12px; border-radius: 10px;

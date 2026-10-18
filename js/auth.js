@@ -1,4 +1,4 @@
-import { adminNameDisplay, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadQrBtn } from './dom.js';
+import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadQrBtn } from './dom.js';
 import { getIsAdmin, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { hashPassword, verifyPassword } from './crypto.js';
@@ -19,12 +19,18 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot } from "https:/
                 loginAvatarImg.style.display = 'block';
                 loginAvatarInitial.style.display = 'none';
                 loginAvatarCircle.classList.add('has-photo');
+                settingsAvatarImg.src = adminPhotoUrl;
+                settingsAvatarImg.style.display = 'block';
+                settingsAvatarInitial.style.display = 'none';
             } else {
                 loginAvatarImg.style.display = 'none';
                 loginAvatarInitial.style.display = 'block';
                 loginAvatarCircle.classList.remove('has-photo');
+                settingsAvatarImg.style.display = 'none';
+                settingsAvatarInitial.style.display = 'block';
                 const initials = adminName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
                 loginAvatarInitial.textContent = initials;
+                settingsAvatarInitial.textContent = initials || 'ZC';
             }
         }
 
@@ -301,7 +307,13 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot } from "https:/
             }
         });
 
+        adminPhotoBtn.addEventListener('click', function() {
+            if (!isAdminSession()) return;
+            adminPhotoInput.click();
+        });
+
         adminPhotoInput.addEventListener('change', async function() {
+            if (!isAdminSession()) { adminPhotoInput.value = ''; return; }
             if (!adminPhotoInput.files[0]) return;
             const photoUrl = await readFileAsBase64(adminPhotoInput.files[0]);
             adminPhotoUrl = photoUrl;

@@ -2,6 +2,9 @@
         export const loginAvatarInitial = document.getElementById('loginAvatarInitial');
         export const loginAvatarCircle = document.getElementById('loginAvatarCircle');
         export const adminPhotoInput = document.getElementById('adminPhotoInput');
+        export const adminPhotoBtn = document.getElementById('adminPhotoBtn');
+        export const settingsAvatarImg = document.getElementById('settingsAvatarImg');
+        export const settingsAvatarInitial = document.getElementById('settingsAvatarInitial');
         export const adminNameDisplay = document.getElementById('adminNameDisplay');
         export const headerAdminName = document.getElementById('headerAdminName');
         export const settingsAdminName = document.getElementById('settingsAdminName');
