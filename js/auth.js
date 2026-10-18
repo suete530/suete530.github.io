@@ -6,7 +6,7 @@ import { escapeHtml, readFileAsBase64 } from './utils.js';
 import { unsubscribeSections, unsubscribeSuggestions } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
 import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function updateAdminNameDisplay() {
             adminNameDisplay.textContent = adminName;
@@ -235,8 +235,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot } from "https:/
         export async function trackVisitor() {
             if (localStorage.getItem('fm_visited')) return;
             try {
-                const ref = doc(db, 'settings', 'admin');
-                await updateDoc(ref, { visitorCount: (visitorCount || 0) + 1 });
+                await updateDoc(doc(db, 'settings', 'admin'), { visitorCount: increment(1) });
                 localStorage.setItem('fm_visited', '1');
             } catch(e) {}
         }
