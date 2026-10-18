@@ -589,6 +589,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
                     });
                     customAlertOverlay.classList.add('hidden');
                     await showAlert('✅ Request sent! Please wait for the admin to approve your account.');
+                    promptStudentSelect();
                 } catch (e) {
                     btn.disabled = false; btn.textContent = '📩 Send Request';
                     const code = (e && e.code) ? e.code : '';
