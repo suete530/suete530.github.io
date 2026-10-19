@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        const _k = atob("QUl6YVN5QnBzU3RIMzE2OGN4NjZsMS1ieU1YOW9ibjZhVVBpWFRj");
+        const _k = atob("QUl6YVN5RGpOS3NBVG5ybjNncjN6VlpaMUl2WlRYLTBuY1J2UUVZ");
 
         export const firebaseConfig = {
             apiKey: _k,
