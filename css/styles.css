@@ -342,7 +342,7 @@
     .login-box.tp-8 .theme-btn { box-shadow: 0 0 12px rgba(20,184,166,0.35); }
     @keyframes themePop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
     .login-box.theme-pop { animation: themePop 0.4s ease; }
-    body.dark .login-box { background: rgba(12,18,34,0.92); border-color: rgba(124,58,237,0.3); }
+    body.dark .login-box:not([class*="tp-"]) { background: rgba(12,18,34,0.92); border-color: rgba(124,58,237,0.3); }
     .login-box h2 {
         font-size: 1.5rem; margin-bottom: 8px;
         background: linear-gradient(135deg, var(--accent), var(--secondary));
