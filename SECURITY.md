@@ -26,7 +26,11 @@ it assumes about its environment, and where its limits are.
 - Changing the password requires a fresh **reauthentication** with the current
   password (`reauthenticateWithCredential`) before `updatePassword` is called.
 - `settings/admin` records only **which** account is the admin, via the public
-  `adminEmail` field. The password itself is never there.
+  `adminEmail` field (plus `adminUid`). The password itself is never there.
+- Changing the admin **email** requires a fresh reauthentication, then Firebase
+  `verifyBeforeUpdateEmail()` sends a confirmation link to the new address. The
+  change only takes effect after the owner opens that link. `adminEmail` is
+  re-synced to the verified address on the next sign-in (matched by `adminUid`).
 
 ### Student passwords
 

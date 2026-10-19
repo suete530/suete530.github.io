@@ -25,6 +25,10 @@
         export const newPw = document.getElementById('newPw');
         export const confirmPw = document.getElementById('confirmPw');
         export const savePwBtn = document.getElementById('savePwBtn');
+        export const settingsCurrentEmail = document.getElementById('settingsCurrentEmail');
+        export const settingsNewEmail = document.getElementById('settingsNewEmail');
+        export const emailCurrentPw = document.getElementById('emailCurrentPw');
+        export const saveEmailBtn = document.getElementById('saveEmailBtn');
         export const settingsGcashNumber = document.getElementById('settingsGcashNumber');
         export const settingsGcashName = document.getElementById('settingsGcashName');
         export const saveGcashBtn = document.getElementById('saveGcashBtn');

@@ -263,6 +263,15 @@
                 <label data-i18n="confirmPw">Confirm New Password</label><input type="password" id="confirmPw" placeholder="••••••••">
                 <button id="savePwBtn" data-i18n="btnSavePw">💾 Save Password</button>
                 <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
+                <h4 style="font-size:0.85rem;margin-bottom:8px;color:#60a5fa;" data-i18n="emailSection">📧 Admin Email</h4>
+                <label data-i18n="currentEmail">Current Email</label>
+                <input type="email" id="settingsCurrentEmail" placeholder="admin@email.com" readonly style="opacity:0.6;cursor:not-allowed;">
+                <label data-i18n="newEmail">New Email</label>
+                <input type="email" id="settingsNewEmail" placeholder="new-admin@email.com" maxlength="60" autocomplete="email">
+                <label data-i18n="emailPwConfirm">Confirm with your password</label><input type="password" id="emailCurrentPw" placeholder="••••••••" autocomplete="current-password">
+                <button id="saveEmailBtn" data-i18n="btnSaveEmail">💾 Save Email</button>
+                <p style="font-size:0.68rem;color:#9ca3af;margin-top:6px;line-height:1.45;" data-i18n="emailHint">A confirmation link will be sent to the new email. The change takes effect only after you click that link.</p>
+                <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
                 <h4 style="font-size:0.85rem;margin-bottom:8px;color:#2d3e5f;" data-i18n="gcashSettings">💳 GCash Settings</h4>
                 <label data-i18n="gcashNum">GCash Number</label><input type="text" id="settingsGcashNumber" placeholder="09XXXXXXXXX" maxlength="11">
                 <label data-i18n="gcashAccName">GCash Account Name</label><input type="text" id="settingsGcashName" placeholder="e.g., Juan Dela Cruz">

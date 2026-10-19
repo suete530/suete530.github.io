@@ -1,10 +1,10 @@
-import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailInput, errEl, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
+import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
 import { unsubscribeSections, unsubscribeSuggestions, stopRequestsListener } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function updateAdminNameDisplay() {
@@ -121,7 +121,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
                 loginBtnEl.disabled = true;
                 try {
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, 'settings', 'admin'), { adminRegistered: true, adminEmail: cred.user.email }, { merge: true });
+                    await setDoc(doc(db, 'settings', 'admin'), { adminRegistered: true, adminEmail: cred.user.email, adminUid: cred.user.uid }, { merge: true });
                     adminRegistered = true;
                     adminRegisteredEmail = cred.user.email;
                     updateSetupButtonVisibility();
@@ -620,6 +620,9 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             changePwModal.classList.add('active');
             currentPw.value = ''; newPw.value = ''; confirmPw.value = '';
             settingsAdminName.value = adminName;
+            settingsCurrentEmail.value = (auth.currentUser && auth.currentUser.email) || adminRegisteredEmail || '';
+            settingsNewEmail.value = '';
+            emailCurrentPw.value = '';
             settingsGcashNumber.value = localStorage.getItem('fm_gcash_number') || '';
             settingsGcashName.value = localStorage.getItem('fm_gcash_name') || '';
             updateQRPreview();
@@ -650,6 +653,41 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             }
             currentPw.value = ''; newPw.value = ''; confirmPw.value = '';
             await showAlert('✅ Password changed!');
+            closeChangePwModal();
+        });
+
+        saveEmailBtn.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user || user.isAnonymous) { await showAlert('Sign in as admin first!'); return; }
+            const newEmail = settingsNewEmail.value.trim();
+            const pw = emailCurrentPw.value;
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { await showAlert('Enter a valid email address.'); return; }
+            if (newEmail === (user.email || '').toLowerCase()) { await showAlert('That is already your current email.'); return; }
+            if (!pw) { await showAlert('Enter your current password to confirm.'); return; }
+            if (!await showConfirm('Change your admin login email to:\n\n' + newEmail + '\n\nA confirmation link will be sent to the new email. You must open it to complete the change.')) return;
+            saveEmailBtn.disabled = true;
+            try {
+                const cred = EmailAuthProvider.credential(user.email, pw);
+                await reauthenticateWithCredential(user, cred);
+            } catch (e) {
+                saveEmailBtn.disabled = false;
+                await showAlert(e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' ? 'Current password is wrong!' : 'Re-authentication failed: ' + (e.message || 'try logging in again.'));
+                return;
+            }
+            try {
+                await verifyBeforeUpdateEmail(user, newEmail);
+            } catch (e) {
+                saveEmailBtn.disabled = false;
+                const code = (e && e.code) || '';
+                if (code === 'auth/email-already-in-use') await showAlert('That email is already used by another account.');
+                else if (code === 'auth/requires-recent-login') await showAlert('For security, please log out and log back in, then try again.');
+                else await showAlert('Could not change email: ' + (e.message || 'unknown error.'));
+                return;
+            }
+            settingsNewEmail.value = '';
+            emailCurrentPw.value = '';
+            saveEmailBtn.disabled = false;
+            await showAlert('📧 Confirmation link sent to ' + newEmail + '.\n\nOpen it from your inbox to finish changing your admin email.\n\n⚠️ Important: log out and log back in only AFTER confirming.');
             closeChangePwModal();
         });
 
@@ -755,6 +793,19 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
         export let allowStudentEdit = false;
         export let visitorCount = 0;
         export let loginBgUrl = '';
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || user.isAnonymous || !user.email) return;
+            try {
+                const snap = await getDoc(doc(db, 'settings', 'admin'));
+                if (!snap.exists()) return;
+                const data = snap.data();
+                const updates = {};
+                if (data.adminEmail && data.adminEmail !== user.email) updates.adminEmail = user.email;
+                if (!data.adminUid) updates.adminUid = user.uid;
+                if (Object.keys(updates).length) await updateDoc(doc(db, 'settings', 'admin'), updates);
+            } catch (e) {}
+        });
 
         export function applyLoginBg() {
             const tint = loginBgUrl
