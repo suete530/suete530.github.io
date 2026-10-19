@@ -483,6 +483,18 @@
                 void box.offsetWidth;
                 box.classList.add('theme-pop');
             });
+
+            if (!localStorage.getItem('fm_box_fell')) {
+                box.addEventListener('click', function () {
+                    localStorage.setItem('fm_box_fell', '1');
+                    box.classList.remove('box-fall');
+                    void box.offsetWidth;
+                    box.classList.add('box-fall');
+                    box.addEventListener('animationend', function () {
+                        box.classList.remove('box-fall');
+                    }, { once: true });
+                }, { once: true });
+            }
         })();
     </script>
 </body>
