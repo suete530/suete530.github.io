@@ -12,7 +12,7 @@ import { collection, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic
             bubble.classList.toggle('active', open);
             if (open && !panel.dataset.initialized) {
                 panel.dataset.initialized = 'true';
-                appendMessage('bot', '<span class="bot-tag">â–¸ AI ASSISTANT v1.0</span> SYSTEM ONLINE. Ako si AI Assistant ng Fines Manager. Pwede mo akong tanungin tungkol sa fines, students, at payments.\n\nI-type ang <b>help</b> para sa listahan ng commands.');
+                appendMessage('bot', '<span class="bot-tag">â–¸ AI ASSISTANT v1.0</span> SYSTEM ONLINE. Ako si AI Assistant ng Fines System. Pwede mo akong tanungin tungkol sa fines, students, at payments.\n\nI-type ang <b>help</b> para sa listahan ng commands.');
             }
             if (open) {
                 const msgs = document.getElementById('chat-messages');
@@ -59,8 +59,8 @@ import { collection, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic
             let reply = '';
             if (/^(hi|hello|hey|musta|good (morning|afternoon|evening|day)|magandang)/i.test(text)) {
                 reply = isTagalog
-                    ? `Magandang araw! ðŸ˜Š Ako ang chat assistant ng Fines Manager. Ano ang maitutulong ko?`
-                    : `Hello! ðŸ˜Š I'm the Fines Manager chat assistant. How can I help you?`;
+                    ? `Magandang araw! ðŸ˜Š Ako ang chat assistant ng Fines System. Ano ang maitutulong ko?`
+                    : `Hello! ðŸ˜Š I'm the Fines System chat assistant. How can I help you?`;
                 if (text.length < 10) reply += '\n\nðŸ’¡ Type <b>help</b> para sa listahan ng commands.';
             } else if (/^(help|commands|tulong|commands)/i.test(text)) {
                 reply = isTagalog

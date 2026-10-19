@@ -1,8 +1,8 @@
         export const i18n = {
             en: {
-                loginTitle: '🔐 Fines Manager', loginDesc: 'Enter secretary email & password or student sign-in',
+                loginTitle: '🔐 Fines System', loginDesc: 'Enter secretary email & password or student sign-in',
                 btnLogin: '🔓 Secretary Login',
-                headerTitle: '📋 BSIS Fines Manager', roleStudent: '👨‍🎓 Student',
+                headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Student',
                 btnActivity: '📋 Activity', btnAnnounce: '📢 Announce', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Student', profileRole: 'USER',
                 pageTitle: 'STUDENT FINES', lblSection: '📚 Section:', btnNewSection: '➕ New Section',
@@ -44,9 +44,9 @@
                 noAnnounce: 'No announcements yet.'
             },
             tl: {
-                loginTitle: '🔐 Fines Manager', loginDesc: 'Ilagay ang email at password ng secretary o mag-sign-in bilang estudyante',
+                loginTitle: '🔐 Fines System', loginDesc: 'Ilagay ang email at password ng secretary o mag-sign-in bilang estudyante',
                 btnLogin: '🔓 Mag-login bilang Secretary',
-                headerTitle: '📋 BSIS Fines Manager', roleStudent: '👨‍🎓 Estudyante',
+                headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Aktibidad', btnAnnounce: '📢 Anunsyo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Estudyante', profileRole: 'USER',
                 pageTitle: 'MGA FINES NG ESTUDYANTE', lblSection: '📚 Seksyon:', btnNewSection: '➕ Bagong Seksyon',
@@ -88,9 +88,9 @@
                 noAnnounce: 'Wala pang anunsyo.'
             },
             ceb: {
-                loginTitle: '🔐 Fines Manager', loginDesc: 'Isulod ang email ug password sa secretary o sign-in isip estudyante',
+                loginTitle: '🔐 Fines System', loginDesc: 'Isulod ang email ug password sa secretary o sign-in isip estudyante',
                 btnLogin: '🔓 Mag-login isip Secretary',
-                headerTitle: '📋 BSIS Fines Manager', roleStudent: '👨‍🎓 Estudyante',
+                headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Kalihokan', btnAnnounce: '📢 Pahibalo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Estudyante', profileRole: 'USER',
                 pageTitle: 'MGA FINES SA ESTUDYANTE', lblSection: '📚 Seksyon:', btnNewSection: '➕ Bag-ong Seksyon',
