@@ -16,7 +16,6 @@
         export const loginPassword = document.getElementById('loginPassword');
         export const loginBtn = document.getElementById('loginBtn');
         export const loginError = document.getElementById('loginError');
-        export const viewAsGuest = document.getElementById('viewAsGuest');
         export const roleBadge = document.getElementById('roleBadge');
         export const darkToggle = document.getElementById('darkToggle');
         export const changePwBtn = document.getElementById('changePwBtn');
@@ -81,7 +80,6 @@
         export const pwInput = document.getElementById('loginPassword');
         export const confirmInput = document.getElementById('loginConfirmPassword');
         export const loginBtnEl = document.getElementById('loginBtn');
-        export const guestBtn = document.getElementById('viewAsGuest');
         export const setupBtn = document.getElementById('setupAdminBtn');
         export const setupNote = document.getElementById('setupNote');
         export const errEl = document.getElementById('loginError');

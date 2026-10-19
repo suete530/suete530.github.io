@@ -1,9 +1,7 @@
-import { guestBtn, loginBtn } from './dom.js';
-
         export const i18n = {
             en: {
-                loginTitle: '🔐 Fines Manager', loginDesc: 'Enter secretary email & password or continue as student',
-                btnLogin: '🔓 Secretary Login', btnGuest: '👨‍🎓 Continue as Student',
+                loginTitle: '🔐 Fines Manager', loginDesc: 'Enter secretary email & password or student sign-in',
+                btnLogin: '🔓 Secretary Login',
                 headerTitle: '📋 BSIS Fines Manager', roleStudent: '👨‍🎓 Student',
                 btnActivity: '📋 Activity', btnAnnounce: '📢 Announce', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Student', profileRole: 'USER',
@@ -46,8 +44,8 @@ import { guestBtn, loginBtn } from './dom.js';
                 noAnnounce: 'No announcements yet.'
             },
             tl: {
-                loginTitle: '🔐 Fines Manager', loginDesc: 'Ilagay ang email at password ng secretary o magpatuloy bilang estudyante',
-                btnLogin: '🔓 Mag-login bilang Secretary', btnGuest: '👨‍🎓 Magpatuloy bilang Estudyante',
+                loginTitle: '🔐 Fines Manager', loginDesc: 'Ilagay ang email at password ng secretary o mag-sign-in bilang estudyante',
+                btnLogin: '🔓 Mag-login bilang Secretary',
                 headerTitle: '📋 BSIS Fines Manager', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Aktibidad', btnAnnounce: '📢 Anunsyo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Estudyante', profileRole: 'USER',
@@ -90,8 +88,8 @@ import { guestBtn, loginBtn } from './dom.js';
                 noAnnounce: 'Wala pang anunsyo.'
             },
             ceb: {
-                loginTitle: '🔐 Fines Manager', loginDesc: 'Isulod ang email ug password sa secretary o padayon isip estudyante',
-                btnLogin: '🔓 Mag-login isip Secretary', btnGuest: '👨‍🎓 Padayon isip Estudyante',
+                loginTitle: '🔐 Fines Manager', loginDesc: 'Isulod ang email ug password sa secretary o sign-in isip estudyante',
+                btnLogin: '🔓 Mag-login isip Secretary',
                 headerTitle: '📋 BSIS Fines Manager', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Kalihokan', btnAnnounce: '📢 Pahibalo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Estudyante', profileRole: 'USER',
@@ -150,8 +148,6 @@ import { guestBtn, loginBtn } from './dom.js';
             });
             const loginBtn = document.getElementById('loginBtn');
             if (loginBtn) loginBtn.innerHTML = i18n[lang].btnLogin;
-            const guestBtn = document.getElementById('viewAsGuest');
-            if (guestBtn) guestBtn.innerHTML = i18n[lang].btnGuest;
         }
         document.getElementById('langToggle')?.addEventListener('click', () => {
             const next = { en: 'tl', tl: 'ceb', ceb: 'en' };

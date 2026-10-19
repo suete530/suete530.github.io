@@ -1,10 +1,10 @@
-import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
+import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailInput, errEl, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
 import { unsubscribeSections, unsubscribeSuggestions, stopRequestsListener } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
-import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function updateAdminNameDisplay() {
@@ -155,56 +155,6 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
         });
         pwInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') loginBtnEl.click(); });
         confirmInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') loginBtnEl.click(); });
-        guestBtn.addEventListener('click', async function() {
-            if (!auth.currentUser) { try { await signInAnonymously(auth); } catch (e) { console.warn('Anonymous auth unavailable:', e.message); } }
-            try {
-                const snap = await getDocs(collection(db, 'students'));
-                const allStudents = [];
-                snap.forEach(d => allStudents.push({ id: parseInt(d.id), ...d.data() }));
-                setStudents(allStudents);
-            } catch (e) { console.warn('Could not load students:', e); }
-            if (!students || students.length === 0) {
-                errEl.textContent = 'Walang students na naka-register pa. Kontakin mo muna ang admin.';
-                errEl.style.display = 'block';
-                return;
-            }
-            errEl.style.display = 'none';
-            promptStudentSelect();
-        });
-
-        export function promptStudentSelect() {
-            const activeSid = localStorage.getItem('fm_student_session_id');
-            document.querySelector('.custom-alert-title').textContent = 'Jonard Suete says!!';
-            customAlertMsg.innerHTML = `
-                <label style="font-size:0.8rem;font-weight:bold;display:block;">👤 Search your name:</label>
-                <input type="text" id="studentSessionInput" placeholder="Type your name..." style="width:100%;padding:8px;margin-top:6px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
-                <div id="sessionMatches" style="max-height:120px;overflow-y:auto;margin-top:6px;"></div>
-                <div style="text-align:center;margin-top:10px;border-top:1px dashed #e2cf9a;padding-top:10px;">
-                    <a id="requestAccountLink" style="font-size:0.75rem;color:#4682b4;cursor:pointer;text-decoration:underline;">🙋 Not in the list? Request an account</a>
-                </div>
-            `;
-            customAlertInput.style.display = 'none';
-            customAlertBtns.innerHTML = '';
-            customAlertOverlay.classList.remove('hidden');
-            const inp = document.getElementById('studentSessionInput');
-            const matchBox = document.getElementById('sessionMatches');
-            document.getElementById('requestAccountLink').onclick = function() {
-                customAlertOverlay.classList.add('hidden');
-                promptStudentRegister();
-            };
-            inp.focus();
-            inp.addEventListener('input', function() {
-                const q = inp.value.toLowerCase();
-                if (!q) { matchBox.innerHTML = ''; return; }
-                const matches = students.filter(s => (s.name || '').toLowerCase().includes(q));
-                if (matches.length === 0) { matchBox.innerHTML = '<div style="padding:8px;font-size:0.75rem;color:#999;">No matches found — you can request an account below.</div>'; return; }
-                matchBox.innerHTML = matches.slice(0, 8).map(s => `<div onclick="window.__pickSession('${s.id}')" style="padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer;font-size:0.8rem;border-radius:6px;${String(s.id) === String(activeSid) ? 'background:#e8f4e8;font-weight:bold;' : ''}">${escapeHtml(s.name)}${String(s.id) === String(activeSid) ? ' ✓' : ''}</div>`).join('');
-            });
-        }
-        window.__pickSession = function(id) {
-            customAlertOverlay.classList.add('hidden');
-            finishStudentLogin(String(id));
-        };
 
         // ================= STUDENT EMAIL AUTH =================
         export let studentMode = false;
