@@ -287,6 +287,61 @@
     @media (prefers-reduced-motion: reduce) {
         .login-box { animation: none; }
     }
+    .theme-btn {
+        position: absolute; top: 14px; right: 14px;
+        width: 34px; height: 34px; border-radius: 50%;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+        cursor: pointer; font-size: 1rem; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform 0.25s, background 0.25s, box-shadow 0.25s;
+        z-index: 5;
+    }
+    .theme-btn:hover {
+        transform: rotate(30deg) scale(1.12);
+        background: rgba(255,255,255,0.12);
+        box-shadow: 0 0 14px var(--accent-a27);
+    }
+    .theme-btn:active { transform: scale(0.9); }
+    .login-box { position: relative; transition: border-color 0.5s, box-shadow 0.5s; }
+    .login-box.tp-1 { --accent:#00d4ff; --accent-a27:#00d4ff44; --accent-a20:#00d4ff33; --accent-a13:#00d4ff22; --accent-a7:#00d4ff11; --secondary:#7c3aed; --secondary-dark:#6d28d9; border-color: rgba(124,58,237,0.25); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.15); }
+    .login-box.tp-2 { --accent:#f472b6; --accent-a27:#f472b644; --accent-a20:#f472b633; --accent-a13:#f472b622; --accent-a7:#f472b611; --secondary:#e11d48; --secondary-dark:#be123c; border-color: rgba(225,29,72,0.28); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(225,29,72,0.18); }
+    .login-box.tp-3 { --accent:#34d399; --accent-a27:#34d39944; --accent-a20:#34d39933; --accent-a13:#34d39922; --accent-a7:#34d39911; --secondary:#059669; --secondary-dark:#047857; border-color: rgba(5,150,105,0.28); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(5,150,105,0.18); }
+    .login-box.tp-4 { --accent:#fbbf24; --accent-a27:#fbbf2444; --accent-a20:#fbbf2433; --accent-a13:#fbbf2422; --accent-a7:#fbbf2411; --secondary:#f59e0b; --secondary-dark:#d97706; border-color: rgba(245,158,11,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(245,158,11,0.18); }
+    .login-box.tp-5 { --accent:#a78bfa; --accent-a27:#a78bfa44; --accent-a20:#a78bfa33; --accent-a13:#a78bfa22; --accent-a7:#a78bfa11; --secondary:#8b5cf6; --secondary-dark:#7c3aed; border-color: rgba(139,92,246,0.28); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(139,92,246,0.18); }
+    .login-box.tp-6 { --accent:#60a5fa; --accent-a27:#60a5fa44; --accent-a20:#60a5fa33; --accent-a13:#60a5fa22; --accent-a7:#60a5fa11; --secondary:#3b82f6; --secondary-dark:#2563eb; border-color: rgba(59,130,246,0.28); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(59,130,246,0.18); }
+    .login-box.tp-7 { --accent:#fb7185; --accent-a27:#fb718544; --accent-a20:#fb718533; --accent-a13:#fb718522; --accent-a7:#fb718511; --secondary:#f43f5e; --secondary-dark:#e11d48; border-color: rgba(244,63,94,0.28); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(244,63,94,0.18); }
+    .login-box.tp-8 { --accent:#2dd4bf; --accent-a27:#2dd4bf44; --accent-a20:#2dd4bf33; --accent-a13:#2dd4bf22; --accent-a7:#2dd4bf11; --secondary:#14b8a6; --secondary-dark:#0d9488; border-color: rgba(20,184,166,0.28); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(20,184,166,0.18); }
+    .login-box.tp-1 .login-btn,
+    .login-box.tp-2 .login-btn,
+    .login-box.tp-3 .login-btn,
+    .login-box.tp-4 .login-btn,
+    .login-box.tp-5 .login-btn,
+    .login-box.tp-6 .login-btn,
+    .login-box.tp-7 .login-btn,
+    .login-box.tp-8 .login-btn { transition: background 0.5s; }
+    .login-box.tp-2 .admin-avatar-circle,
+    .login-box.tp-3 .admin-avatar-circle,
+    .login-box.tp-4 .admin-avatar-circle,
+    .login-box.tp-5 .admin-avatar-circle,
+    .login-box.tp-6 .admin-avatar-circle,
+    .login-box.tp-7 .admin-avatar-circle,
+    .login-box.tp-8 .admin-avatar-circle { border-color: var(--secondary); box-shadow: 0 0 20px var(--accent-a27); }
+    .login-box.tp-2 .admin-avatar-circle:hover,
+    .login-box.tp-3 .admin-avatar-circle:hover,
+    .login-box.tp-4 .admin-avatar-circle:hover,
+    .login-box.tp-5 .admin-avatar-circle:hover,
+    .login-box.tp-6 .admin-avatar-circle:hover,
+    .login-box.tp-7 .admin-avatar-circle:hover,
+    .login-box.tp-8 .admin-avatar-circle:hover { border-color: var(--accent); box-shadow: 0 0 25px var(--accent-a27); }
+    .login-box.tp-2 .theme-btn { box-shadow: 0 0 12px rgba(225,29,72,0.35); }
+    .login-box.tp-3 .theme-btn { box-shadow: 0 0 12px rgba(5,150,105,0.35); }
+    .login-box.tp-4 .theme-btn { box-shadow: 0 0 12px rgba(245,158,11,0.35); }
+    .login-box.tp-5 .theme-btn { box-shadow: 0 0 12px rgba(139,92,246,0.35); }
+    .login-box.tp-6 .theme-btn { box-shadow: 0 0 12px rgba(59,130,246,0.35); }
+    .login-box.tp-7 .theme-btn { box-shadow: 0 0 12px rgba(244,63,94,0.35); }
+    .login-box.tp-8 .theme-btn { box-shadow: 0 0 12px rgba(20,184,166,0.35); }
+    @keyframes themePop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+    .login-box.theme-pop { animation: themePop 0.4s ease; }
     body.dark .login-box { background: rgba(12,18,34,0.92); border-color: rgba(124,58,237,0.3); }
     .login-box h2 {
         font-size: 1.5rem; margin-bottom: 8px;

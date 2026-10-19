@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>BSIS-1 · Fines System</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        (function() {
+            var box = document.getElementById('loginBox');
+            var btn = document.getElementById('loginThemeBtn');
+            if (!box || !btn) return;
+            var total = 8, cur = parseInt(localStorage.getItem('fm_login_theme') || '1', 10);
+            function apply(n) {
+                for (var i = 1; i <= total; i++) box.classList.remove('tp-' + i);
+                if (n > 1) box.classList.add('tp-' + n);
+                localStorage.setItem('fm_login_theme', String(n));
+            }
+            apply(cur);
+            btn.addEventListener('click', function() {
+                cur = cur % total + 1;
+                apply(cur);
+                box.classList.remove('theme-pop');
+                void box.offsetWidth;
+                box.classList.add('theme-pop');
+            });
+        })();
+    </script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -25,7 +46,8 @@
         <div class="snake-g2"><div class="snake-segment snake-head snake-s0"></div><div class="snake-segment snake-body snake-s1"></div><div class="snake-segment snake-body snake-s2"></div><div class="snake-segment snake-body snake-s3"></div><div class="snake-segment snake-body snake-s4"></div><div class="snake-segment snake-body snake-s5"></div><div class="snake-segment snake-body snake-s6"></div><div class="snake-segment snake-body snake-s7"></div><div class="snake-segment snake-body snake-s8"></div><div class="snake-segment snake-body snake-s9"></div><div class="snake-segment snake-body snake-s10"></div><div class="snake-segment snake-body snake-s11"></div><div class="snake-segment snake-body snake-s12"></div><div class="snake-segment snake-body snake-s13"></div><div class="snake-segment snake-tail snake-s14"></div></div>
         <div class="snake-g3"><div class="snake-segment snake-head snake-s0"></div><div class="snake-segment snake-body snake-s1"></div><div class="snake-segment snake-body snake-s2"></div><div class="snake-segment snake-body snake-s3"></div><div class="snake-segment snake-body snake-s4"></div><div class="snake-segment snake-body snake-s5"></div><div class="snake-segment snake-body snake-s6"></div><div class="snake-segment snake-body snake-s7"></div><div class="snake-segment snake-body snake-s8"></div><div class="snake-segment snake-body snake-s9"></div><div class="snake-segment snake-body snake-s10"></div><div class="snake-segment snake-body snake-s11"></div><div class="snake-segment snake-body snake-s12"></div><div class="snake-segment snake-body snake-s13"></div><div class="snake-segment snake-tail snake-s14"></div></div>
         <div class="snake-g4"><div class="snake-segment snake-head snake-s0"></div><div class="snake-segment snake-body snake-s1"></div><div class="snake-segment snake-body snake-s2"></div><div class="snake-segment snake-body snake-s3"></div><div class="snake-segment snake-body snake-s4"></div><div class="snake-segment snake-body snake-s5"></div><div class="snake-segment snake-body snake-s6"></div><div class="snake-segment snake-body snake-s7"></div><div class="snake-segment snake-body snake-s8"></div><div class="snake-segment snake-body snake-s9"></div><div class="snake-segment snake-body snake-s10"></div><div class="snake-segment snake-body snake-s11"></div><div class="snake-segment snake-body snake-s12"></div><div class="snake-segment snake-body snake-s13"></div><div class="snake-segment snake-tail snake-s14"></div></div>
-        <div class="login-box">
+        <div class="login-box" id="loginBox">
+            <button class="theme-btn" id="loginThemeBtn" title="Change color theme">🎨</button>
             <div id="visitorCounter" style="font-size:0.85rem;color:#9ca3af;text-align:center;margin-bottom:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);font-weight:600;">👁️ Visits: <span id="visitorCountNum" style="color:var(--accent);font-weight:800;">0</span></div>
             <h2 data-i18n="loginTitle">🔐 Fines System</h2>
             <div class="admin-profile-section">
