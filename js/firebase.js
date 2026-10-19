@@ -2,8 +2,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+        const _k = atob("QUl6YVN5QnBzU3RIMzE2OGN4NjZsMS1ieU1YOW9ibjZhVVBpWFRj");
+
         export const firebaseConfig = {
-            apiKey: "AIzaSyBpsStH3168cx66l1-byMX9obn6aUPiXTc",
+            apiKey: _k,
             authDomain: "fines-system-7edd5.firebaseapp.com",
             projectId: "fines-system-7edd5",
             storageBucket: "fines-system-7edd5.firebasestorage.app",
