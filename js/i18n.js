@@ -147,7 +147,10 @@
                 if (i18n[lang][key]) el.placeholder = i18n[lang][key].replace(/<[^>]*>/g, '');
             });
             const loginBtn = document.getElementById('loginBtn');
-            if (loginBtn) loginBtn.innerHTML = i18n[lang].btnLogin;
+            if (loginBtn) {
+                const studentLinks = document.getElementById('studentLoginLinks');
+                loginBtn.innerHTML = (studentLinks && studentLinks.style.display === 'block') ? '🎓 Student Login' : i18n[lang].btnLogin;
+            }
         }
         document.getElementById('langToggle')?.addEventListener('click', () => {
             const next = { en: 'tl', tl: 'ceb', ceb: 'en' };

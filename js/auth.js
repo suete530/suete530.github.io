@@ -164,14 +164,18 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
         const forgotPwLinkEl = document.getElementById('forgotPwLink');
         const createAccountLinkEl = document.getElementById('createAccountLink');
         const backToSecretaryLoginEl = document.getElementById('backToSecretaryLogin');
+        const studentSignInToggle = document.getElementById('studentSignInToggle');
+        const createAccountWrap = document.getElementById('createAccountWrap');
 
         function enterStudentMode() {
             studentMode = true;
             exitSetupMode();
             setupBtn.style.display = 'none';
-            loginBtnEl.textContent = '🎓 Student Sign-In';
+            loginBtnEl.textContent = '🎓 Student Login';
             emailInput.placeholder = 'student@email.com';
             studentLoginLinks.style.display = 'block';
+            studentSignInToggle.style.display = '';
+            createAccountWrap.style.display = 'none';
             studentModeBack.style.display = 'block';
             studentModeBtn.style.display = 'none';
             errEl.style.display = 'none';
@@ -181,12 +185,17 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
             emailInput.placeholder = 'secretary@email.com';
             studentLoginLinks.style.display = 'none';
+            studentSignInToggle.style.display = 'none';
+            createAccountWrap.style.display = 'none';
             studentModeBack.style.display = 'none';
             studentModeBtn.style.display = '';
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
         }
         studentModeBtn.addEventListener('click', enterStudentMode);
+        studentSignInToggle.addEventListener('click', function() {
+            createAccountWrap.style.display = createAccountWrap.style.display === 'block' ? 'none' : 'block';
+        });
         backToSecretaryLoginEl.addEventListener('click', exitStudentMode);
 
         export async function studentSignIn(email, password) {
