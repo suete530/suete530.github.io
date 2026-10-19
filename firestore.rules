@@ -7,6 +7,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Password/Google accounts only — anonymous (guest) tokens have no 'email' claim.
     function isEmailUser() {
       return request.auth != null && 'email' in request.auth.token;
     }
@@ -23,15 +24,29 @@ service cloud.firestore {
 
     function selfEditableStudentFields() {
       return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['name', 'gender', 'relationStatus', 'lastOnline', 'pw', 'photoUrl']);
+        .hasOnly(['name', 'gender', 'relationStatus', 'lastOnline', 'photoUrl']);
     }
 
-    // Admin profile / app settings. The admin password hash no longer lives
-    // here: authentication is handled by Firebase Auth (email + password),
-    // verified on Firebase's servers. adminEmail below only records WHICH
-    // Firebase account is the admin; the password itself is never stored.
+    // True when the signed-in user has a users/{uid} doc linked to this student.
+    function hasUserDoc() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function myStudentId() {
+      let u = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return u.get('studentId', '');
+    }
+
+    function isLinkedStudent(studentId) {
+      return isEmailUser() && hasUserDoc() && myStudentId() == studentId;
+    }
+
+    // Admin profile / app settings. Login screen reads this BEFORE sign-in
+    // (visitor count, background), so read is public — same exposure the app
+    // already had via anonymous auth. adminEmail only records WHICH Firebase
+    // account is the admin; no password lives here.
     match /settings/admin {
-      allow read: if signedIn();
+      allow read: if true;
       // First-time setup: a brand-new email/password account bootstraps the
       // doc. After adminRegistered is true, only the registered admin can write.
       allow create: if isEmailUser();
@@ -41,18 +56,24 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Section names are needed on the login screen (registration dropdown).
     match /sections/{sectionId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /students/{studentId} {
       allow read: if signedIn();
       allow create: if isAdmin();
-      // Students may update only their own profile fields (self-edit,
-      // photo, password, last-online heartbeat). Fines, payments, status
-      // and section stay admin-only.
-      allow update: if selfEditableStudentFields() || isAdmin();
+      // Self-edit: only the linked account holder, and only profile fields.
+      // Fine, payment, status and section changes stay admin-only.
+      // The third clause lets an owner DELETE a legacy 'pw' field (field must
+      // end up absent — a password can never be written through this path).
+      allow update: if isAdmin()
+                    || (isLinkedStudent(studentId) && selfEditableStudentFields())
+                    || (isLinkedStudent(studentId)
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pw'])
+                        && !('pw' in request.resource.data));
       allow delete: if isAdmin();
 
       match /payments/{paymentId} {
@@ -61,34 +82,54 @@ service cloud.firestore {
       }
     }
 
+    // Auth-to-student link. Only the admin can create it (at approval time),
+    // so nobody can claim a student record by themselves.
+    match /users/{userId} {
+      allow read: if (signedIn() && request.auth.uid == userId) || isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     match /announcements/{announceId} {
       allow read: if signedIn();
-      allow create: if signedIn();
+      allow create: if isEmailUser();
       allow update, delete: if isAdmin();
     }
 
     match /suggestions/{suggestId} {
       allow read: if signedIn();
-      allow create: if signedIn();
+      allow create: if isEmailUser();
       allow update, delete: if isAdmin();
     }
 
-    // Students who are not yet on the class list can request an account here.
-    // Anyone signed in may submit a request; only the admin can read and act
-    // on them (approve creates the student account, reject removes it).
+    // Student account requests. Doc id == requester uid, so a student can
+    // only read/cancel their OWN request; the admin reads all of them.
     match /account_requests/{reqId} {
-      allow read: if isAdmin();
-      allow create: if signedIn();
-      allow update, delete: if isAdmin();
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == reqId);
+      allow create: if isEmailUser()
+                    && request.auth.uid == reqId
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (signedIn() && request.auth.uid == reqId);
     }
 
+    // Chats: the admin or the linked owner of that conversation only.
     match /chats/{chatId} {
-      allow read, create, update: if signedIn();
+      allow read: if isAdmin() || isLinkedStudent(chatId);
+      allow create: if isAdmin()
+                    || (isLinkedStudent(chatId) && request.resource.data.studentId == chatId);
+      // A student may only append messages — studentId/studentName are locked.
+      allow update: if isAdmin()
+                    || (isLinkedStudent(chatId)
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['messages']));
       allow delete: if isAdmin();
     }
 
+    // Activity log: any signed-in account holder, never guests/anonymous.
     match /activity_logs/{logId} {
-      allow read, create: if signedIn();
+      allow read, create: if isEmailUser();
       allow update, delete: if isAdmin();
     }
   }

@@ -46,7 +46,16 @@
             <button class="login-btn" id="loginBtn" data-i18n="btnLogin">🔓 Secretary Login</button>
             <div class="login-error" id="loginError">❌ Wrong password!</div>
             <button class="login-viewer-btn" id="setupAdminBtn" style="display:none;">🛠️ First time? Create admin account</button>
-            <button class="login-viewer-btn" id="viewAsGuest" data-i18n="btnGuest">👨‍🎓 Continue as Student</button>
+            <button class="login-viewer-btn" id="viewAsGuest" data-i18n="btnGuest">👨‍🎓 Continue as Guest</button>
+            <button class="login-viewer-btn" id="studentModeBtn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">🎓 Student Sign-In / Create Account</button>
+            <div id="studentLoginLinks" style="display:none;text-align:center;margin-top:10px;font-size:0.72rem;">
+                <a id="forgotPwLink" style="color:#4682b4;cursor:pointer;text-decoration:underline;">🔑 Forgot password?</a>
+                <span style="color:#4b5563;"> · </span>
+                <a id="createAccountLink" style="color:#4682b4;cursor:pointer;text-decoration:underline;">🙋 Create account</a>
+            </div>
+            <div id="studentModeBack" style="display:none;text-align:center;margin-top:6px;">
+                <a id="backToSecretaryLogin" style="font-size:0.7rem;color:#9ca3af;cursor:pointer;text-decoration:underline;">← Secretary login</a>
+            </div>
         </div>
     </div>
 

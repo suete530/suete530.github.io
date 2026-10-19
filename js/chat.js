@@ -1,9 +1,9 @@
-import { badge } from './dom.js';
+﻿import { badge } from './dom.js';
 import { currentSectionId, getIsAdmin, sections, students } from './state.js';
 import { db } from './firebase.js';
 import { escapeHtml, formatMoney, getCurrentSectionName } from './utils.js';
 import { playSound } from './ui.js';
-import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { collection, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function toggleChatWeb() {
             const panel = document.getElementById('chat-panel');
@@ -12,7 +12,7 @@ import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query } from "htt
             bubble.classList.toggle('active', open);
             if (open && !panel.dataset.initialized) {
                 panel.dataset.initialized = 'true';
-                appendMessage('bot', '<span class="bot-tag">▸ AI ASSISTANT v1.0</span> SYSTEM ONLINE. Ako si AI Assistant ng Fines Manager. Pwede mo akong tanungin tungkol sa fines, students, at payments.\n\nI-type ang <b>help</b> para sa listahan ng commands.');
+                appendMessage('bot', '<span class="bot-tag">â–¸ AI ASSISTANT v1.0</span> SYSTEM ONLINE. Ako si AI Assistant ng Fines Manager. Pwede mo akong tanungin tungkol sa fines, students, at payments.\n\nI-type ang <b>help</b> para sa listahan ng commands.');
             }
             if (open) {
                 const msgs = document.getElementById('chat-messages');
@@ -59,88 +59,88 @@ import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query } from "htt
             let reply = '';
             if (/^(hi|hello|hey|musta|good (morning|afternoon|evening|day)|magandang)/i.test(text)) {
                 reply = isTagalog
-                    ? `Magandang araw! 😊 Ako ang chat assistant ng Fines Manager. Ano ang maitutulong ko?`
-                    : `Hello! 😊 I'm the Fines Manager chat assistant. How can I help you?`;
-                if (text.length < 10) reply += '\n\n💡 Type <b>help</b> para sa listahan ng commands.';
+                    ? `Magandang araw! ðŸ˜Š Ako ang chat assistant ng Fines Manager. Ano ang maitutulong ko?`
+                    : `Hello! ðŸ˜Š I'm the Fines Manager chat assistant. How can I help you?`;
+                if (text.length < 10) reply += '\n\nðŸ’¡ Type <b>help</b> para sa listahan ng commands.';
             } else if (/^(help|commands|tulong|commands)/i.test(text)) {
                 reply = isTagalog
-                    ? `📋 <b>Mga Pwede Kong Gawin:</b>\n\n🔍 <b>find [name]</b> — Maghanap ng estudyante\n💰 <b>total fines</b> — Kabuuang fines\n⚠️ <b>unpaid</b> — Mga hindi pa bayad\n✅ <b>paid</b> — Mga nakabayad na\n👥 <b>how many students</b> — Bilang ng estudyante\n📊 <b>stats</b> — Statistics ng section\n📚 <b>sections</b> — Listahan ng sections\n💬 Pwede rin Tagalog!`
-                    : `📋 <b>Available Commands:</b>\n\n🔍 <b>find [name]</b> — Search for a student\n💰 <b>total fines</b> — Total fines amount\n⚠️ <b>unpaid</b> — List unpaid students\n✅ <b>paid</b> — List paid students\n👥 <b>how many students</b> — Student count\n📊 <b>stats</b> — Section statistics\n📚 <b>sections</b> — List all sections\n💬 Tagalog is also supported!`;
+                    ? `ðŸ“‹ <b>Mga Pwede Kong Gawin:</b>\n\nðŸ” <b>find [name]</b> â€” Maghanap ng estudyante\nðŸ’° <b>total fines</b> â€” Kabuuang fines\nâš ï¸ <b>unpaid</b> â€” Mga hindi pa bayad\nâœ… <b>paid</b> â€” Mga nakabayad na\nðŸ‘¥ <b>how many students</b> â€” Bilang ng estudyante\nðŸ“Š <b>stats</b> â€” Statistics ng section\nðŸ“š <b>sections</b> â€” Listahan ng sections\nðŸ’¬ Pwede rin Tagalog!`
+                    : `ðŸ“‹ <b>Available Commands:</b>\n\nðŸ” <b>find [name]</b> â€” Search for a student\nðŸ’° <b>total fines</b> â€” Total fines amount\nâš ï¸ <b>unpaid</b> â€” List unpaid students\nâœ… <b>paid</b> â€” List paid students\nðŸ‘¥ <b>how many students</b> â€” Student count\nðŸ“Š <b>stats</b> â€” Section statistics\nðŸ“š <b>sections</b> â€” List all sections\nðŸ’¬ Tagalog is also supported!`;
             } else if (/^(find|search|hanapin|sino si|ipakita)/i.test(text) && studentsList.length > 0) {
                 const query = text.replace(/^(find|search|hanapin|sino si|ipakita)\s*/i, '');
                 if (query) {
                     const matches = studentsList.filter(s => (s.name || '').toLowerCase().includes(query));
                     if (matches.length === 0) {
-                        reply = isTagalog ? `😕 Walang nahanap na "${escapeHtml(query)}".` : `😕 No student found matching "${escapeHtml(query)}".`;
+                        reply = isTagalog ? `ðŸ˜• Walang nahanap na "${escapeHtml(query)}".` : `ðŸ˜• No student found matching "${escapeHtml(query)}".`;
                     } else if (matches.length === 1) {
                         const s = matches[0];
                         const remaining = Math.max(0, (s.fine || 0) - (s.totalPaid || 0));
-                        const statusEmoji = s.status === 'paid' ? '✅' : '⚠️';
-                        reply = `👤 <b>${escapeHtml(s.name)}</b>\n` +
-                            `💰 Fine: ${formatMoney(s.fine || 0)}\n` +
-                            `💳 Paid: ${formatMoney(s.totalPaid || 0)}\n` +
-                            `📊 Remaining: ${formatMoney(remaining)}\n` +
+                        const statusEmoji = s.status === 'paid' ? 'âœ…' : 'âš ï¸';
+                        reply = `ðŸ‘¤ <b>${escapeHtml(s.name)}</b>\n` +
+                            `ðŸ’° Fine: ${formatMoney(s.fine || 0)}\n` +
+                            `ðŸ’³ Paid: ${formatMoney(s.totalPaid || 0)}\n` +
+                            `ðŸ“Š Remaining: ${formatMoney(remaining)}\n` +
                             `${statusEmoji} Status: <b>${s.status === 'paid' ? 'Paid' : 'Unpaid'}</b>`;
                     } else {
-                        reply = (isTagalog ? `🔍 ${matches.length} nahanap: ` : `🔍 ${matches.length} found: `) +
+                        reply = (isTagalog ? `ðŸ” ${matches.length} nahanap: ` : `ðŸ” ${matches.length} found: `) +
                             matches.slice(0, 8).map(s => escapeHtml(s.name)).join(', ') +
                             (matches.length > 8 ? `, +${matches.length - 8} more` : '');
                     }
                 } else {
-                    reply = isTagalog ? '👤 Sino ang gusto mong hanapin?' : '👤 Who would you like to find?';
+                    reply = isTagalog ? 'ðŸ‘¤ Sino ang gusto mong hanapin?' : 'ðŸ‘¤ Who would you like to find?';
                 }
             } else if (/(total|kabuuang|lahat na|sum|total fines)\s*(fine|fines|bayad|multa)?/i.test(text) && !/paid|bayad|nakabayad|collected/i.test(text)) {
                 reply = isTagalog
-                    ? `💰 <b>Kabuuang Fines</b> (${sectionName}):\n📊 Total: ${formatMoney(totalFines)}\n👥 Students: ${totalStudents}\n📈 Average: ${formatMoney(totalStudents > 0 ? totalFines / totalStudents : 0)}`
-                    : `💰 <b>Total Fines</b> (${sectionName}):\n📊 Total: ${formatMoney(totalFines)}\n👥 Students: ${totalStudents}\n📈 Average: ${formatMoney(totalStudents > 0 ? totalFines / totalStudents : 0)}`;
+                    ? `ðŸ’° <b>Kabuuang Fines</b> (${sectionName}):\nðŸ“Š Total: ${formatMoney(totalFines)}\nðŸ‘¥ Students: ${totalStudents}\nðŸ“ˆ Average: ${formatMoney(totalStudents > 0 ? totalFines / totalStudents : 0)}`
+                    : `ðŸ’° <b>Total Fines</b> (${sectionName}):\nðŸ“Š Total: ${formatMoney(totalFines)}\nðŸ‘¥ Students: ${totalStudents}\nðŸ“ˆ Average: ${formatMoney(totalStudents > 0 ? totalFines / totalStudents : 0)}`;
             } else if (/^(unpaid|hindi.*(bayad|paid)|may.*(utang|balance|atraso)|sino.*balance)/i.test(text)) {
                 if (unpaidStudents.length === 0) {
-                    reply = isTagalog ? '🎉 Lahat ay bayad na! Walang may balance.' : '🎉 Everyone is paid! No outstanding balances.';
+                    reply = isTagalog ? 'ðŸŽ‰ Lahat ay bayad na! Walang may balance.' : 'ðŸŽ‰ Everyone is paid! No outstanding balances.';
                 } else {
                     const show = unpaidStudents.slice(0, 10);
-                    const list = show.map(s => `• ${escapeHtml(s.name)} — ${formatMoney(s.fine || 0)}`).join('\n');
+                    const list = show.map(s => `â€¢ ${escapeHtml(s.name)} â€” ${formatMoney(s.fine || 0)}`).join('\n');
                     reply = (isTagalog
-                        ? `⚠️ <b>${unpaidStudents.length} na estudyante</b> ang hindi pa bayad:\n${list}`
-                        : `⚠️ <b>${unpaidStudents.length} student(s)</b> unpaid:\n${list}`)
+                        ? `âš ï¸ <b>${unpaidStudents.length} na estudyante</b> ang hindi pa bayad:\n${list}`
+                        : `âš ï¸ <b>${unpaidStudents.length} student(s)</b> unpaid:\n${list}`)
                         + (unpaidStudents.length > 10 ? `\n(+${unpaidStudents.length - 10} more)` : '');
                 }
             } else if (/^(paid|bayad|nakabayad|sino.*bayad)/i.test(text)) {
                 if (paidStudents.length === 0) {
-                    reply = isTagalog ? '😕 Wala pang nakakabayad.' : '😕 No one has paid yet.';
+                    reply = isTagalog ? 'ðŸ˜• Wala pang nakakabayad.' : 'ðŸ˜• No one has paid yet.';
                 } else {
                     const show = paidStudents.slice(0, 10);
-                    const list = show.map(s => `• ${escapeHtml(s.name)} — Paid ${formatMoney(s.totalPaid || 0)}`).join('\n');
+                    const list = show.map(s => `â€¢ ${escapeHtml(s.name)} â€” Paid ${formatMoney(s.totalPaid || 0)}`).join('\n');
                     reply = (isTagalog
-                        ? `✅ <b>${paidStudents.length} na estudyante</b> ang bayad na:\n${list}`
-                        : `✅ <b>${paidStudents.length} student(s)</b> paid:\n${list}`)
+                        ? `âœ… <b>${paidStudents.length} na estudyante</b> ang bayad na:\n${list}`
+                        : `âœ… <b>${paidStudents.length} student(s)</b> paid:\n${list}`)
                         + (paidStudents.length > 10 ? `\n(+${paidStudents.length - 10} more)` : '');
                 }
             } else if (/(how many|ilang|bilang|count|total.*student|ilan.*estudyante)/i.test(text)) {
                 reply = isTagalog
-                    ? `👥 <b>${totalStudents}</b> na estudyante sa ${sectionName}.`
-                    : `👥 <b>${totalStudents}</b> student(s) in ${sectionName}.`;
+                    ? `ðŸ‘¥ <b>${totalStudents}</b> na estudyante sa ${sectionName}.`
+                    : `ðŸ‘¥ <b>${totalStudents}</b> student(s) in ${sectionName}.`;
             } else if (/^(stats|statistics|statistical|estadistika)/i.test(text)) {
                 const avgFine = totalStudents > 0 ? totalFines / totalStudents : 0;
                 const highestFine = totalStudents > 0 ? Math.max(...studentsList.map(s => s.fine || 0)) : 0;
                 reply = (isTagalog
-                    ? `📊 <b>Statistics</b> (${sectionName}):\n👥 Students: ${totalStudents}\n💰 Total Fines: ${formatMoney(totalFines)}\n📈 Average: ${formatMoney(avgFine)}\n🏆 Highest: ${formatMoney(highestFine)}\n✅ Paid: ${paidStudents.length}\n⚠️ Unpaid: ${unpaidStudents.length}\n💳 Collected: ${formatMoney(totalCollected)}`
-                    : `📊 <b>Statistics</b> (${sectionName}):\n👥 Students: ${totalStudents}\n💰 Total Fines: ${formatMoney(totalFines)}\n📈 Average Fine: ${formatMoney(avgFine)}\n🏆 Highest Fine: ${formatMoney(highestFine)}\n✅ Paid: ${paidStudents.length}\n⚠️ Unpaid: ${unpaidStudents.length}\n💳 Collected: ${formatMoney(totalCollected)}`);
+                    ? `ðŸ“Š <b>Statistics</b> (${sectionName}):\nðŸ‘¥ Students: ${totalStudents}\nðŸ’° Total Fines: ${formatMoney(totalFines)}\nðŸ“ˆ Average: ${formatMoney(avgFine)}\nðŸ† Highest: ${formatMoney(highestFine)}\nâœ… Paid: ${paidStudents.length}\nâš ï¸ Unpaid: ${unpaidStudents.length}\nðŸ’³ Collected: ${formatMoney(totalCollected)}`
+                    : `ðŸ“Š <b>Statistics</b> (${sectionName}):\nðŸ‘¥ Students: ${totalStudents}\nðŸ’° Total Fines: ${formatMoney(totalFines)}\nðŸ“ˆ Average Fine: ${formatMoney(avgFine)}\nðŸ† Highest Fine: ${formatMoney(highestFine)}\nâœ… Paid: ${paidStudents.length}\nâš ï¸ Unpaid: ${unpaidStudents.length}\nðŸ’³ Collected: ${formatMoney(totalCollected)}`);
             } else if (/^(sections|section|section list|mga section)/i.test(text)) {
                 const sects = sections || [];
                 if (sects.length === 0) {
-                    reply = isTagalog ? '📚 Walang sections.' : '📚 No sections available.';
+                    reply = isTagalog ? 'ðŸ“š Walang sections.' : 'ðŸ“š No sections available.';
                 } else {
-                    const list = sects.map(s => `• ${escapeHtml(s.name)}${s.id === currentSectionId ? ' ← current' : ''}`).join('\n');
-                    reply = (isTagalog ? `📚 <b>Mga Section:</b>\n${list}` : `📚 <b>Sections:</b>\n${list}`);
+                    const list = sects.map(s => `â€¢ ${escapeHtml(s.name)}${s.id === currentSectionId ? ' â† current' : ''}`).join('\n');
+                    reply = (isTagalog ? `ðŸ“š <b>Mga Section:</b>\n${list}` : `ðŸ“š <b>Sections:</b>\n${list}`);
                 }
             } else if (/(collected|nakolekta|total.*paid|total.*collected)/i.test(text)) {
                 reply = isTagalog
-                    ? `💳 <b>Nakolekta na:</b> ${formatMoney(totalCollected)} mula sa ${totalStudents} na estudyante.`
-                    : `💳 <b>Total Collected:</b> ${formatMoney(totalCollected)} from ${totalStudents} student(s).`;
+                    ? `ðŸ’³ <b>Nakolekta na:</b> ${formatMoney(totalCollected)} mula sa ${totalStudents} na estudyante.`
+                    : `ðŸ’³ <b>Total Collected:</b> ${formatMoney(totalCollected)} from ${totalStudents} student(s).`;
             } else {
                 reply = isTagalog
-                    ? `😅 Hindi ko maintindihan. I-type ang <b>help</b> para sa listahan ng mga kaya kong gawin.`
-                    : `😅 I didn't understand that. Type <b>help</b> to see what I can do.`;
+                    ? `ðŸ˜… Hindi ko maintindihan. I-type ang <b>help</b> para sa listahan ng mga kaya kong gawin.`
+                    : `ðŸ˜… I didn't understand that. Type <b>help</b> to see what I can do.`;
             }
             appendMessage('bot', reply);
             if ('speechSynthesis' in window) {
@@ -177,7 +177,7 @@ import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query } from "htt
             const s = students.find(st => st.id === studentId);
             if (!s) return;
             _chatStudentId = studentId;
-            document.getElementById('chatModalTitle').textContent = '💬 ' + s.name;
+            document.getElementById('chatModalTitle').textContent = 'ðŸ’¬ ' + s.name;
             document.getElementById('chatMessagesContainer').innerHTML = '<div class="no-results" style="padding:20px;font-size:0.75rem;">Loading...</div>';
             document.getElementById('chatMsgInput').value = '';
             document.getElementById('chatModal').classList.add('active');
@@ -201,7 +201,7 @@ import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query } from "htt
             container.innerHTML = msgs.map(m => {
                 const isAdmin = m.sender === 'admin';
                 const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return `<div class="${isAdmin ? 'chat-bubble-admin' : 'chat-bubble-student'}">${escapeHtml(m.text)}<div class="chat-msg-time">${time}${isAdmin ? ' · Admin' : ''}</div></div>`;
+                return `<div class="${isAdmin ? 'chat-bubble-admin' : 'chat-bubble-student'}">${escapeHtml(m.text)}<div class="chat-msg-time">${time}${isAdmin ? ' Â· Admin' : ''}</div></div>`;
             }).join('');
             container.scrollTop = container.scrollHeight;
         }
@@ -238,14 +238,15 @@ import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query } from "htt
             const list = document.getElementById('inboxChatList');
             list.innerHTML = '<div class="no-results" style="padding:20px;font-size:0.75rem;">Loading...</div>';
             try {
-                const snap = await getDocs(collection(db, 'chats'));
-                const chats = [];
-                snap.forEach(d => { const data = d.data(); if (String(data.studentId) === String(sid)) chats.push(data); });
-                if (chats.length === 0) { list.innerHTML = '<div class="no-results" style="padding:20px;font-size:0.75rem;">No messages from admin yet.</div>'; return; }
+                const snap = await getDoc(doc(db, 'chats', String(sid)));
+                const chats = snap.exists() ? [snap.data()] : [];
+                if (chats.length === 0 || !chats[0].messages || chats[0].messages.length === 0) {
+                    list.innerHTML = '<div class="no-results" style="padding:20px;font-size:0.75rem;">No messages from admin yet.</div>'; return;
+                }
                 const chat = chats[0];
                 const msgs = chat.messages || [];
                 list.innerHTML = `<div style="cursor:pointer;padding:12px;background:#0d1520;border-radius:12px;border-left:4px solid var(--accent);" onclick="closeInboxModal();window.openChat(${sid})">
-                    <div style="font-size:0.8rem;font-weight:bold;color:var(--accent);">📨 Chat with Admin</div>
+                    <div style="font-size:0.8rem;font-weight:bold;color:var(--accent);">ðŸ“¨ Chat with Admin</div>
                     <div style="font-size:0.7rem;color:#9ca3af;margin-top:4px;">${msgs.length > 0 ? escapeHtml(msgs[msgs.length - 1].text.slice(0, 60)) : 'No messages'}</div>
                 </div>`;
             } catch(e) { list.innerHTML = '<div class="no-results">Error loading inbox.</div>'; }

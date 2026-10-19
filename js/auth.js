@@ -1,12 +1,11 @@
 import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailInput, errEl, guestBtn, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsGcashName, settingsGcashNumber, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
-import { hashPassword, verifyPassword } from './crypto.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
 import { unsubscribeSections, unsubscribeSuggestions, stopRequestsListener } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
-import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function updateAdminNameDisplay() {
             adminNameDisplay.textContent = adminName;
@@ -42,14 +41,17 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
             const code = (e && e.code) || '';
             if (code === 'auth/invalid-email') return 'Invalid email address.';
             if (code === 'auth/missing-password') return 'Enter your password.';
-            if (code === 'auth/weak-password') return 'Password must be at least 6 characters.';
+            if (code === 'auth/weak-password') return 'Password must be at least 8 characters.';
             if (code === 'auth/email-already-in-use') return 'That email already has an account — try logging in instead.';
-            if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'Wrong email or password!';
+            if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') return 'Wrong email or password!';
+            if (code === 'auth/user-not-found') return 'No account exists for that email.';
             if (code === 'auth/too-many-requests') return 'Too many attempts. Wait a moment and try again.';
             if (code === 'auth/network-request-failed') return 'Network error. Check your connection.';
             if (code === 'auth/operation-not-allowed') return 'Email/Password sign-in is turned off. Enable it in Firebase Console → Authentication → Sign-in method.';
             if (code === 'auth/configuration-not-found') return 'Firebase Auth is not set up yet. Enable Email/Password in Firebase Console.';
             if (code === 'auth/not-admin') return 'This account is not the registered admin.';
+            if (code === 'app/not-linked') return "This email isn't linked to a student yet. Click 'Create account' first — the admin will approve it.";
+            if (code === 'app/pending') return 'Your account is still pending admin approval.';
             return 'Login failed' + (code ? ' (' + code + ')' : '') + '. Please try again.';
         }
         export function showLoginError(msg) {
@@ -93,6 +95,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
                     await updateDoc(doc(db, 'settings', 'admin'), { adminPwHash: deleteField(), adminPw: deleteField() });
                 }
             } catch (e) {}
+            purgeLegacyStudentPw();
         }
 
         export function enterApp(admin) {
@@ -113,6 +116,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
             const password = pwInput.value;
             if (!email || !password) { showLoginError('Enter email and password.'); return; }
             if (setupMode) {
+                if (password.length < 8) { showLoginError('Password must be at least 8 characters.'); return; }
                 if (password !== confirmInput.value) { showLoginError('Passwords do not match.'); return; }
                 loginBtnEl.disabled = true;
                 try {
@@ -129,6 +133,10 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
                 } finally {
                     loginBtnEl.disabled = false;
                 }
+                return;
+            }
+            if (studentMode) {
+                await studentSignIn(email, password);
                 return;
             }
             loginBtnEl.disabled = true;
@@ -150,6 +158,232 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
         guestBtn.addEventListener('click', async function() {
             if (!auth.currentUser) { try { await signInAnonymously(auth); } catch (e) { console.warn('Anonymous auth unavailable:', e.message); } }
             enterApp(false);
+        });
+
+        // ================= STUDENT EMAIL AUTH =================
+        export let studentMode = false;
+        const studentModeBtn = document.getElementById('studentModeBtn');
+        const studentLoginLinks = document.getElementById('studentLoginLinks');
+        const studentModeBack = document.getElementById('studentModeBack');
+        const forgotPwLinkEl = document.getElementById('forgotPwLink');
+        const createAccountLinkEl = document.getElementById('createAccountLink');
+        const backToSecretaryLoginEl = document.getElementById('backToSecretaryLogin');
+
+        function enterStudentMode() {
+            studentMode = true;
+            exitSetupMode();
+            setupBtn.style.display = 'none';
+            loginBtnEl.textContent = '🎓 Student Sign-In';
+            emailInput.placeholder = 'student@email.com';
+            studentLoginLinks.style.display = 'block';
+            studentModeBack.style.display = 'block';
+            studentModeBtn.style.display = 'none';
+            errEl.style.display = 'none';
+        }
+        function exitStudentMode() {
+            studentMode = false;
+            loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
+            emailInput.placeholder = 'secretary@email.com';
+            studentLoginLinks.style.display = 'none';
+            studentModeBack.style.display = 'none';
+            studentModeBtn.style.display = '';
+            updateSetupButtonVisibility();
+            errEl.style.display = 'none';
+        }
+        studentModeBtn.addEventListener('click', enterStudentMode);
+        backToSecretaryLoginEl.addEventListener('click', exitStudentMode);
+
+        export async function studentSignIn(email, password) {
+            loginBtnEl.disabled = true;
+            try {
+                if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                if (isAdminSession()) { pwInput.value = ''; if (studentMode) exitStudentMode(); enterApp(true); return; }
+                const userSnap = await getDoc(doc(db, 'users', cred.user.uid));
+                if (userSnap.exists() && userSnap.data().role === 'student' && userSnap.data().studentId) {
+                    finishStudentLogin(String(userSnap.data().studentId));
+                    return;
+                }
+                const reqSnap = await getDoc(doc(db, 'account_requests', cred.user.uid));
+                if (reqSnap.exists()) {
+                    watchOwnRequest();
+                    showLoginError('⏳ Your account is still pending approval. Keep this page open — you will enter automatically once approved.');
+                    return;
+                }
+                throw { code: 'app/not-linked' };
+            } catch (e) {
+                showLoginError(authErrorMessage(e));
+                pwInput.value = '';
+            } finally {
+                loginBtnEl.disabled = false;
+            }
+        }
+
+        function finishStudentLogin(sid) {
+            localStorage.setItem('fm_student_session_id', sid);
+            cleanupLegacyStudentPw(sid);
+            pwInput.value = '';
+            if (studentMode) exitStudentMode();
+            errEl.style.display = 'none';
+            enterApp(false);
+        }
+
+        async function cleanupLegacyStudentPw(sid) {
+            try { Object.keys(localStorage).filter(k => k.startsWith('fm_student_pw_')).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+            try { await updateDoc(doc(db, 'students', String(sid)), { pw: deleteField() }); } catch (e) {}
+        }
+
+        // Admin-only sweep: strip legacy password hashes from every student doc.
+        export async function purgeLegacyStudentPw() {
+            try {
+                const snap = await getDocs(collection(db, 'students'));
+                const jobs = [];
+                snap.forEach(d => { const data = d.data() || {}; if ('pw' in data) jobs.push(updateDoc(d.ref, { pw: deleteField() })); });
+                if (jobs.length) await Promise.all(jobs);
+            } catch (e) {}
+            purgeLegacyStudentPw();
+        }
+
+        forgotPwLinkEl.addEventListener('click', async function() {
+            const email = emailInput.value.trim();
+            if (!email) { showLoginError('Enter your email address first, then click Forgot password.'); return; }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                await showAlert('📧 Password reset link sent to ' + email + '.\n\nOpen it from your inbox to set a new password.');
+            } catch (e) {
+                showLoginError(authErrorMessage(e));
+            }
+        });
+
+        let _requestUnsub = null;
+        export function stopRequestWatcher() { if (_requestUnsub) { _requestUnsub(); _requestUnsub = null; } }
+
+        export function watchOwnRequest() {
+            const u = auth.currentUser;
+            if (!u) return;
+            stopRequestWatcher();
+            showPendingRequestScreen();
+            _requestUnsub = onSnapshot(doc(db, 'account_requests', u.uid), async (snap) => {
+                if (snap.exists()) return;
+                stopRequestWatcher();
+                try {
+                    const us = await getDoc(doc(db, 'users', u.uid));
+                    if (us.exists() && us.data().role === 'student' && us.data().studentId) {
+                        customAlertOverlay.classList.add('hidden');
+                        finishStudentLogin(String(us.data().studentId));
+                    } else {
+                        customAlertOverlay.classList.add('hidden');
+                        showLoginError('Your account request was not approved. Contact the admin or try again with your correct name.');
+                        await signOut(auth).catch(() => {});
+                    }
+                } catch (e) {
+                    customAlertOverlay.classList.add('hidden');
+                    showLoginError('Could not verify your account. Please log in again.');
+                }
+            });
+        }
+
+        function showPendingRequestScreen() {
+            document.querySelector('.custom-alert-title').textContent = '⏳ Account Pending Approval';
+            customAlertMsg.innerHTML = `
+                <p style="font-size:0.78rem;line-height:1.6;text-align:center;">
+                    Your account was created and sent to the admin for approval.<br><br>
+                    <b>Keep this page open</b> — you will enter automatically once approved.<br>
+                    You can also close this and log in again later with your email and password.
+                </p>`;
+            customAlertInput.style.display = 'none';
+            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="cancelReqBtn">Cancel request</button><button class="custom-alert-btn custom-alert-ok" id="waitReqBtn">OK, waiting...</button>';
+            customAlertOverlay.classList.remove('hidden');
+            document.getElementById('waitReqBtn').onclick = function() { customAlertOverlay.classList.add('hidden'); };
+            document.getElementById('cancelReqBtn').onclick = async function() {
+                stopRequestWatcher();
+                const u = auth.currentUser;
+                customAlertOverlay.classList.add('hidden');
+                try { if (u) await deleteDoc(doc(db, 'account_requests', u.uid)); } catch (e) {}
+                try { await signOut(auth); } catch (e) {}
+                showLoginError('Account request cancelled.');
+            };
+        }
+
+        export async function promptStudentRegister() {
+            let secOpts = '<option value="">Loading sections...</option>';
+            try {
+                const snap = await getDocs(query(collection(db, 'sections'), orderBy('order')));
+                const list = [];
+                snap.forEach(d => list.push({ id: parseInt(d.id), ...d.data() }));
+                secOpts = list.length
+                    ? list.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')
+                    : '<option value="">No section yet — ask the admin first</option>';
+            } catch (e) {
+                secOpts = '<option value="">Could not load sections — try again</option>';
+            }
+            document.querySelector('.custom-alert-title').textContent = '🙋 Create Student Account';
+            customAlertMsg.innerHTML = `
+                <p style="font-size:0.72rem;color:#888;margin-bottom:10px;">Register with your email. The admin will approve it and link it to your name in the class list.</p>
+                <input type="text" id="reqName" placeholder="Your full name (as in the class list)" maxlength="60" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
+                <label style="font-size:0.7rem;font-weight:bold;display:block;text-align:left;">📚 Section</label>
+                <select id="reqSection" style="width:100%;padding:10px;margin:4px 0 8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;">${secOpts}</select>
+                <input type="email" id="reqEmail" placeholder="Email address" maxlength="60" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="email">
+                <input type="password" id="reqPw" placeholder="Password (8+ characters)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
+                <input type="password" id="reqPw2" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
+                <div id="reqError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
+            `;
+            customAlertInput.style.display = 'none';
+            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="reqCancel">Cancel</button><button class="custom-alert-btn custom-alert-ok" id="reqSubmit">📩 Create Account</button>';
+            customAlertOverlay.classList.remove('hidden');
+            const nameEl = document.getElementById('reqName');
+            const secEl = document.getElementById('reqSection');
+            const emailEl = document.getElementById('reqEmail');
+            const pwEl = document.getElementById('reqPw');
+            const pw2El = document.getElementById('reqPw2');
+            const reqErr = document.getElementById('reqError');
+            nameEl.focus();
+            document.getElementById('reqCancel').onclick = function() {
+                customAlertOverlay.classList.add('hidden');
+            };
+            document.getElementById('reqSubmit').onclick = async function() {
+                const name = nameEl.value.trim();
+                const sectionId = secEl.value;
+                const email = emailEl.value.trim();
+                const p1 = pwEl.value;
+                const p2 = pw2El.value;
+                const fail = function(m) { reqErr.textContent = m; reqErr.style.display = 'block'; };
+                reqErr.style.display = 'none';
+                if (name.length < 2) return fail('Please enter your full name.');
+                if (!sectionId) return fail('Please choose your section.');
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.');
+                if (p1.length < 8) return fail('Password must be at least 8 characters.');
+                if (p1 !== p2) return fail('Passwords do not match.');
+                const btn = document.getElementById('reqSubmit');
+                btn.disabled = true; btn.textContent = 'Creating...';
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, p1);
+                    const secList = [];
+                    const secSnap = await getDocs(query(collection(db, 'sections'), orderBy('order')));
+                    secSnap.forEach(d => secList.push({ id: parseInt(d.id), ...d.data() }));
+                    const sec = secList.find(s => String(s.id) === String(sectionId));
+                    await setDoc(doc(db, 'account_requests', cred.user.uid), {
+                        uid: cred.user.uid,
+                        email: cred.user.email,
+                        name: name,
+                        section_id: isNaN(parseInt(sectionId)) ? sectionId : parseInt(sectionId),
+                        sectionName: sec ? sec.name : '',
+                        status: 'pending',
+                        requestedAt: Date.now()
+                    });
+                    watchOwnRequest();
+                } catch (e) {
+                    btn.disabled = false; btn.textContent = '📩 Create Account';
+                    const code = (e && e.code) ? e.code : '';
+                    fail(code === 'permission-denied'
+                        ? 'Security rules not deployed yet — ask the admin to publish the new rules first.'
+                        : authErrorMessage(e));
+                }
+            };
+        }
+        createAccountLinkEl.addEventListener('click', function() {
+            customAlertOverlay.classList.add('hidden');
+            promptStudentRegister();
         });
 
         document.getElementById('logoutBtn').addEventListener('click', async function() {
@@ -394,7 +628,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
         savePwBtn.addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user || user.isAnonymous) { await showAlert('Sign in as admin first!'); return; }
-            if (newPw.value.length < 6) { await showAlert('Password must be at least 6 characters (Firebase requirement)!'); return; }
+            if (newPw.value.length < 8) { await showAlert('Password must be at least 8 characters (Firebase requirement)!'); return; }
             if (newPw.value !== confirmPw.value) { await showAlert('New passwords do not match!'); return; }
             try {
                 const cred = EmailAuthProvider.credential(user.email, currentPw.value);
@@ -494,6 +728,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
         }
         export function stopHeartbeat() {
             if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
             localStorage.removeItem('fm_student_session_id');
             hideStudentProfile();
             document.getElementById('editProfileBtn').style.display = 'none';
@@ -505,232 +740,6 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
             if (unsubscribeSettings) unsubscribeSettings();
             stopHeartbeat();
         };
-
-        export function promptStudentSelect() {
-            const activeSid = localStorage.getItem('fm_student_session_id');
-            document.querySelector('.custom-alert-title').textContent = 'Jonard Suete says!!';
-            customAlertMsg.innerHTML = `
-                <label style="font-size:0.8rem;font-weight:bold;display:block;">👤 Search your name:</label>
-                <input type="text" id="studentSessionInput" placeholder="Type your name..." style="width:100%;padding:8px;margin-top:6px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
-                <div id="sessionMatches" style="max-height:120px;overflow-y:auto;margin-top:6px;"></div>
-                <div style="text-align:center;margin-top:10px;border-top:1px dashed #e2cf9a;padding-top:10px;">
-                    <a id="requestAccountLink" style="font-size:0.75rem;color:#4682b4;cursor:pointer;text-decoration:underline;">🙋 Not in the list? Request an account</a>
-                </div>
-            `;
-            customAlertInput.style.display = 'none';
-            customAlertBtns.innerHTML = '';
-            customAlertOverlay.classList.remove('hidden');
-            const inp = document.getElementById('studentSessionInput');
-            const matchBox = document.getElementById('sessionMatches');
-            document.getElementById('requestAccountLink').onclick = function() {
-                customAlertOverlay.classList.add('hidden');
-                promptAccountRequest();
-            };
-            inp.focus();
-            inp.addEventListener('input', function() {
-                const q = inp.value.toLowerCase();
-                if (!q) { matchBox.innerHTML = ''; return; }
-                const matches = students.filter(s => s.name.toLowerCase().includes(q));
-                if (matches.length === 0) { matchBox.innerHTML = '<div style="padding:8px;font-size:0.75rem;color:#999;">No matches found — you can request an account below.</div>'; return; }
-                matchBox.innerHTML = matches.slice(0, 8).map(s => `<div onclick="window.__pickSession('${s.id}')" style="padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer;font-size:0.8rem;border-radius:6px;${String(s.id) === String(activeSid) ? 'background:#e8f4e8;font-weight:bold;' : ''}">${escapeHtml(s.name)}${String(s.id) === String(activeSid) ? ' ✓' : ''}</div>`).join('');
-            });
-        }
-        export function promptAccountRequest() {
-            document.querySelector('.custom-alert-title').textContent = '📩 Request Account';
-            const sectionOpts = sections.length
-                ? sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')
-                : '<option value="">No section available</option>';
-            customAlertMsg.innerHTML = `
-                <p style="font-size:0.72rem;color:#888;margin-bottom:10px;">Not on the list? Fill this up — the admin will review and approve your account.</p>
-                <input type="text" id="reqName" placeholder="Full name" maxlength="60" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
-                <label style="font-size:0.7rem;font-weight:bold;display:block;text-align:left;">📚 Section</label>
-                <select id="reqSection" style="width:100%;padding:10px;margin:4px 0 8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;">${sectionOpts}</select>
-                <input type="password" id="reqPw" placeholder="Password (4+ chars)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
-                <input type="password" id="reqPw2" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
-                <div id="reqError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
-            `;
-            customAlertInput.style.display = 'none';
-            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="reqCancel">Cancel</button><button class="custom-alert-btn custom-alert-ok" id="reqSubmit">📩 Send Request</button>';
-            customAlertOverlay.classList.remove('hidden');
-            const nameEl = document.getElementById('reqName');
-            const secEl = document.getElementById('reqSection');
-            const pwEl = document.getElementById('reqPw');
-            const pw2El = document.getElementById('reqPw2');
-            const errEl = document.getElementById('reqError');
-            nameEl.focus();
-            document.getElementById('reqCancel').onclick = function() {
-                customAlertOverlay.classList.add('hidden');
-                promptStudentSelect();
-            };
-            document.getElementById('reqSubmit').onclick = async function() {
-                const name = nameEl.value.trim();
-                const sectionId = secEl.value;
-                const p1 = pwEl.value;
-                const p2 = pw2El.value;
-                const fail = function(m) { errEl.textContent = m; errEl.style.display = 'block'; };
-                errEl.style.display = 'none';
-                if (name.length < 2) return fail('Please enter your full name.');
-                if (!sectionId) return fail('Please choose your section.');
-                if (p1.length < 4) return fail('Password must be at least 4 characters.');
-                if (p1 !== p2) return fail('Passwords do not match.');
-                if (students.some(s => s.name.trim().toLowerCase() === name.toLowerCase())) return fail('That name already exists. Please search your name instead.');
-                const btn = document.getElementById('reqSubmit');
-                btn.disabled = true; btn.textContent = 'Sending...';
-                try {
-                    const record = await hashPassword(p1);
-                    const sec = sections.find(s => String(s.id) === String(sectionId));
-                    await addDoc(collection(db, 'account_requests'), {
-                        name: name,
-                        section_id: isNaN(parseInt(sectionId)) ? sectionId : parseInt(sectionId),
-                        sectionName: sec ? sec.name : '',
-                        pw: record,
-                        status: 'pending',
-                        requestedAt: Date.now()
-                    });
-                    customAlertOverlay.classList.add('hidden');
-                    await showAlert('✅ Request sent! Please wait for the admin to approve your account.');
-                    promptStudentSelect();
-                } catch (e) {
-                    btn.disabled = false; btn.textContent = '📩 Send Request';
-                    const code = (e && e.code) ? e.code : '';
-                    fail(code === 'permission-denied'
-                        ? 'Nag-fail: hindi pa naka-set ang security rules para sa requests. Ipa-publish muna ng admin.'
-                        : 'Could not send request. Please try again.' + (code ? ' (' + code + ')' : ''));
-                }
-            };
-            pw2El.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('reqSubmit').click(); } });
-        }
-        window.__pickSession = function(id) {
-            customAlertOverlay.classList.add('hidden');
-            promptStudentPassword(id);
-        };
-        export function promptStudentPassword(studentId) {
-            const student = students.find(s => String(s.id) === String(studentId));
-            if (!student) return;
-            const existingPw = student.pw || null;
-            document.querySelector('.custom-alert-title').textContent = '🔐 ' + student.name;
-            if (existingPw) {
-                customAlertMsg.innerHTML = `
-                    <label style="font-size:0.75rem;font-weight:bold;display:block;">Enter your password:</label>
-                    <input type="password" id="studentPwInput" placeholder="••••••••" style="width:100%;padding:10px;margin-top:6px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
-                    <div style="text-align:center;margin-top:8px;"><a id="forgotPwLink" style="font-size:0.7rem;color:#4682b4;cursor:pointer;text-decoration:underline;">🔑 Forgot password? Create new one</a></div>
-                `;
-                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caPwOk">🔓 Enter</button>';
-                customAlertInput.style.display = 'none';
-                customAlertOverlay.classList.remove('hidden');
-                const pwIn = document.getElementById('studentPwInput');
-                pwIn.focus();
-                const checkPw = async () => {
-                    const match = await verifyPassword(pwIn.value, existingPw);
-                    if (match && typeof existingPw === 'string') {
-                        try {
-                            const record = await hashPassword(pwIn.value);
-                            await updateDoc(doc(db, 'students', String(studentId)), { pw: record });
-                            localStorage.setItem('fm_student_pw_' + studentId, JSON.stringify(record));
-                            const migIdx = students.findIndex(s => String(s.id) === String(studentId));
-                            if (migIdx !== -1) students[migIdx].pw = record;
-                        } catch (e) {}
-                    }
-                    if (match) {
-                        customAlertOverlay.classList.add('hidden');
-                        document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
-                        startHeartbeat(studentId);
-                        showWelcome(student.name);
-                    } else {
-                        pwIn.style.borderColor = '#dc3545';
-                        pwIn.value = '';
-                        pwIn.placeholder = 'Wrong! Try again';
-                        setTimeout(() => { pwIn.style.borderColor = '#e2cf9a'; pwIn.placeholder = '••••••••'; }, 1500);
-                    }
-                };
-                document.getElementById('caPwOk').onclick = checkPw;
-                pwIn.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); checkPw(); } });
-                document.getElementById('forgotPwLink').onclick = function() {
-                    customAlertOverlay.classList.add('hidden');
-                    promptCreateNewPassword(studentId);
-                };
-            } else {
-                customAlertMsg.innerHTML = `
-                    <p style="font-size:0.75rem;color:#888;margin-bottom:10px;">No password yet. Create one for your account:</p>
-                    <input type="password" id="newStudentPw" placeholder="New password (4+ chars)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
-                    <input type="password" id="confirmStudentPw" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
-                    <div id="createPwError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
-                `;
-                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caCreatePw">✅ Create</button>';
-                customAlertInput.style.display = 'none';
-                customAlertOverlay.classList.remove('hidden');
-                const newPw = document.getElementById('newStudentPw');
-                const confPw = document.getElementById('confirmStudentPw');
-                const errEl = document.getElementById('createPwError');
-                newPw.focus();
-                const doCreate = async function() {
-                    const p1 = newPw.value;
-                    const p2 = confPw.value;
-                    if (p1.length < 4) { errEl.textContent = 'Password must be at least 4 characters!'; errEl.style.display = 'block'; return; }
-                    if (p1 !== p2) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
-                    const h = await hashPassword(p1);
-                    localStorage.setItem('fm_student_pw_' + studentId, JSON.stringify(h));
-                    await updateDoc(doc(db, 'students', String(studentId)), { pw: h });
-                    const idx = students.findIndex(s => String(s.id) === String(studentId));
-                    if (idx !== -1) students[idx].pw = h;
-                    const studentName = student.name;
-                    customAlertOverlay.classList.add('hidden');
-                    document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
-                    startHeartbeat(studentId);
-                    showWelcome(studentName);
-                    customAlertMsg.textContent = '✅ Password created successfully!';
-                    customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caOk">OK</button>';
-                    customAlertInput.style.display = 'none';
-                    customAlertOverlay.classList.remove('hidden');
-                    document.getElementById('caOk').onclick = function() { customAlertOverlay.classList.add('hidden'); };
-                };
-                document.getElementById('caCreatePw').onclick = doCreate;
-                confPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doCreate(); } });
-                newPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); confPw.focus(); } });
-            }
-        }
-        export function promptCreateNewPassword(studentId) {
-            const student = students.find(s => String(s.id) === String(studentId));
-            if (!student) return;
-            document.querySelector('.custom-alert-title').textContent = '🔐 Reset ' + student.name;
-            customAlertMsg.innerHTML = `
-                <p style="font-size:0.7rem;color:#888;margin-bottom:10px;">Create a new password (old one will be deleted):</p>
-                <input type="password" id="newStudentPw2" placeholder="New password (4+ chars)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
-                <input type="password" id="confirmStudentPw2" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.9rem;text-align:center;letter-spacing:3px;" autocomplete="off">
-                <div id="resetPwError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
-            `;
-            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caResetPw">✅ Reset</button>';
-            customAlertInput.style.display = 'none';
-            customAlertOverlay.classList.remove('hidden');
-            const newPw = document.getElementById('newStudentPw2');
-            const confPw = document.getElementById('confirmStudentPw2');
-            const errEl = document.getElementById('resetPwError');
-            newPw.focus();
-            const doReset = async function() {
-                const p1 = newPw.value;
-                const p2 = confPw.value;
-                if (p1.length < 4) { errEl.textContent = 'Password must be at least 4 characters!'; errEl.style.display = 'block'; return; }
-                if (p1 !== p2) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
-                const h = await hashPassword(p1);
-                localStorage.setItem('fm_student_pw_' + studentId, JSON.stringify(h));
-                await updateDoc(doc(db, 'students', String(studentId)), { pw: h });
-                const idx2 = students.findIndex(s => String(s.id) === String(studentId));
-                if (idx2 !== -1) students[idx2].pw = h;
-                const studentName2 = student.name;
-                customAlertOverlay.classList.add('hidden');
-                document.querySelector('.custom-alert-title').textContent = 'Jonard Suete';
-                startHeartbeat(studentId);
-                showWelcome(studentName2);
-                customAlertMsg.textContent = '✅ Password created successfully!';
-                customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-ok" id="caOk">OK</button>';
-                customAlertInput.style.display = 'none';
-                customAlertOverlay.classList.remove('hidden');
-                document.getElementById('caOk').onclick = function() { customAlertOverlay.classList.add('hidden'); };
-            };
-            document.getElementById('caResetPw').onclick = doReset;
-            confPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doReset(); } });
-            newPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); confPw.focus(); } });
-        }
 
         export let adminRegistered = false;
         export let adminRegisteredEmail = '';
@@ -765,8 +774,3 @@ import { doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, increment, col
             }
             if (deleteBgBtn) deleteBgBtn.style.display = loginBgUrl ? 'block' : 'none';
         }
-
-        window.__startStudentSession = function(studentId) {
-            stopHeartbeat();
-            startHeartbeat(studentId);
-        };
