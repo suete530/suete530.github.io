@@ -5,27 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>BSIS-1 · Fines System</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script>
-        (function() {
-            var box = document.getElementById('loginBox');
-            var btn = document.getElementById('loginThemeBtn');
-            if (!box || !btn) return;
-            var total = 8, cur = parseInt(localStorage.getItem('fm_login_theme') || '1', 10);
-            function apply(n) {
-                for (var i = 1; i <= total; i++) box.classList.remove('tp-' + i);
-                if (n > 1) box.classList.add('tp-' + n);
-                localStorage.setItem('fm_login_theme', String(n));
-            }
-            apply(cur);
-            btn.addEventListener('click', function() {
-                cur = cur % total + 1;
-                apply(cur);
-                box.classList.remove('theme-pop');
-                void box.offsetWidth;
-                box.classList.add('theme-pop');
-            });
-        })();
-    </script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -485,5 +464,26 @@
     </div>
 
     <script type="module" src="js/app.js"></script>
+    <script>
+        (function() {
+            var box = document.getElementById('loginBox');
+            var btn = document.getElementById('loginThemeBtn');
+            if (!box || !btn) return;
+            var total = 8, cur = parseInt(localStorage.getItem('fm_login_theme') || '1', 10);
+            function apply(n) {
+                for (var i = 1; i <= total; i++) box.classList.remove('tp-' + i);
+                if (n > 1) box.classList.add('tp-' + n);
+                localStorage.setItem('fm_login_theme', String(n));
+            }
+            apply(cur);
+            btn.addEventListener('click', function() {
+                cur = cur % total + 1;
+                apply(cur);
+                box.classList.remove('theme-pop');
+                void box.offsetWidth;
+                box.classList.add('theme-pop');
+            });
+        })();
+    </script>
 </body>
 </html>
