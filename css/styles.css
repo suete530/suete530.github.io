@@ -276,6 +276,16 @@
         max-width: 380px; width: 100%; text-align: center;
         box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.15);
         border: 1px solid rgba(124,58,237,0.25);
+        animation: loginSlideIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes loginSlideIn {
+        0%   { opacity: 0; transform: translateX(-100vw); }
+        60%  { opacity: 1; transform: translateX(24px); }
+        80%  { transform: translateX(-8px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .login-box { animation: none; }
     }
     body.dark .login-box { background: rgba(12,18,34,0.92); border-color: rgba(124,58,237,0.3); }
     .login-box h2 {
