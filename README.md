@@ -76,8 +76,14 @@ suete530.github.io/
 The 👑 Developer button emails you (via [EmailJS](https://www.emailjs.com)) when a
 developer account is used:
 
-- `✅ Successfully signed in` — owner logs in through Developer Login
 - `✅ Successfully created developer account` — first-time owner setup
+
+Account approval emails (sent to the account owner):
+
+- `✅ Your admin account has been approved` — owner approves a secretary/admin request
+- `✅ Your student account has been approved` — secretary approves a student account
+
+No emails are sent on ordinary sign-ins.
 
 1. Sign up (free) at https://www.emailjs.com and verify your email.
 2. **Email Services** → Add New Service → Gmail (or any provider) → copy the **Service ID**.

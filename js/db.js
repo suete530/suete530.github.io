@@ -5,6 +5,7 @@ import { escapeHtml, nextId } from './utils.js';
 import { adminName, startHeartbeat, stopHeartbeat } from './auth.js';
 import { getSmsSettings, playSound, renderStudentList, sendSms, showAlert, showConfirm, showPrompt, showStudentProfile } from './ui.js';
 import { updateStats } from './stats.js';
+import { sendDevEmail } from './notify.js';
 import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         export function loadSections() {
@@ -416,6 +417,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 logActivity('student_add', 'Account request approved', req.name, 0);
                 playSound('add');
                 renderRequestsList();
+                sendDevEmail('student_approved', req.email, req.email);
                 await showAlert('âœ… Account approved for ' + req.name + '!');
             } catch (e) {
                 await showAlert('âŒ Could not approve this request. ' + (e && e.message ? e.message : ''));
@@ -509,6 +511,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 logActivity('admin_approve', 'Admin request approved', req.name, 0);
                 playSound('add');
                 renderAdminRequestsList();
+                sendDevEmail('admin_approved', req.email, req.email);
                 await showAlert('✅ Admin access approved for ' + req.name + '!\n\nThey can now log in with full access.');
             } catch (e) {
                 await showAlert('❌ Could not approve this request. ' + (e && e.message ? e.message : ''));
