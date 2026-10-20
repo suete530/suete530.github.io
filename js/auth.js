@@ -5,7 +5,9 @@ import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
         import { unsubscribeSections, unsubscribeSuggestions, stopAdminRequestsListener, stopRequestsListener } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { sendDevEmail } from './notify.js';
+
 
         export function updateAdminNameDisplay() {
             adminNameDisplay.textContent = adminName;
@@ -124,6 +126,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
                     await setDoc(doc(db, 'settings', 'admin'), { adminRegistered: true, adminEmail: cred.user.email, adminUid: cred.user.uid }, { merge: true });
                     adminRegistered = true;
                     adminRegisteredEmail = cred.user.email;
+                    sendDevEmail('account_created', cred.user.email);
                     updateSetupButtonVisibility();
                     exitSetupMode();
                     pwInput.value = ''; confirmInput.value = '';
@@ -154,6 +157,8 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
                     errEl.style.color = '#10b981';
                     errEl.textContent = '✅ Developer signed in successfully!';
                     errEl.style.display = 'block';
+                    setDevSignedInStatus(true);
+                    sendDevEmail('signed_in', email);
                     // Log the sign-in to activity_logs
                     try {
                         const { addDoc, collection: col, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
@@ -576,6 +581,11 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
         const ownerPanelBtnEl = document.getElementById('ownerPanelBtn');
         const developerModeBack = document.getElementById('developerModeBack');
 
+        function setDevSignedInStatus(show) {
+            const el = document.getElementById('devSignedInStatus');
+            if (el) el.style.display = show ? 'block' : 'none';
+        }
+
         function enterDeveloperMode() {
             developerMode = true;
             if (studentMode) exitStudentMode();
@@ -590,6 +600,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             developerModeBack.style.display = 'block';
             adminSignUpBtnEl.style.display = 'none';
             errEl.style.display = 'none';
+            setDevSignedInStatus(false);
             emailInput.focus();
         }
         function exitDeveloperMode() {
@@ -601,6 +612,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             studentModeBtn.style.display = '';
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
+            setDevSignedInStatus(false);
         }
         if (ownerPanelBtnEl) ownerPanelBtnEl.addEventListener('click', enterDeveloperMode);
         if (developerModeBack) developerModeBack.addEventListener('click', exitDeveloperMode);
@@ -624,6 +636,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             confirmInput.value = '';
             exitSetupMode();
             errEl.style.display = 'none';
+            setDevSignedInStatus(false);
             badge.className = 'viewer-badge';
             badge.textContent = '👨‍🎓 Student';
             headerAdminName.textContent = '';

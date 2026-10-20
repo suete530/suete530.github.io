@@ -46,6 +46,7 @@ suete530.github.io/
 │   ├── utils.js      # Small helpers (ids, escaping, formatting, files)
 │   ├── i18n.js       # EN/TL/CEB translations and language switching
 │   ├── auth.js       # Login, setup, admin settings, sessions, heartbeat
+│   ├── notify.js     # EmailJS alerts for developer sign-in / account creation
 │   ├── db.js         # Firestore reads/writes (students, sections, payments)
 │   ├── ui.js         # Rendering, modals, theme, sound, CSV export
 │   ├── stats.js      # Dashboard stats, leaderboard, progress
@@ -70,7 +71,42 @@ suete530.github.io/
 7. Open the site and use **"First time? Create admin account"** to register the
    first admin. Do this immediately after deploying the rules.
 
-### 2. Local development
+### 2. EmailJS setup (developer login alerts)
+
+The 👑 Developer button emails you (via [EmailJS](https://www.emailjs.com)) when a
+developer account is used:
+
+- `✅ Successfully signed in` — owner logs in through Developer Login
+- `✅ Successfully created developer account` — first-time owner setup
+
+1. Sign up (free) at https://www.emailjs.com and verify your email.
+2. **Email Services** → Add New Service → Gmail (or any provider) → copy the **Service ID**.
+3. **Email Templates** → Create New Template. Use these variables in the subject/body:
+
+   ```
+   Subject: {{subject}}
+   Body:
+   {{message}}
+
+   Account: {{email}}
+   Event: {{event}}
+   Time: {{time}}
+   ```
+
+   Set **To email** to `{{to_email}}` so the app can choose the recipient. Save and copy the **Template ID**.
+4. **Account → General** → copy your **Public Key**.
+5. Open `js/notify.js` and replace the four placeholders:
+
+   ```js
+   const EMAILJS_PUBLIC_KEY    = 'YOUR_EMAILJS_PUBLIC_KEY';
+   const EMAILJS_SERVICE_ID    = 'YOUR_EMAILJS_SERVICE_ID';
+   const EMAILJS_TEMPLATE_ID   = 'YOUR_EMAILJS_TEMPLATE_ID';
+   export const DEV_NOTIFY_EMAIL = 'your-email@example.com';   // where alerts are sent
+   ```
+
+Until the placeholders are replaced, the app simply skips sending emails (nothing breaks).
+
+### 3. Local development
 
 ES modules require HTTP — opening `index.html` directly (file://) will not work.
 
@@ -81,7 +117,7 @@ python -m http.server 8000
 
 Then open http://localhost:8000
 
-### 3. Deploy
+### 4. Deploy
 
 Push to the `main` branch — GitHub Pages deploys automatically.
 
