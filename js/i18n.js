@@ -1,7 +1,7 @@
         export const i18n = {
             en: {
-                loginTitle: '🔐 Fines System', loginDesc: 'Enter secretary email & password or student sign-in',
-                btnLogin: '🔓 Secretary Login',
+                loginTitle: '🔐 Fines System', loginDesc: 'Enter treasurer email & password or student sign-in',
+                btnLogin: '🔓 Treasurer Login',
                 headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Student',
                 btnActivity: '📋 Activity', btnAnnounce: '📢 Announce', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Student', profileRole: 'USER',
@@ -47,8 +47,8 @@
                 noAnnounce: 'No announcements yet.'
             },
             tl: {
-                loginTitle: '🔐 Fines System', loginDesc: 'Ilagay ang email at password ng secretary o mag-sign-in bilang estudyante',
-                btnLogin: '🔓 Mag-login bilang Secretary',
+                loginTitle: '🔐 Fines System', loginDesc: 'Ilagay ang email at password ng treasurer o mag-sign-in bilang estudyante',
+                btnLogin: '🔓 Mag-login bilang Treasurer',
                 headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Aktibidad', btnAnnounce: '📢 Anunsyo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Estudyante', profileRole: 'USER',
@@ -94,8 +94,8 @@
                 noAnnounce: 'Wala pang anunsyo.'
             },
             ceb: {
-                loginTitle: '🔐 Fines System', loginDesc: 'Isulod ang email ug password sa secretary o sign-in isip estudyante',
-                btnLogin: '🔓 Mag-login isip Secretary',
+                loginTitle: '🔐 Fines System', loginDesc: 'Isulod ang email ug password sa treasurer o sign-in isip estudyante',
+                btnLogin: '🔓 Mag-login isip Treasurer',
                 headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Kalihokan', btnAnnounce: '📢 Pahibalo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
                 profileStudent: '👨‍🎓 Estudyante', profileRole: 'USER',

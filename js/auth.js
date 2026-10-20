@@ -255,7 +255,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         function exitStudentMode() {
             studentMode = false;
             loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
-            emailInput.placeholder = 'secretary@email.com';
+            emailInput.placeholder = 'treasurer@email.com';
             studentLoginLinks.style.display = 'none';
             studentSignInToggle.style.display = 'none';
             createAccountWrap.style.display = 'none';
@@ -636,7 +636,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         function exitDeveloperMode() {
             developerMode = false;
             loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
-            emailInput.placeholder = 'secretary@email.com';
+            emailInput.placeholder = 'treasurer@email.com';
             developerModeBack.style.display = 'none';
             adminSignUpBtnEl.style.display = '';
             studentModeBtn.style.display = '';
