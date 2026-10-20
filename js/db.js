@@ -467,10 +467,12 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 adminRequestsBadge.style.display = n > 0 ? 'inline-block' : 'none';
                 adminRequestsBadge.textContent = n;
             }
+            window.__adminReqCount = n;
             const devCount = document.getElementById('devReqCount');
+            const total = n + (window.__secReqCount || 0);
             if (devCount) {
-                devCount.style.display = n > 0 ? 'inline-block' : 'none';
-                devCount.textContent = n;
+                devCount.style.display = total > 0 ? 'inline-block' : 'none';
+                devCount.textContent = total;
             }
         }
 
@@ -533,5 +535,5 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             } catch (e) {}
         };
 
-        if (adminRequestsBtn) adminRequestsBtn.addEventListener('click', () => { renderAdminRequestsList(); adminRequestsModal.classList.add('active'); });
+        if (adminRequestsBtn) adminRequestsBtn.addEventListener('click', () => { renderAdminRequestsList(); if (window.switchAdminReqTab) window.switchAdminReqTab('admins'); adminRequestsModal.classList.add('active'); });
         if (adminRequestsModal) adminRequestsModal.addEventListener('click', (e) => { if (e.target === adminRequestsModal) closeAdminRequestsModal(); });

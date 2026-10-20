@@ -2,6 +2,7 @@ import './i18n.js';
 import { getIsAdmin, students } from './state.js';
 import { auth, db } from './firebase.js';
 import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
+import { enterSecretaryApp, startSecRequestsListener, watchOwnSecretaryRequest } from './secretary.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';
 import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js';
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';
@@ -51,6 +52,21 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             } catch (e) {}
         }
 
+        // Auto-enter approved secretary session
+        if (currentUser && !currentUser.isAnonymous && !autoEnterAdmin && !autoEnterAdminApproved && !autoEnterStudent) {
+            try {
+                const secSnap = await getDoc(doc(db, 'secretaries', currentUser.uid));
+                if (secSnap.exists() && secSnap.data().status === 'approved') {
+                    enterSecretaryApp(secSnap.data().name || (currentUser.email || '').split('@')[0]);
+                } else if (secSnap.exists() && secSnap.data().status === 'pending') {
+                    watchOwnSecretaryRequest();
+                    errSecretaryPending();
+                } else if (secSnap.exists()) {
+                    watchOwnSecretaryRequest();
+                }
+            } catch (e) {}
+        }
+
         function errStudentPending() {
             const el = document.getElementById('loginError');
             if (el) {
@@ -63,6 +79,14 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             const el = document.getElementById('loginError');
             if (el) {
                 el.textContent = '⏳ Your admin request is still pending owner approval.';
+                el.style.display = 'block';
+            }
+        }
+
+        function errSecretaryPending() {
+            const el = document.getElementById('loginError');
+            if (el) {
+                el.textContent = '⏳ Your secretary request is still pending approval.';
                 el.style.display = 'block';
             }
         }
@@ -81,6 +105,7 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             if (getIsAdmin()) {
                 startRequestsListener();
                 startAdminRequestsListener();
+                startSecRequestsListener();
             }
             if (!getIsAdmin()) updateStudentLastOnline();
         }

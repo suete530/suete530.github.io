@@ -50,6 +50,31 @@ service cloud.firestore {
       allow delete: if isOwner() || (signedIn() && request.auth.uid == adminUid);
     }
 
+    function isSecretary() {
+      return isEmailUser() && exists(/databases/$(database)/documents/secretaries/$(request.auth.uid))
+        && get(/databases/$(database)/documents/secretaries/$(request.auth.uid)).data.get('status', '') == 'approved';
+    }
+
+    // Secretary accounts: self-register as pending; admin/owner approves.
+    match /secretaries/{secUid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == secUid);
+      allow create: if isEmailUser()
+                    && request.auth.uid == secUid
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (signedIn() && request.auth.uid == secUid);
+
+      // Secretary's own student roster (attendance page).
+      match /students/{studentId} {
+        allow read, write: if isSecretary() && request.auth.uid == secUid;
+      }
+      // Secretary's daily attendance records (doc id = YYYY-MM-DD).
+      match /attendance/{date} {
+        allow read, write: if isSecretary() && request.auth.uid == secUid;
+      }
+    }
+
     function visitorCountOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['visitorCount']);
     }

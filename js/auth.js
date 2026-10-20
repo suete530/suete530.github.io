@@ -7,6 +7,7 @@ import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, r
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { sendDevEmail } from './notify.js';
+        import { secretaryMode, handleSecretaryLogin, exitSecretaryApp, exitSecretaryMode, stopSecRequestsListener } from './secretary.js';
 
 
         export function updateAdminNameDisplay() {
@@ -143,6 +144,10 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 await studentSignIn(email, password);
                 return;
             }
+            if (secretaryMode) {
+                await handleSecretaryLogin();
+                return;
+            }
             if (developerMode) {
                 loginBtnEl.disabled = true;
                 loginBtnEl.textContent = '⏳ Signing in...';
@@ -252,7 +257,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             studentModeBtn.style.display = 'none';
             errEl.style.display = 'none';
         }
-        function exitStudentMode() {
+        export function exitStudentMode() {
             studentMode = false;
             loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
             emailInput.placeholder = 'treasurer@email.com';
@@ -598,7 +603,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
             const adminRequestsListEl = document.getElementById('adminRequestsList');
             if (adminRequestsListEl) adminRequestsListEl.innerHTML = '<div class="no-results">Loading admin requests...</div>';
-            if (adminRequestsModalEl) adminRequestsModalEl.classList.add('active');
+            if (adminRequestsModalEl) { if (window.switchAdminReqTab) window.switchAdminReqTab('admins'); adminRequestsModalEl.classList.add('active'); }
         }
         export function exitDevSession() {
             document.body.classList.remove('dev-session');
@@ -608,6 +613,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         }
         if (devOpenRequestsBtnEl) devOpenRequestsBtnEl.addEventListener('click', function() {
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
+            if (window.switchAdminReqTab) window.switchAdminReqTab('admins');
             if (adminRequestsModalEl) adminRequestsModalEl.classList.add('active');
         });
         if (devLogoutBtnEl) devLogoutBtnEl.addEventListener('click', function() {
@@ -617,6 +623,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 
         function enterDeveloperMode() {
             developerMode = true;
+            if (secretaryMode) exitSecretaryMode();
             if (studentMode) exitStudentMode();
             exitSetupMode();
             setupBtn.style.display = 'none';
@@ -633,7 +640,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             devSignUpBtnEl.style.display = adminRegistered ? 'none' : '';
             emailInput.focus();
         }
-        function exitDeveloperMode() {
+        export function exitDeveloperMode() {
             developerMode = false;
             loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
             emailInput.placeholder = 'treasurer@email.com';
@@ -664,6 +671,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             stopRequestsListener();
             stopAdminRequestsListener();
             stopAdminRequestWatcher();
+            stopSecRequestsListener();
+            exitSecretaryApp();
             setCurrentSectionId(null);
             setStudentPrompted(false);
             overlay.classList.remove('hidden');
@@ -1051,6 +1060,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             if (unsubscribeSettings) unsubscribeSettings();
             stopHeartbeat();
             stopAdminRequestsListener();
+            stopSecRequestsListener();
+            exitSecretaryApp();
         };
 
         export let adminRegistered = false;
