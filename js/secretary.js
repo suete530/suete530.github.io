@@ -2,6 +2,7 @@ import { auth, db } from './firebase.js';
 import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
 import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, setupMode, studentMode, updateSetupButtonVisibility } from './auth.js';
+import { setSecretaryProfile } from './profile.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -122,7 +123,7 @@ export async function handleSecretaryLogin() {
         }
         pwInput.value = '';
         errEl.style.display = 'none';
-        enterSecretaryApp(data.name || email.split('@')[0]);
+        enterSecretaryApp(data.name || email.split('@')[0], data.photoUrl);
     } catch (e) {
         pwInput.value = '';
         loginBtnEl.textContent = '📝 Secretary Login';
@@ -225,7 +226,7 @@ export function watchOwnSecretaryRequest() {
         if (d.status === 'approved') {
             if (secUnsubReqWatch) { secUnsubReqWatch(); secUnsubReqWatch = null; }
             errEl.style.display = 'none';
-            enterSecretaryApp(d.name || u.email.split('@')[0]);
+            enterSecretaryApp(d.name || u.email.split('@')[0], d.photoUrl);
         } else if (d.status === 'revoked') {
             if (secUnsubReqWatch) { secUnsubReqWatch(); secUnsubReqWatch = null; }
             showSecretaryError('⛔ Your secretary request was rejected. Contact the developer.');
@@ -235,7 +236,7 @@ export function watchOwnSecretaryRequest() {
 }
 
 // ================= SECRETARY SESSION (attendance page) =================
-export function enterSecretaryApp(name) {
+export function enterSecretaryApp(name, photoUrl) {
     secretarySession = true;
     secretaryMode = false;
     overlay.classList.add('hidden');
@@ -245,6 +246,7 @@ export function enterSecretaryApp(name) {
     if (ownerPanelBtn) ownerPanelBtn.style.display = 'none';
     document.body.style.overflow = 'hidden';
     if (secPageName) secPageName.textContent = '👤 ' + (name || 'Secretary');
+    setSecretaryProfile(name || 'Secretary', photoUrl);
     // default date = today
     const today = new Date().toISOString().split('T')[0];
     attDate.value = today;
@@ -257,6 +259,7 @@ export function enterSecretaryApp(name) {
 export function exitSecretaryApp() {
     secretarySession = false;
     secretaryPage.style.display = 'none';
+    if (window.closeProfileModal) window.closeProfileModal();
     if (secretaryPanelBtn) secretaryPanelBtn.style.display = '';
     const ownerPanelBtn = document.getElementById('ownerPanelBtn');
     if (ownerPanelBtn) ownerPanelBtn.style.display = '';

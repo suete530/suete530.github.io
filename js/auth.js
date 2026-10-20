@@ -8,11 +8,13 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { sendDevEmail } from './notify.js';
         import { secretaryMode, handleSecretaryLogin, exitSecretaryApp, exitSecretaryMode, stopSecRequestsListener } from './secretary.js';
+        import { renderDevProfile } from './profile.js';
 
 
         export function updateAdminNameDisplay() {
             adminNameDisplay.textContent = adminName;
             headerAdminName.textContent = adminName;
+            renderDevProfile();
         }
 
         export function updateAdminAvatarDisplay() {
@@ -34,6 +36,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 loginAvatarInitial.textContent = initials;
                 settingsAvatarInitial.textContent = initials || 'ZC';
             }
+            renderDevProfile();
         }
 
         export let setupMode = false;
@@ -600,6 +603,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export function enterDevSession() {
             document.body.classList.add('dev-session');
             if (devSessionBarEl) devSessionBarEl.style.display = 'flex';
+            renderDevProfile();
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
             const adminRequestsListEl = document.getElementById('adminRequestsList');
             if (adminRequestsListEl) adminRequestsListEl.innerHTML = '<div class="no-results">Loading admin requests...</div>';
@@ -608,6 +612,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export function exitDevSession() {
             document.body.classList.remove('dev-session');
             if (devSessionBarEl) devSessionBarEl.style.display = 'none';
+            if (window.closeProfileModal) window.closeProfileModal();
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
             if (adminRequestsModalEl) adminRequestsModalEl.classList.remove('active');
         }

@@ -4,6 +4,7 @@ import { auth, db } from './firebase.js';
 import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
 import { enterSecretaryApp, startSecRequestsListener, watchOwnSecretaryRequest } from './secretary.js';
 import './accounts.js';
+import './profile.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';
 import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js';
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';
@@ -58,7 +59,7 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             try {
                 const secSnap = await getDoc(doc(db, 'secretaries', currentUser.uid));
                 if (secSnap.exists() && secSnap.data().status === 'approved') {
-                    enterSecretaryApp(secSnap.data().name || (currentUser.email || '').split('@')[0]);
+                    enterSecretaryApp(secSnap.data().name || (currentUser.email || '').split('@')[0], secSnap.data().photoUrl);
                 } else if (secSnap.exists() && secSnap.data().status === 'pending') {
                     watchOwnSecretaryRequest();
                     errSecretaryPending();
