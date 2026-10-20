@@ -139,6 +139,28 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
                 await studentSignIn(email, password);
                 return;
             }
+            if (developerMode) {
+                loginBtnEl.disabled = true;
+                try {
+                    if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
+                    const cred = await signInWithEmailAndPassword(auth, email, password);
+                    if (!adminRegisteredEmail || cred.user.email !== adminRegisteredEmail) {
+                        throw { code: 'auth/not-admin' };
+                    }
+                    window.__approvedAdmin = false;
+                    pwInput.value = '';
+                    exitDeveloperMode();
+                    enterApp(true);
+                } catch (e) {
+                    showLoginError(e.code === 'auth/not-admin'
+                        ? '⛔ Access denied. Only the owner (developer) can log in here.'
+                        : authErrorMessage(e));
+                    pwInput.value = '';
+                } finally {
+                    loginBtnEl.disabled = false;
+                }
+                return;
+            }
             loginBtnEl.disabled = true;
             try {
                 if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
@@ -188,6 +210,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
         const backToSecretaryLoginEl = document.getElementById('backToSecretaryLogin');
         const studentSignInToggle = document.getElementById('studentSignInToggle');
         const createAccountWrap = document.getElementById('createAccountWrap');
+        const adminSignUpBtnEl = document.getElementById('adminSignUpBtn');
 
         function enterStudentMode() {
             studentMode = true;
@@ -211,6 +234,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             createAccountWrap.style.display = 'none';
             studentModeBack.style.display = 'none';
             studentModeBtn.style.display = '';
+            adminSignUpBtnEl.style.display = '';
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
         }
@@ -519,7 +543,6 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             };
         }
 
-        const adminSignUpBtnEl = document.getElementById('adminSignUpBtn');
         if (adminSignUpBtnEl) {
             adminSignUpBtnEl.addEventListener('click', function() {
                 customAlertOverlay.classList.add('hidden');
@@ -527,25 +550,41 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             });
         }
 
+        // ================= DEVELOPER MODE =================
+        export let developerMode = false;
         const ownerPanelBtnEl = document.getElementById('ownerPanelBtn');
-        if (ownerPanelBtnEl) {
-            ownerPanelBtnEl.addEventListener('click', function() {
-                const u = auth.currentUser;
-                if (!u || u.isAnonymous || !u.email) {
-                    showLoginError('🔑 Log in as the owner first to view admin requests.');
-                    return;
-                }
-                // Only the owner can see the admin requests panel
-                if (adminRegisteredEmail && u.email === adminRegisteredEmail) {
-                    import('./db.js').then(db => {
-                        db.startAdminRequestsListener();
-                        document.getElementById('adminRequestsModal').classList.add('active');
-                    });
-                } else {
-                    showLoginError('⛔ Only the owner can access the admin requests panel.');
-                }
-            });
+        const developerModeBack = document.getElementById('developerModeBack');
+
+        function enterDeveloperMode() {
+            developerMode = true;
+            if (studentMode) exitStudentMode();
+            exitSetupMode();
+            setupBtn.style.display = 'none';
+            studentModeBtn.style.display = 'none';
+            loginBtnEl.textContent = '👑 Developer Login';
+            emailInput.placeholder = 'developer@email.com';
+            studentLoginLinks.style.display = 'none';
+            studentSignInToggle.style.display = 'none';
+            createAccountWrap.style.display = 'none';
+            developerModeBack.style.display = 'block';
+            adminSignUpBtnEl.style.display = 'none';
+            errEl.style.display = 'none';
+            emailInput.focus();
         }
+        function exitDeveloperMode() {
+            developerMode = false;
+            loginBtnEl.textContent = DEFAULT_LOGIN_LABEL;
+            emailInput.placeholder = 'secretary@email.com';
+            developerModeBack.style.display = 'none';
+            adminSignUpBtnEl.style.display = '';
+            studentModeBtn.style.display = '';
+            updateSetupButtonVisibility();
+            errEl.style.display = 'none';
+        }
+        if (ownerPanelBtnEl) ownerPanelBtnEl.addEventListener('click', enterDeveloperMode);
+        if (developerModeBack) developerModeBack.addEventListener('click', exitDeveloperMode);
+        const backToSecretaryFromDevEl = document.getElementById('backToSecretaryFromDev');
+        if (backToSecretaryFromDevEl) backToSecretaryFromDevEl.addEventListener('click', exitDeveloperMode);
 
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             try { await signOut(auth); } catch (e) {}
