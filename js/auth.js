@@ -141,6 +141,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             }
             if (developerMode) {
                 loginBtnEl.disabled = true;
+                loginBtnEl.textContent = '⏳ Signing in...';
                 try {
                     if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
                     const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -149,13 +150,33 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
                     }
                     window.__approvedAdmin = false;
                     pwInput.value = '';
-                    exitDeveloperMode();
-                    enterApp(true);
+                    errEl.style.display = 'none';
+                    errEl.style.color = '#10b981';
+                    errEl.textContent = '✅ Developer signed in successfully!';
+                    errEl.style.display = 'block';
+                    // Log the sign-in to activity_logs
+                    try {
+                        const { addDoc, collection: col, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+                        await addDoc(col(db, 'activity_logs'), {
+                            action: 'developer_login',
+                            details: 'Developer (owner) signed in',
+                            studentName: '',
+                            amount: 0,
+                            timestamp: Date.now()
+                        });
+                    } catch (e) {}
+                    setTimeout(() => {
+                        errEl.style.color = '';
+                        exitDeveloperMode();
+                        enterApp(true);
+                    }, 1500);
                 } catch (e) {
+                    errEl.style.color = '';
                     showLoginError(e.code === 'auth/not-admin'
                         ? '⛔ Access denied. Only the owner (developer) can log in here.'
                         : authErrorMessage(e));
                     pwInput.value = '';
+                    loginBtnEl.textContent = '👑 Developer Login';
                 } finally {
                     loginBtnEl.disabled = false;
                 }
