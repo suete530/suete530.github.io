@@ -1,4 +1,4 @@
-﻿        import { addBtn, addSectionBtn, clearFormBtn, fineInput, gcashName, gcashNumber, genderSelect, nameInput, openSuggestionsBtn, paymentAmount, paymentDate, paymentHistoryList, paymentModal, paymentModalTitle, paymentNote, paymentRef, relationStatusSelect, requestsBadge, requestsBtn, requestsList, requestsModal, sectionSelect, sectionSelectView, statusSelect, studentListContainer, submitPaymentBtn, submitSuggestionBtn, suggestionModal, suggestionName, suggestionText, suggestionsList } from './dom.js';
+﻿        import { addBtn, addSectionBtn, adminRequestsBadge, adminRequestsBtn, adminRequestsList, adminRequestsModal, clearFormBtn, fineInput, gcashName, gcashNumber, genderSelect, nameInput, openSuggestionsBtn, paymentAmount, paymentDate, paymentHistoryList, paymentModal, paymentModalTitle, paymentNote, paymentRef, relationStatusSelect, requestsBadge, requestsBtn, requestsList, requestsModal, sectionSelect, sectionSelectView, statusSelect, studentListContainer, submitPaymentBtn, submitSuggestionBtn, suggestionModal, suggestionName, suggestionText, suggestionsList } from './dom.js';
 import { currentSectionId, getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, studentPrompted, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, nextId } from './utils.js';
@@ -434,3 +434,96 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
         };
         if (requestsBtn) requestsBtn.addEventListener('click', () => { renderRequestsList(); requestsModal.classList.add('active'); });
         if (requestsModal) requestsModal.addEventListener('click', (e) => { if (e.target === requestsModal) closeRequestsModal(); });
+
+        // ================= ADMIN REQUESTS (OWNER ONLY) =================
+        export let pendingAdminRequests = [];
+        export let unsubscribeAdminRequests = null;
+
+        export function startAdminRequestsListener() {
+            if (unsubscribeAdminRequests) unsubscribeAdminRequests();
+            const q = query(collection(db, 'admins'), orderBy('requestedAt'));
+            unsubscribeAdminRequests = onSnapshot(q, (snapshot) => {
+                pendingAdminRequests = [];
+                snapshot.forEach(d => {
+                    const data = d.data();
+                    if (data.status === 'pending') pendingAdminRequests.push({ id: d.id, ...data });
+                });
+                updateAdminRequestsBadge();
+                if (adminRequestsModal && adminRequestsModal.classList.contains('active')) renderAdminRequestsList();
+            }, () => {});
+        }
+
+        export function stopAdminRequestsListener() {
+            if (unsubscribeAdminRequests) { unsubscribeAdminRequests(); unsubscribeAdminRequests = null; }
+            pendingAdminRequests = [];
+            updateAdminRequestsBadge();
+        }
+
+        export function updateAdminRequestsBadge() {
+            const n = pendingAdminRequests.length;
+            if (adminRequestsBadge) {
+                adminRequestsBadge.style.display = n > 0 ? 'inline-block' : 'none';
+                adminRequestsBadge.textContent = n;
+            }
+        }
+
+        function renderAdminRequestsList() {
+            if (!adminRequestsList) return;
+            if (pendingAdminRequests.length === 0) {
+                adminRequestsList.innerHTML = '<div class="no-results">No pending admin requests.</div>';
+                return;
+            }
+            adminRequestsList.innerHTML = pendingAdminRequests.map(r => {
+                const when = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : '';
+                return `<div style="background:#0f1923;border:1px solid #1e293b;border-radius:14px;padding:12px;">
+                    <div style="font-weight:bold;font-size:0.9rem;color:#e0e0e0;">👑 ${escapeHtml(r.name || 'Unknown')}</div>
+                    <div style="font-size:0.72rem;color:#9ca3af;margin-top:2px;">📧 ${escapeHtml(r.email || '')}</div>
+                    <div style="font-size:0.65rem;color:#6b7280;margin-top:2px;">🕐 ${escapeHtml(when)}</div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button onclick="window.__acceptAdminReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">✅ Approve</button>
+                        <button onclick="window.__rejectAdminReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">❌ Reject</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function closeAdminRequestsModal() { if (adminRequestsModal) adminRequestsModal.classList.remove('active'); }
+        window.closeAdminRequestsModal = closeAdminRequestsModal;
+
+        window.__acceptAdminReq = async function(reqId) {
+            if (!getIsAdmin()) return;
+            const req = pendingAdminRequests.find(r => String(r.id) === String(reqId));
+            if (!req) return;
+            if (!await showConfirm('Approve admin access for "' + req.name + '" (' + req.email + ')?')) return;
+            try {
+                await updateDoc(doc(db, 'admins', String(reqId)), {
+                    status: 'approved',
+                    approvedAt: Date.now(),
+                    approvedBy: auth.currentUser ? auth.currentUser.email : ''
+                });
+                logActivity('admin_approve', 'Admin request approved', req.name, 0);
+                playSound('add');
+                renderAdminRequestsList();
+                await showAlert('✅ Admin access approved for ' + req.name + '!\n\nThey can now log in with full access.');
+            } catch (e) {
+                await showAlert('❌ Could not approve this request. ' + (e && e.message ? e.message : ''));
+            }
+        };
+
+        window.__rejectAdminReq = async function(reqId) {
+            if (!getIsAdmin()) return;
+            const req = pendingAdminRequests.find(r => String(r.id) === String(reqId));
+            if (!req) return;
+            if (!await showConfirm('Reject admin request from "' + req.name + '"?')) return;
+            try {
+                await updateDoc(doc(db, 'admins', String(reqId)), {
+                    status: 'revoked',
+                    revokedAt: Date.now()
+                });
+                renderAdminRequestsList();
+                await showAlert('❌ Admin request from ' + req.name + ' rejected.');
+            } catch (e) {}
+        };
+
+        if (adminRequestsBtn) adminRequestsBtn.addEventListener('click', () => { renderAdminRequestsList(); adminRequestsModal.classList.add('active'); });
+        if (adminRequestsModal) adminRequestsModal.addEventListener('click', (e) => { if (e.target === adminRequestsModal) closeAdminRequestsModal(); });

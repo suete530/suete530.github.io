@@ -1,8 +1,8 @@
 import './i18n.js';
 import { getIsAdmin, students } from './state.js';
 import { auth, db } from './firebase.js';
-import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnRequest } from './auth.js';
-import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startRequestsListener } from './db.js';
+import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
+import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';
 import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js';
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -21,18 +21,31 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
         export const autoEnterAdmin = isAdminSession();
 
         let autoEnterStudent = false;
+        let autoEnterAdminApproved = false;
         const currentUser = auth.currentUser;
         if (currentUser && !currentUser.isAnonymous && !autoEnterAdmin) {
             try {
-                const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
-                if (userSnap.exists() && userSnap.data().role === 'student' && userSnap.data().studentId) {
-                    localStorage.setItem('fm_student_session_id', String(userSnap.data().studentId));
-                    autoEnterStudent = true;
+                // Check if this user is an approved multi-admin
+                const adminDocSnap = await getDoc(doc(db, 'admins', currentUser.uid));
+                if (adminDocSnap.exists() && adminDocSnap.data().status === 'approved') {
+                    window.__approvedAdmin = true;
+                    autoEnterAdminApproved = true;
+                } else if (adminDocSnap.exists() && adminDocSnap.data().status === 'pending') {
+                    window.__approvedAdmin = false;
+                    watchOwnAdminRequest();
+                    errAdminPending();
                 } else {
-                    const reqSnap = await getDoc(doc(db, 'account_requests', currentUser.uid));
-                    if (reqSnap.exists()) {
-                        watchOwnRequest();
-                        errStudentPending();
+                    // Check student account
+                    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+                    if (userSnap.exists() && userSnap.data().role === 'student' && userSnap.data().studentId) {
+                        localStorage.setItem('fm_student_session_id', String(userSnap.data().studentId));
+                        autoEnterStudent = true;
+                    } else {
+                        const reqSnap = await getDoc(doc(db, 'account_requests', currentUser.uid));
+                        if (reqSnap.exists()) {
+                            watchOwnRequest();
+                            errStudentPending();
+                        }
                     }
                 }
             } catch (e) {}
@@ -42,6 +55,14 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             const el = document.getElementById('loginError');
             if (el) {
                 el.textContent = '⏳ Your account is still pending admin approval.';
+                el.style.display = 'block';
+            }
+        }
+
+        function errAdminPending() {
+            const el = document.getElementById('loginError');
+            if (el) {
+                el.textContent = '⏳ Your admin request is still pending owner approval.';
                 el.style.display = 'block';
             }
         }
@@ -57,7 +78,10 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             renderFinePresets();
             loadAnnouncements();
             updateInboxBadge();
-            if (getIsAdmin()) startRequestsListener();
+            if (getIsAdmin()) {
+                startRequestsListener();
+                startAdminRequestsListener();
+            }
             if (!getIsAdmin()) updateStudentLastOnline();
         }
 
@@ -84,4 +108,5 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
         window.deleteAnnounce = deleteAnnounce;
 
         if (autoEnterAdmin) enterApp(true);
+        else if (autoEnterAdminApproved) enterApp(true);
         else if (autoEnterStudent) enterApp(false);

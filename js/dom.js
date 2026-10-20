@@ -92,3 +92,7 @@
         export const requestsBadge = document.getElementById('requestsBadge');
         export const requestsModal = document.getElementById('requestsModal');
         export const requestsList = document.getElementById('requestsList');
+        export const adminRequestsBtn = document.getElementById('adminRequestsBtn');
+        export const adminRequestsBadge = document.getElementById('adminRequestsBadge');
+        export const adminRequestsModal = document.getElementById('adminRequestsModal');
+        export const adminRequestsList = document.getElementById('adminRequestsList');

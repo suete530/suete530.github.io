@@ -2,7 +2,7 @@ import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, c
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
-import { unsubscribeSections, unsubscribeSuggestions, stopRequestsListener } from './db.js';
+        import { unsubscribeSections, unsubscribeSuggestions, stopAdminRequestsListener, stopRequestsListener } from './db.js';
 import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -61,7 +61,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
         export function isAdminSession() {
             const u = auth.currentUser;
             if (!u || u.isAnonymous || !u.email) return false;
-            if (adminRegisteredEmail) return u.email === adminRegisteredEmail;
+            if (adminRegisteredEmail) return u.email === adminRegisteredEmail || window.__approvedAdmin === true;
             return true;
         }
         export function updateSetupButtonVisibility() {
@@ -142,10 +142,32 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             loginBtnEl.disabled = true;
             try {
                 if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
-                await signInWithEmailAndPassword(auth, email, password);
-                if (!isAdminSession()) throw { code: 'auth/not-admin' };
-                pwInput.value = '';
-                enterApp(true);
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                // Owner check first
+                if (adminRegisteredEmail && cred.user.email === adminRegisteredEmail) {
+                    window.__approvedAdmin = false;
+                    pwInput.value = '';
+                    enterApp(true);
+                    return;
+                }
+                // Multi-admin: check admins/{uid} collection
+                const adminSnap = await getDoc(doc(db, 'admins', cred.user.uid));
+                if (adminSnap.exists() && adminSnap.data().status === 'approved') {
+                    window.__approvedAdmin = true;
+                    pwInput.value = '';
+                    enterApp(true);
+                    return;
+                }
+                if (adminSnap.exists() && adminSnap.data().status === 'pending') {
+                    window.__approvedAdmin = false;
+                    watchOwnAdminRequest();
+                    showLoginError('⏳ Your admin account is still pending owner approval. Keep this page open — you will enter automatically once approved.');
+                    pwInput.value = '';
+                    return;
+                }
+                // Not an admin at all
+                window.__approvedAdmin = false;
+                throw { code: 'auth/not-admin' };
             } catch (e) {
                 showLoginError(authErrorMessage(e));
                 pwInput.value = '';
@@ -391,6 +413,120 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             promptStudentRegister();
         });
 
+        // ================= ADMIN REQUEST (MULTI-ADMIN) =================
+        let _adminReqUnsub = null;
+        export function stopAdminRequestWatcher() { if (_adminReqUnsub) { _adminReqUnsub(); _adminReqUnsub = null; } }
+
+        export function watchOwnAdminRequest() {
+            const u = auth.currentUser;
+            if (!u) return;
+            stopAdminRequestWatcher();
+            showPendingAdminScreen();
+            _adminReqUnsub = onSnapshot(doc(db, 'admins', u.uid), async (snap) => {
+                if (!snap.exists()) return;
+                if (snap.data().status === 'approved') {
+                    stopAdminRequestWatcher();
+                    customAlertOverlay.classList.add('hidden');
+                    window.__approvedAdmin = true;
+                    pwInput.value = '';
+                    enterApp(true);
+                } else if (snap.data().status === 'revoked') {
+                    stopAdminRequestWatcher();
+                    customAlertOverlay.classList.add('hidden');
+                    window.__approvedAdmin = false;
+                    showLoginError('Your admin request was rejected. Contact the owner for more info.');
+                    await signOut(auth).catch(() => {});
+                }
+            });
+        }
+
+        function showPendingAdminScreen() {
+            document.querySelector('.custom-alert-title').textContent = '⏳ Admin Request Pending';
+            customAlertMsg.innerHTML = `
+                <p style="font-size:0.78rem;line-height:1.6;text-align:center;">
+                    Your admin account request was sent to the owner for approval.<br><br>
+                    <b>Keep this page open</b> — you will enter automatically once approved.<br>
+                    You can also close this and log in again later with your email and password.
+                </p>`;
+            customAlertInput.style.display = 'none';
+            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="cancelAdminReqBtn">Cancel request</button><button class="custom-alert-btn custom-alert-ok" id="waitAdminReqBtn">OK, waiting...</button>';
+            customAlertOverlay.classList.remove('hidden');
+            document.getElementById('waitAdminReqBtn').onclick = function() { customAlertOverlay.classList.add('hidden'); };
+            document.getElementById('cancelAdminReqBtn').onclick = async function() {
+                stopAdminRequestWatcher();
+                const u = auth.currentUser;
+                customAlertOverlay.classList.add('hidden');
+                try { if (u) await deleteDoc(doc(db, 'admins', u.uid)); } catch (e) {}
+                try { await signOut(auth); } catch (e) {}
+                showLoginError('Admin request cancelled.');
+            };
+        }
+
+        export async function promptAdminRegister() {
+            document.querySelector('.custom-alert-title').textContent = '🤝 Request Admin Access';
+            customAlertMsg.innerHTML = `
+                <p style="font-size:0.72rem;color:#888;margin-bottom:10px;">Register as an admin. The owner must approve your request before you can access the system.</p>
+                <input type="text" id="adminReqName" placeholder="Your full name" maxlength="60" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="off">
+                <input type="email" id="adminReqEmail" placeholder="Email address" maxlength="60" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;" autocomplete="email">
+                <input type="password" id="adminReqPw" placeholder="Password (8+ characters)" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
+                <input type="password" id="adminReqPw2" placeholder="Confirm password" style="width:100%;padding:10px;border-radius:12px;border:2px solid #e2cf9a;font-size:0.85rem;text-align:center;letter-spacing:3px;" autocomplete="new-password">
+                <div id="adminReqError" style="font-size:0.75rem;color:#dc3545;margin-top:6px;display:none;"></div>
+            `;
+            customAlertInput.style.display = 'none';
+            customAlertBtns.innerHTML = '<button class="custom-alert-btn custom-alert-cancel" id="adminReqCancel">Cancel</button><button class="custom-alert-btn custom-alert-ok" id="adminReqSubmit">📩 Send Request</button>';
+            customAlertOverlay.classList.remove('hidden');
+            const nameEl = document.getElementById('adminReqName');
+            const emailEl = document.getElementById('adminReqEmail');
+            const pwEl = document.getElementById('adminReqPw');
+            const pw2El = document.getElementById('adminReqPw2');
+            const reqErr = document.getElementById('adminReqError');
+            nameEl.focus();
+            document.getElementById('adminReqCancel').onclick = function() {
+                customAlertOverlay.classList.add('hidden');
+            };
+            document.getElementById('adminReqSubmit').onclick = async function() {
+                const name = nameEl.value.trim();
+                const email = emailEl.value.trim();
+                const p1 = pwEl.value;
+                const p2 = pw2El.value;
+                const fail = function(m) { reqErr.textContent = m; reqErr.style.display = 'block'; };
+                reqErr.style.display = 'none';
+                if (name.length < 2) return fail('Please enter your full name.');
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.');
+                if (p1.length < 8) return fail('Password must be at least 8 characters.');
+                if (p1 !== p2) return fail('Passwords do not match.');
+                // Prevent registering with the owner email
+                if (adminRegisteredEmail && email.toLowerCase() === adminRegisteredEmail.toLowerCase()) return fail('This email is already the owner account. Please log in instead.');
+                const btn = document.getElementById('adminReqSubmit');
+                btn.disabled = true; btn.textContent = 'Sending...';
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, p1);
+                    await setDoc(doc(db, 'admins', cred.user.uid), {
+                        uid: cred.user.uid,
+                        email: cred.user.email,
+                        name: name,
+                        status: 'pending',
+                        requestedAt: Date.now()
+                    });
+                    watchOwnAdminRequest();
+                } catch (e) {
+                    btn.disabled = false; btn.textContent = '📩 Send Request';
+                    const code = (e && e.code) ? e.code : '';
+                    fail(code === 'permission-denied'
+                        ? 'Security rules not deployed yet — ask the owner to publish the new rules first.'
+                        : authErrorMessage(e));
+                }
+            };
+        }
+
+        const adminRequestBtnEl = document.getElementById('adminRequestBtn');
+        if (adminRequestBtnEl) {
+            adminRequestBtnEl.addEventListener('click', function() {
+                customAlertOverlay.classList.add('hidden');
+                promptAdminRegister();
+            });
+        }
+
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             try { await signOut(auth); } catch (e) {}
             window.__isAdmin = false;
@@ -398,6 +534,8 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             if (window.__unsubscribeAll) window.__unsubscribeAll();
             if (window._inboxUnsub) { window._inboxUnsub(); window._inboxUnsub = null; }
             stopRequestsListener();
+            stopAdminRequestsListener();
+            stopAdminRequestWatcher();
             setCurrentSectionId(null);
             setStudentPrompted(false);
             overlay.classList.remove('hidden');
@@ -782,6 +920,7 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             if (unsubscribeSuggestions) unsubscribeSuggestions();
             if (unsubscribeSettings) unsubscribeSettings();
             stopHeartbeat();
+            stopAdminRequestsListener();
         };
 
         export let adminRegistered = false;
@@ -798,12 +937,16 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             if (!user || user.isAnonymous || !user.email) return;
             try {
                 const snap = await getDoc(doc(db, 'settings', 'admin'));
-                if (!snap.exists()) return;
-                const data = snap.data();
-                const updates = {};
-                if (data.adminEmail && data.adminEmail !== user.email) updates.adminEmail = user.email;
-                if (!data.adminUid) updates.adminUid = user.uid;
-                if (Object.keys(updates).length) await updateDoc(doc(db, 'settings', 'admin'), updates);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    // Only sync owner email/uid if this user IS the owner (matches existing or first-time bootstrap)
+                    if (!data.adminEmail || data.adminEmail === user.email) {
+                        const updates = {};
+                        if (data.adminEmail !== user.email) updates.adminEmail = user.email;
+                        if (!data.adminUid) updates.adminUid = user.uid;
+                        if (Object.keys(updates).length) await updateDoc(doc(db, 'settings', 'admin'), updates);
+                    }
+                }
             } catch (e) {}
         });
 

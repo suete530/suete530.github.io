@@ -16,10 +16,38 @@ service cloud.firestore {
       let cfg = get(/databases/$(database)/documents/settings/admin).data;
       let registeredEmail = cfg.get('adminEmail', '');
       let registeredUid = cfg.get('adminUid', '');
+      let isOwner = isEmailUser() && (
+        (registeredUid != '' && request.auth.uid == registeredUid)
+        || (registeredEmail != '' && request.auth.token.email == registeredEmail)
+      );
+      let isApprovedAdmin = isEmailUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('status', '') == 'approved';
+      return isOwner || isApprovedAdmin;
+    }
+
+    function isOwner() {
+      let cfg = get(/databases/$(database)/documents/settings/admin).data;
+      let registeredEmail = cfg.get('adminEmail', '');
+      let registeredUid = cfg.get('adminUid', '');
       return isEmailUser() && (
         (registeredUid != '' && request.auth.uid == registeredUid)
         || (registeredEmail != '' && request.auth.token.email == registeredEmail)
       );
+    }
+
+    // Any signed-in email user can register as admin (status=pending).
+    // Only the owner can approve/revoke/update other admins.
+    match /admins/{adminUid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == adminUid);
+      // Self-registration: create own doc with status 'pending'.
+      allow create: if isEmailUser()
+                    && request.auth.uid == adminUid
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      // Owner can approve, revoke, or update any admin doc.
+      // Pending admin can only cancel their own request (delete).
+      allow update: if isOwner();
+      allow delete: if isOwner() || (signedIn() && request.auth.uid == adminUid);
     }
 
     function visitorCountOnly() {
