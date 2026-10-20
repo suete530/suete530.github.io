@@ -159,7 +159,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     errEl.textContent = '✅ Developer signed in successfully!';
                     errEl.style.display = 'block';
                     setDevSignedInStatus(true);
-                    sendDevEmail('signed_in', email);
+                    // Only email on the first developer sign-in of the day
+                    const devEmailDay = new Date().toDateString();
+                    if (localStorage.getItem('fm_dev_email_day') !== devEmailDay) {
+                        localStorage.setItem('fm_dev_email_day', devEmailDay);
+                        sendDevEmail('signed_in', email);
+                    }
                     // Log the sign-in to activity_logs
                     try {
                         const { addDoc, collection: col, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
