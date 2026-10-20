@@ -580,6 +580,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export let developerMode = false;
         const ownerPanelBtnEl = document.getElementById('ownerPanelBtn');
         const developerModeBack = document.getElementById('developerModeBack');
+        const devSignUpBtnEl = document.getElementById('devSignUpBtn');
 
         function setDevSignedInStatus(show) {
             const el = document.getElementById('devSignedInStatus');
@@ -601,6 +602,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             adminSignUpBtnEl.style.display = 'none';
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
+            devSignUpBtnEl.style.display = adminRegistered ? 'none' : '';
             emailInput.focus();
         }
         function exitDeveloperMode() {
@@ -610,6 +612,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             developerModeBack.style.display = 'none';
             adminSignUpBtnEl.style.display = '';
             studentModeBtn.style.display = '';
+            devSignUpBtnEl.style.display = 'none';
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
@@ -618,6 +621,11 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         if (developerModeBack) developerModeBack.addEventListener('click', exitDeveloperMode);
         const backToSecretaryFromDevEl = document.getElementById('backToSecretaryFromDev');
         if (backToSecretaryFromDevEl) backToSecretaryFromDevEl.addEventListener('click', exitDeveloperMode);
+        if (devSignUpBtnEl) devSignUpBtnEl.addEventListener('click', function() {
+            enterSetupMode();
+            loginBtnEl.textContent = '🛠️ Create Developer Account';
+            devSignUpBtnEl.style.display = 'none';
+        });
 
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             try { await signOut(auth); } catch (e) {}
