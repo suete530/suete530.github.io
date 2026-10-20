@@ -3,6 +3,7 @@ import { getIsAdmin, students } from './state.js';
 import { auth, db } from './firebase.js';
 import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
 import { enterSecretaryApp, startSecRequestsListener, watchOwnSecretaryRequest } from './secretary.js';
+import './accounts.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';
 import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js';
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';

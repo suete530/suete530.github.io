@@ -77,6 +77,7 @@
         <span style="color:#f59e0b;font-weight:bold;font-size:0.85rem;">👑 Developer — Admin Account Requests</span>
         <span id="devReqCount" style="display:none;background:#ef4444;color:#fff;font-size:0.65rem;padding:2px 8px;border-radius:20px;font-weight:bold;">0</span>
         <button id="devOpenRequestsBtn" style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">📥 Requests</button>
+        <button id="devAccountsBtn" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">👥 Accounts</button>
         <button id="devLogoutBtn" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">Logout</button>
     </div>
 
@@ -378,6 +379,21 @@
             </div>
             <div id="secRequestsList" style="display:none;max-height:420px;overflow-y:auto;flex-direction:column;gap:8px;">
                 <div class="no-results">No pending secretary requests.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="devAccountsModal">
+        <div class="modal" style="max-width:600px;">
+            <button class="modal-close" onclick="window.closeDevAccountsModal()">✕</button>
+            <h3>👥 Registered Accounts</h3>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <input type="text" id="devAccountsSearch" placeholder="🔍 Search name or email..." style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid #1e293b;background:#0d1520;color:#e0e0e0;font-family:monospace;font-size:0.8rem;">
+                <button id="devAccountsRefreshBtn" style="padding:9px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-weight:bold;cursor:pointer;font-size:0.75rem;">🔄 Refresh</button>
+            </div>
+            <div id="devAccountsSummary" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+            <div id="devAccountsList" style="display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;">
+                <div class="no-results">Loading accounts...</div>
             </div>
         </div>
     </div>
