@@ -11,29 +11,54 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         import { renderDevProfile } from './profile.js';
 
 
+        const loginRoleLabel = document.getElementById('secretaryRole');
+
         export function updateAdminNameDisplay() {
-            adminNameDisplay.textContent = adminName;
+            if (secretaryMode) {
+                adminNameDisplay.textContent = 'Secretary';
+                if (loginRoleLabel) loginRoleLabel.textContent = '📝 Secretary';
+            } else if (developerMode) {
+                adminNameDisplay.textContent = 'Developer';
+                if (loginRoleLabel) loginRoleLabel.textContent = '👑 Developer';
+            } else {
+                adminNameDisplay.textContent = adminName;
+                if (loginRoleLabel) loginRoleLabel.textContent = 'BSIS-1 Treasurer';
+            }
             headerAdminName.textContent = adminName;
             renderDevProfile();
         }
 
         export function updateAdminAvatarDisplay() {
-            if (adminPhotoUrl) {
+            if (secretaryMode) {
+                loginAvatarImg.style.display = 'none';
+                loginAvatarCircle.classList.remove('has-photo');
+                loginAvatarInitial.style.display = 'block';
+                loginAvatarInitial.textContent = '📝';
+            } else if (developerMode) {
+                loginAvatarImg.style.display = 'none';
+                loginAvatarCircle.classList.remove('has-photo');
+                loginAvatarInitial.style.display = 'block';
+                loginAvatarInitial.textContent = '👑';
+            } else if (adminPhotoUrl) {
                 loginAvatarImg.src = adminPhotoUrl;
                 loginAvatarImg.style.display = 'block';
                 loginAvatarInitial.style.display = 'none';
                 loginAvatarCircle.classList.add('has-photo');
-                settingsAvatarImg.src = adminPhotoUrl;
-                settingsAvatarImg.style.display = 'block';
-                settingsAvatarInitial.style.display = 'none';
             } else {
                 loginAvatarImg.style.display = 'none';
                 loginAvatarInitial.style.display = 'block';
                 loginAvatarCircle.classList.remove('has-photo');
+                const initials = adminName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                loginAvatarInitial.textContent = initials;
+            }
+            if (adminPhotoUrl) {
+                settingsAvatarImg.src = adminPhotoUrl;
+                settingsAvatarImg.style.display = 'block';
+                settingsAvatarInitial.style.display = 'none';
+            } else {
                 settingsAvatarImg.style.display = 'none';
                 settingsAvatarInitial.style.display = 'block';
                 const initials = adminName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-                loginAvatarInitial.textContent = initials;
                 settingsAvatarInitial.textContent = initials || 'ZC';
             }
             renderDevProfile();
@@ -643,6 +668,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
             devSignUpBtnEl.style.display = adminRegistered ? 'none' : '';
+            updateAdminNameDisplay();
+            updateAdminAvatarDisplay();
             emailInput.focus();
         }
         export function exitDeveloperMode() {
@@ -656,6 +683,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
+            updateAdminNameDisplay();
+            updateAdminAvatarDisplay();
         }
         if (ownerPanelBtnEl) ownerPanelBtnEl.addEventListener('click', enterDeveloperMode);
         if (developerModeBack) developerModeBack.addEventListener('click', exitDeveloperMode);

@@ -1,7 +1,7 @@
 import { auth, db } from './firebase.js';
 import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
-import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, setupMode, studentMode, updateSetupButtonVisibility } from './auth.js';
+import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, setupMode, studentMode, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
 import { setSecretaryProfile } from './profile.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -77,6 +77,8 @@ export function enterSecretaryMode() {
     secretaryModeBack.style.display = 'block';
     errEl.style.color = '';
     errEl.style.display = 'none';
+    updateAdminNameDisplay();
+    updateAdminAvatarDisplay();
     emailInput.focus();
 }
 
@@ -93,6 +95,8 @@ export function exitSecretaryMode() {
     updateSetupButtonVisibility();
     errEl.style.color = '';
     errEl.style.display = 'none';
+    updateAdminNameDisplay();
+    updateAdminAvatarDisplay();
 }
 
 // ================= SECRETARY LOGIN =================
