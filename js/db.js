@@ -449,7 +449,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                     if (data.status === 'pending') pendingAdminRequests.push({ id: d.id, ...data });
                 });
                 updateAdminRequestsBadge();
-                if (adminRequestsModal && adminRequestsModal.classList.contains('active')) renderAdminRequestsList();
+                if ((adminRequestsModal && adminRequestsModal.classList.contains('active')) || document.body.classList.contains('dev-session')) renderAdminRequestsList();
             }, () => {});
         }
 
@@ -464,6 +464,11 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             if (adminRequestsBadge) {
                 adminRequestsBadge.style.display = n > 0 ? 'inline-block' : 'none';
                 adminRequestsBadge.textContent = n;
+            }
+            const devCount = document.getElementById('devReqCount');
+            if (devCount) {
+                devCount.style.display = n > 0 ? 'inline-block' : 'none';
+                devCount.textContent = n;
             }
         }
 

@@ -131,6 +131,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     exitSetupMode();
                     pwInput.value = ''; confirmInput.value = '';
                     enterApp(true);
+                    if (developerMode) { exitDeveloperMode(); enterDevSession(); }
                 } catch (e) {
                     showLoginError(authErrorMessage(e));
                 } finally {
@@ -174,6 +175,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                         errEl.style.color = '';
                         exitDeveloperMode();
                         enterApp(true);
+                        enterDevSession();
                     }, 1500);
                 } catch (e) {
                     errEl.style.color = '';
@@ -587,6 +589,33 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             if (el) el.style.display = show ? 'block' : 'none';
         }
 
+        const devSessionBarEl = document.getElementById('devSessionBar');
+        const devOpenRequestsBtnEl = document.getElementById('devOpenRequestsBtn');
+        const devLogoutBtnEl = document.getElementById('devLogoutBtn');
+
+        export function enterDevSession() {
+            document.body.classList.add('dev-session');
+            if (devSessionBarEl) devSessionBarEl.style.display = 'flex';
+            const adminRequestsModalEl = document.getElementById('adminRequestsModal');
+            const adminRequestsListEl = document.getElementById('adminRequestsList');
+            if (adminRequestsListEl) adminRequestsListEl.innerHTML = '<div class="no-results">Loading admin requests...</div>';
+            if (adminRequestsModalEl) adminRequestsModalEl.classList.add('active');
+        }
+        export function exitDevSession() {
+            document.body.classList.remove('dev-session');
+            if (devSessionBarEl) devSessionBarEl.style.display = 'none';
+            const adminRequestsModalEl = document.getElementById('adminRequestsModal');
+            if (adminRequestsModalEl) adminRequestsModalEl.classList.remove('active');
+        }
+        if (devOpenRequestsBtnEl) devOpenRequestsBtnEl.addEventListener('click', function() {
+            const adminRequestsModalEl = document.getElementById('adminRequestsModal');
+            if (adminRequestsModalEl) adminRequestsModalEl.classList.add('active');
+        });
+        if (devLogoutBtnEl) devLogoutBtnEl.addEventListener('click', function() {
+            exitDevSession();
+            document.getElementById('logoutBtn').click();
+        });
+
         function enterDeveloperMode() {
             developerMode = true;
             if (studentMode) exitStudentMode();
@@ -645,6 +674,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             exitSetupMode();
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
+            exitDevSession();
             badge.className = 'viewer-badge';
             badge.textContent = '👨‍🎓 Student';
             headerAdminName.textContent = '';

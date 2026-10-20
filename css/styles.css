@@ -521,6 +521,13 @@
         body.is-admin .admin-flex { display: flex !important; }
         .student-only { display: inherit !important; }
         body.is-admin .student-only { display: none !important; }
+        body.dev-session .header-bar,
+        body.dev-session .notebook-container,
+        body.dev-session .student-profile-bar,
+        body.dev-session #topAnnouncements,
+        body.dev-session #chat-bubble,
+        body.dev-session #chat-panel { display: none !important; }
+        body.dev-session { padding-top: 52px; }
         .student-only.active { display: flex !important; }
         .suggestion-card {
             background: #1a2332; border-radius: 16px; padding: 14px;
