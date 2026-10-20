@@ -519,11 +519,31 @@ import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnap
             };
         }
 
-        const adminRequestBtnEl = document.getElementById('adminRequestBtn');
-        if (adminRequestBtnEl) {
-            adminRequestBtnEl.addEventListener('click', function() {
+        const adminSignUpBtnEl = document.getElementById('adminSignUpBtn');
+        if (adminSignUpBtnEl) {
+            adminSignUpBtnEl.addEventListener('click', function() {
                 customAlertOverlay.classList.add('hidden');
                 promptAdminRegister();
+            });
+        }
+
+        const ownerPanelBtnEl = document.getElementById('ownerPanelBtn');
+        if (ownerPanelBtnEl) {
+            ownerPanelBtnEl.addEventListener('click', function() {
+                const u = auth.currentUser;
+                if (!u || u.isAnonymous || !u.email) {
+                    showLoginError('🔑 Log in as the owner first to view admin requests.');
+                    return;
+                }
+                // Only the owner can see the admin requests panel
+                if (adminRegisteredEmail && u.email === adminRegisteredEmail) {
+                    import('./db.js').then(db => {
+                        db.startAdminRequestsListener();
+                        document.getElementById('adminRequestsModal').classList.add('active');
+                    });
+                } else {
+                    showLoginError('⛔ Only the owner can access the admin requests panel.');
+                }
             });
         }
 
