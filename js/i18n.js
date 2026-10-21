@@ -1,6 +1,8 @@
         export const i18n = {
             en: {
                 loginTitle: '🔐 Fines System', loginDesc: 'Enter treasurer email & password or student sign-in',
+                loginDescSec: 'Enter secretary email & password',
+                loginDescDev: 'Enter developer email & password',
                 btnLogin: '🔓 Treasurer Login',
                 headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Student',
                 btnActivity: '📋 Activity', btnAnnounce: '📢 Announce', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
@@ -48,6 +50,8 @@
             },
             tl: {
                 loginTitle: '🔐 Fines System', loginDesc: 'Ilagay ang email at password ng treasurer o mag-sign-in bilang estudyante',
+                loginDescSec: 'Ilagay ang email at password ng secretary',
+                loginDescDev: 'Ilagay ang email at password ng developer',
                 btnLogin: '🔓 Mag-login bilang Treasurer',
                 headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Aktibidad', btnAnnounce: '📢 Anunsyo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
@@ -95,6 +99,8 @@
             },
             ceb: {
                 loginTitle: '🔐 Fines System', loginDesc: 'Isulod ang email ug password sa treasurer o sign-in isip estudyante',
+                loginDescSec: 'Isulod ang email ug password sa secretary',
+                loginDescDev: 'Isulod ang email ug password sa developer',
                 btnLogin: '🔓 Mag-login isip Treasurer',
                 headerTitle: '📋 BSIS Fines System', roleStudent: '👨‍🎓 Estudyante',
                 btnActivity: '📋 Kalihokan', btnAnnounce: '📢 Pahibalo', btnPassword: '🔑 Password', btnLogout: '🚪 Logout',
@@ -160,6 +166,7 @@
                 const studentLinks = document.getElementById('studentLoginLinks');
                 loginBtn.innerHTML = (studentLinks && studentLinks.style.display === 'block') ? '🎓 Student Login' : i18n[lang].btnLogin;
             }
+            document.dispatchEvent(new CustomEvent('app:langchange', { detail: { lang } }));
         }
         document.getElementById('langToggle')?.addEventListener('click', () => {
             const next = { en: 'tl', tl: 'ceb', ceb: 'en' };

@@ -638,6 +638,10 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             createAccountWrap.style.display = 'none';
             developerModeBack.style.display = 'block';
             adminSignUpBtnEl.style.display = 'none';
+            const secSignUpBtnEl = document.getElementById('secSignUpBtn');
+            const secretaryModeBackEl = document.getElementById('secretaryModeBack');
+            if (secSignUpBtnEl) secSignUpBtnEl.style.display = 'none';
+            if (secretaryModeBackEl) secretaryModeBackEl.style.display = 'none';
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
             devSignUpBtnEl.style.display = adminRegistered ? 'none' : '';

@@ -3,15 +3,16 @@
 // display name, role label and login background wallpaper.
 
 import { adminNameDisplay, customAlertOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginOverlay } from './dom.js';
+import { currentLang, i18n } from './i18n.js';
 
 export const ROLE_TREASURER = 'treasurer';
 export const ROLE_SECRETARY = 'secretary';
 export const ROLE_DEVELOPER = 'developer';
 
 const ROLE_META = {
-    [ROLE_TREASURER]: { label: '💰 BSIS-1 Treasurer', emoji: '💰', defaultName: 'Treasurer' },
-    [ROLE_SECRETARY]: { label: '📝 Secretary', emoji: '📝', defaultName: 'Secretary' },
-    [ROLE_DEVELOPER]: { label: '👑 Developer', emoji: '👑', defaultName: 'Developer' }
+    [ROLE_TREASURER]: { label: '💰 BSIS-1 Treasurer', emoji: '💰', defaultName: 'Treasurer', descKey: 'loginDesc' },
+    [ROLE_SECRETARY]: { label: '📝 Secretary', emoji: '📝', defaultName: 'Secretary', descKey: 'loginDescSec' },
+    [ROLE_DEVELOPER]: { label: '👑 Developer', emoji: '👑', defaultName: 'Developer', descKey: 'loginDescDev' }
 };
 
 const visuals = {
@@ -23,6 +24,7 @@ const visuals = {
 let activeRole = ROLE_TREASURER;
 
 const loginRoleLabel = document.getElementById('secretaryRole');
+const loginDescEl = document.getElementById('loginDesc');
 
 export function initialsOf(name) {
     const parts = (name || '').trim().split(/\s+/).filter(Boolean);
@@ -71,6 +73,10 @@ function renderLoginProfile() {
 
     if (adminNameDisplay) adminNameDisplay.textContent = name;
     if (loginRoleLabel) loginRoleLabel.textContent = meta.label;
+    if (loginDescEl) {
+        const t = (i18n[currentLang] || {})[meta.descKey];
+        if (t) loginDescEl.textContent = t;
+    }
     if (!loginAvatarImg || !loginAvatarInitial) return;
 
     if (photo) {
@@ -115,3 +121,7 @@ export function applyRoleVisuals() {
     renderLoginProfile();
     applyRoleBackground();
 }
+
+document.addEventListener('app:langchange', function () {
+    renderLoginProfile();
+});
