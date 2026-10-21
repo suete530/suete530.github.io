@@ -34,6 +34,9 @@ const attDate = document.getElementById('attDate');
 const secNewStudentName = document.getElementById('secNewStudentName');
 const secAddStudentBtn = document.getElementById('secAddStudentBtn');
 const secStudentList = document.getElementById('secStudentList');
+const secSearchInput = document.getElementById('secSearchInput');
+const secSearchClearBtn = document.getElementById('secSearchClearBtn');
+const secSearchInfo = document.getElementById('secSearchInfo');
 const attPresentCount = document.getElementById('attPresentCount');
 const attAbsentCount = document.getElementById('attAbsentCount');
 const attTotalCount = document.getElementById('attTotalCount');
@@ -285,6 +288,7 @@ export function enterSecretaryApp(name, photoUrl) {
     loadSecretaryStudents();
     loadAttendanceForDate(today);
     loadAttendanceHistory();
+    resetRosterSearch();
     secNewStudentName.focus();
 }
 
@@ -325,6 +329,13 @@ function loadSecretaryStudents() {
     }, () => {});
 }
 
+// Clears the roster search box (used when the secretary app opens).
+function resetRosterSearch() {
+    secSearchQuery = '';
+    if (secSearchInput) secSearchInput.value = '';
+    updateSearchUI();
+}
+
 async function addSecretaryStudent() {
     const u = auth.currentUser;
     if (!u) return;
@@ -349,24 +360,94 @@ async function removeSecretaryStudent(sid) {
     try { await deleteDoc(doc(db, 'secretaries', u.uid, 'students', sid)); } catch (e) {}
 }
 
+// ================= ROSTER SEARCH =================
+// Live filter on the secretary's own roster: type a name and only the
+// matching students stay visible (the attendance marks are untouched).
+let secSearchQuery = '';
+
+function highlightName(name, query) {
+    const safe = escapeHtml(name);
+    if (!query) return safe;
+    const idx = (name || '').toLowerCase().indexOf(query.toLowerCase());
+    if (idx < 0) return safe;
+    const before = escapeHtml(name.slice(0, idx));
+    const match = escapeHtml(name.slice(idx, idx + query.length));
+    const after = escapeHtml(name.slice(idx + query.length));
+    return before + '<mark style="background:rgba(245,158,11,0.28);color:#fbbf24;border-radius:3px;padding:0 2px;">' + match + '</mark>' + after;
+}
+
+function updateSearchUI() {
+    if (secSearchClearBtn) secSearchClearBtn.style.display = secSearchQuery ? 'block' : 'none';
+    if (!secSearchInfo) return;
+    if (secSearchQuery) {
+        const shown = secFilteredStudents().length;
+        secSearchInfo.style.display = 'block';
+        secSearchInfo.textContent = 'Showing ' + shown + ' of ' + secStudents.length + ' student' + (secStudents.length === 1 ? '' : 's')
+            + (shown === secStudents.length ? '' : ' — bulk buttons apply to these ' + shown);
+    } else {
+        secSearchInfo.style.display = 'none';
+        secSearchInfo.textContent = '';
+    }
+}
+
+function secFilteredStudents() {
+    const q = secSearchQuery.trim().toLowerCase();
+    if (!q) return secStudents.map((s, i) => ({ s: s, i: i }));
+    return secStudents
+        .map((s, i) => ({ s: s, i: i }))
+        .filter(function (row) { return (row.s.name || '').toLowerCase().indexOf(q) !== -1; });
+}
+
+if (secSearchInput) {
+    secSearchInput.addEventListener('input', function () {
+        secSearchQuery = secSearchInput.value || '';
+        renderStudentList();
+    });
+    secSearchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            secSearchInput.value = '';
+            secSearchQuery = '';
+            renderStudentList();
+        }
+    });
+}
+
+if (secSearchClearBtn) {
+    secSearchClearBtn.addEventListener('click', function () {
+        if (secSearchInput) { secSearchInput.value = ''; secSearchInput.focus(); }
+        secSearchQuery = '';
+        renderStudentList();
+    });
+}
+
 function renderStudentList() {
     if (!secStudentList) return;
     if (secStudents.length === 0) {
         secStudentList.innerHTML = '<div style="color:#6b7280;font-size:0.78rem;text-align:center;padding:16px;">No students yet. Add students above.</div>';
+        updateSearchUI();
         return;
     }
-    secStudentList.innerHTML = secStudents.map((s, i) => {
+    const rows = secFilteredStudents();
+    if (rows.length === 0) {
+        secStudentList.innerHTML = '<div style="color:#6b7280;font-size:0.78rem;text-align:center;padding:16px;">No student matches “' + escapeHtml(secSearchQuery.trim()) + '”.</div>';
+        updateSearchUI();
+        return;
+    }
+    secStudentList.innerHTML = rows.map(function (row) {
+        const s = row.s;
+        const i = row.i;
         const status = secAttendance[s.id] || null;
         const pActive = status === 'present' ? 'background:linear-gradient(135deg,#10b981,#059669);color:#fff;' : 'background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.4);';
         const aActive = status === 'absent' ? 'background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;' : 'background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.4);';
         return `<div style="display:flex;align-items:center;gap:8px;background:#0f1923;border:1px solid #1e293b;border-radius:12px;padding:10px 12px;">
             <span style="font-size:0.7rem;color:#6b7280;font-weight:bold;min-width:20px;">${i + 1}.</span>
-            <span style="flex:1;color:#e0e0e0;font-size:0.85rem;font-weight:600;">${escapeHtml(s.name)}</span>
+            <span style="flex:1;color:#e0e0e0;font-size:0.85rem;font-weight:600;">${highlightName(s.name || '', secSearchQuery.trim())}</span>
             <button onclick="window.__secMark('${s.id}','present')" style="padding:6px 12px;border-radius:8px;border:none;font-size:0.7rem;font-weight:bold;cursor:pointer;${pActive}">✅ Present</button>
             <button onclick="window.__secMark('${s.id}','absent')" style="padding:6px 12px;border-radius:8px;border:none;font-size:0.7rem;font-weight:bold;cursor:pointer;${aActive}">❌ Absent</button>
             <button onclick="window.__secRemoveStudent('${s.id}')" style="background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:0.85rem;padding:4px;" title="Remove">🗑️</button>
         </div>`;
     }).join('');
+    updateSearchUI();
 }
 
 window.__secMark = async function(sid, status) {
@@ -468,14 +549,23 @@ window.__secLoadHistory = function(date) {
 };
 
 // ================= MARK ALL =================
+// With an active search, the bulk buttons only touch the students that are
+// currently visible (the search box says so).
 function markAll(status) {
-    secStudents.forEach(s => { secAttendance[s.id] = status; });
+    const rows = secFilteredStudents();
+    const targets = secSearchQuery.trim() ? rows.map(r => r.s) : secStudents;
+    targets.forEach(s => { secAttendance[s.id] = status; });
     renderStudentList();
     renderCounts();
 }
 
 function clearMarks() {
-    secAttendance = {};
+    const q = secSearchQuery.trim();
+    if (q) {
+        secFilteredStudents().forEach(r => { delete secAttendance[r.s.id]; });
+    } else {
+        secAttendance = {};
+    }
     renderStudentList();
     renderCounts();
 }
