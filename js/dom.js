@@ -96,3 +96,9 @@
         export const adminRequestsBadge = document.getElementById('adminRequestsBadge');
         export const adminRequestsModal = document.getElementById('adminRequestsModal');
         export const adminRequestsList = document.getElementById('adminRequestsList');
+        export const secProfileNameInput = document.getElementById('secProfileNameInput');
+        export const saveSecProfileNameBtn = document.getElementById('saveSecProfileNameBtn');
+        export const secProfilePhotoBtn = document.getElementById('secProfilePhotoBtn');
+        export const secProfilePhotoInput = document.getElementById('secProfilePhotoInput');
+        export const secProfileAvatarImg = document.getElementById('secProfileAvatarImg');
+        export const secProfileAvatarInitial = document.getElementById('secProfileAvatarInitial');

@@ -3,7 +3,7 @@ import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
 import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, isOwnerSession, setupMode, studentMode, toggleMobilePanelLinks, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
 import { setSecretaryProfile } from './profile.js';
-import { setActiveRole, ROLE_SECRETARY, ROLE_TREASURER } from './roleTheme.js';
+import { setActiveRole, clearSecretaryLoginProfile, setSecretaryLoginProfile, ROLE_SECRETARY, ROLE_TREASURER } from './roleTheme.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -48,6 +48,41 @@ const secLogoutBtn = document.getElementById('secLogoutBtn');
 const secPageName = document.getElementById('secPageName');
 const secHistoryList = document.getElementById('secHistoryList');
 
+// ================= SECRETARY LOGIN PROFILE (per email) =================
+// Every secretary owns a profile doc at secretary_profiles/{their email}.
+// The login page shows that photo + name as soon as the email is typed, so
+// the shared login profile (owner controlled) is never overwritten.
+let secLoginLookupTimer = null;
+
+async function applySecLoginProfileForEmail(email) {
+    const mail = (email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
+        clearSecretaryLoginProfile();
+        return;
+    }
+    try {
+        const snap = await getDoc(doc(db, 'secretary_profiles', mail));
+        if (snap.exists()) {
+            const data = snap.data() || {};
+            setSecretaryLoginProfile(data.photoUrl || '', data.name || '');
+        } else {
+            clearSecretaryLoginProfile();
+        }
+    } catch (e) {
+        clearSecretaryLoginProfile();
+    }
+}
+
+if (emailInput) {
+    emailInput.addEventListener('input', function () {
+        if (!secretaryMode) return;
+        clearTimeout(secLoginLookupTimer);
+        secLoginLookupTimer = setTimeout(function () {
+            applySecLoginProfileForEmail(emailInput.value);
+        }, 400);
+    });
+}
+
 // ================= MODE TOGGLE =================
 export function enterSecretaryMode() {
     // exit other login modes first so their flags/handlers can't hijack the login button
@@ -81,6 +116,8 @@ export function enterSecretaryMode() {
     setActiveRole(ROLE_SECRETARY);
     updateAdminNameDisplay();
     updateAdminAvatarDisplay();
+    clearSecretaryLoginProfile();
+    applySecLoginProfileForEmail(emailInput.value);
     toggleMobilePanelLinks(false);
     emailInput.focus();
 }
@@ -101,6 +138,7 @@ export function exitSecretaryMode() {
     setActiveRole(ROLE_TREASURER);
     updateAdminNameDisplay();
     updateAdminAvatarDisplay();
+    clearSecretaryLoginProfile();
     toggleMobilePanelLinks(true);
 }
 
@@ -210,6 +248,17 @@ export function promptSecretaryRegister() {
                 status: 'pending',
                 requestedAt: Date.now()
             });
+            // Per-email login profile: the login page shows the applicant's own
+            // name (and later their photo) once they type this email.
+            try {
+                const mail = (cred.user.email || email).trim().toLowerCase();
+                await setDoc(doc(db, 'secretary_profiles', mail), {
+                    email: mail,
+                    name: name,
+                    photoUrl: '',
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (e) {}
             watchOwnSecretaryRequest();
             customAlertOverlay.classList.add('hidden');
             showSecretaryError('⏳ Request sent! Keep this page open — you will enter automatically once approved.');

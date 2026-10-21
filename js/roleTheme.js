@@ -22,9 +22,23 @@ const visuals = {
 };
 
 let activeRole = ROLE_TREASURER;
+// While the secretary login shows a typed email, that secretary's own
+// profile (from secretary_profiles/{email}) replaces the shared one.
+let secLoginOverride = null;
 
 const loginRoleLabel = document.getElementById('secretaryRole');
 const loginDescEl = document.getElementById('loginDesc');
+
+export function setSecretaryLoginProfile(photo, name) {
+    secLoginOverride = { photo: photo || '', name: name || '' };
+    applyRoleVisuals();
+}
+
+export function clearSecretaryLoginProfile() {
+    if (!secLoginOverride) return;
+    secLoginOverride = null;
+    applyRoleVisuals();
+}
 
 export function initialsOf(name) {
     const parts = (name || '').trim().split(/\s+/).filter(Boolean);
@@ -68,8 +82,10 @@ export function setActiveRole(role) {
 function renderLoginProfile() {
     const v = visuals[activeRole];
     const meta = ROLE_META[activeRole];
-    const photo = v.photo;
-    const name = v.name || meta.defaultName;
+    const over = (activeRole === ROLE_SECRETARY) ? secLoginOverride : null;
+    const rawName = over ? over.name : v.name;
+    const photo = over ? over.photo : v.photo;
+    const name = rawName || meta.defaultName;
 
     if (adminNameDisplay) adminNameDisplay.textContent = name;
     if (loginRoleLabel) loginRoleLabel.textContent = meta.label;
@@ -88,7 +104,7 @@ function renderLoginProfile() {
         loginAvatarImg.removeAttribute('src');
         loginAvatarImg.style.display = 'none';
         loginAvatarInitial.style.display = 'block';
-        loginAvatarInitial.textContent = v.name ? initialsOf(v.name) : meta.emoji;
+        loginAvatarInitial.textContent = rawName ? initialsOf(rawName) : meta.emoji;
         loginAvatarCircle.classList.remove('has-photo');
     }
 }

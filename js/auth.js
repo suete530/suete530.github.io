@@ -1,4 +1,4 @@
-import { adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
+import { adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, saveSecProfileNameBtn, secProfileAvatarImg, secProfileAvatarInitial, secProfileNameInput, secProfilePhotoBtn, secProfilePhotoInput, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
@@ -33,6 +33,21 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 settingsAvatarInitial.textContent = initials || 'ZC';
             }
             renderDevProfile();
+        }
+
+        // Preview for the shared Secretary login profile (settings modal).
+        export function updateSecProfilePreview() {
+            if (!secProfileAvatarImg || !secProfileAvatarInitial) return;
+            if (roleSecPhotoUrl) {
+                secProfileAvatarImg.src = roleSecPhotoUrl;
+                secProfileAvatarImg.style.display = 'block';
+                secProfileAvatarInitial.style.display = 'none';
+            } else {
+                secProfileAvatarImg.style.display = 'none';
+                secProfileAvatarInitial.style.display = 'block';
+                const initials = (roleSecName || '').split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                secProfileAvatarInitial.textContent = initials || '📝';
+            }
         }
 
         export let setupMode = false;
@@ -932,6 +947,40 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             adminPhotoInput.value = '';
         });
 
+        // Shared Secretary login profile (owner controlled fallback).
+        if (saveSecProfileNameBtn) saveSecProfileNameBtn.addEventListener('click', async function() {
+            if (!isAdminSession()) return;
+            const name = (secProfileNameInput.value || '').trim();
+            setSecretaryRolePhoto(roleSecPhotoUrl, name);
+            updateSecProfilePreview();
+            try {
+                await updateDoc(doc(db, 'settings', 'admin'), { secName: name });
+                await showAlert('✅ Secretary login profile updated!');
+            } catch (e) {
+                await showAlert('⛔ Could not save: ' + (e && e.message ? e.message : 'error'));
+            }
+        });
+
+        if (secProfilePhotoBtn) secProfilePhotoBtn.addEventListener('click', function() {
+            if (!isAdminSession()) return;
+            secProfilePhotoInput.click();
+        });
+
+        if (secProfilePhotoInput) secProfilePhotoInput.addEventListener('change', async function() {
+            if (!isAdminSession()) { secProfilePhotoInput.value = ''; return; }
+            if (!secProfilePhotoInput.files[0]) return;
+            const photoUrl = await readFileAsBase64(secProfilePhotoInput.files[0]);
+            setSecretaryRolePhoto(photoUrl, roleSecName);
+            updateSecProfilePreview();
+            try {
+                await updateDoc(doc(db, 'settings', 'admin'), { secPhoto: photoUrl });
+                await showAlert('✅ Secretary login photo updated!');
+            } catch (e) {
+                await showAlert('⛔ Could not save: ' + (e && e.message ? e.message : 'error'));
+            }
+            secProfilePhotoInput.value = '';
+        });
+
         uploadBgBtn.addEventListener('click', function() {
             if (!isAdminSession()) return;
             loginBgInput.click();
@@ -986,6 +1035,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             emailCurrentPw.value = '';
             settingsGcashNumber.value = localStorage.getItem('fm_gcash_number') || '';
             settingsGcashName.value = localStorage.getItem('fm_gcash_name') || '';
+            if (secProfileNameInput) secProfileNameInput.value = roleSecName;
+            updateSecProfilePreview();
             updateQRPreview();
             renderThemeSwatches();
             renderPresetsManager();

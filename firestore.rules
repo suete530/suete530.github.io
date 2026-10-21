@@ -81,6 +81,23 @@ service cloud.firestore {
       }
     }
 
+    // Per-email secretary profile used by the login screen: as soon as a
+    // secretary types their email, the login page shows THEIR OWN photo and
+    // name. Public single-document read (same exposure as settings/admin);
+    // collection queries stay admin-only.
+    match /secretary_profiles/{email} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isEmailUser()
+                    && request.resource.data.email.lower() == request.auth.token.email.lower();
+      allow update: if isAdmin()
+                    || (isEmailUser()
+                        && resource.data.email.lower() == request.auth.token.email.lower()
+                        && request.resource.data.email.lower() == request.auth.token.email.lower());
+      allow delete: if isAdmin()
+                    || (isEmailUser() && resource.data.email.lower() == request.auth.token.email.lower());
+    }
+
     function visitorCountOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['visitorCount']);
     }
@@ -116,10 +133,11 @@ service cloud.firestore {
       allow update: if (isEmailUser() && resource.data.get('adminRegistered', false) != true)
                     || visitorCountOnly()
                     || isAdmin()
-                    // A secretary may only publish their own role visuals
-                    // (login page photo + wallpaper) for the secretary login.
+                    // A secretary may only publish their own login wallpaper.
+                    // Their photo/name live in secretary_profiles/{email},
+                    // so no secretary can overwrite the shared login profile.
                     || (isSecretary() && request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['secPhoto', 'secName', 'loginBgSec']));
+                        .hasOnly(['loginBgSec']));
       allow delete: if isAdmin();
     }
 

@@ -1,9 +1,9 @@
 import { auth, db } from './firebase.js';
 import { readFileAsBase64, readImageAsBase64 } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
-import { adminName, adminPhotoUrl, devName, devPhotoUrl, setDeveloperName, setDeveloperPhoto, setDeveloperWallpaper, setSecretaryRolePhoto, setSecretaryWallpaper } from './auth.js';
+import { adminName, adminPhotoUrl, devName, devPhotoUrl, setDeveloperName, setDeveloperPhoto, setDeveloperWallpaper, setSecretaryWallpaper } from './auth.js';
 import { getRoleBackground, ROLE_DEVELOPER, ROLE_SECRETARY } from './roleTheme.js';
-import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const devProfileBtn = document.getElementById('devProfileBtn');
 const devProfileImg = document.getElementById('devProfileImg');
@@ -144,10 +144,20 @@ async function uploadProfilePhoto() {
             await updateDoc(doc(db, 'secretaries', u.uid), { photoUrl });
             secPhotoUrl = photoUrl;
             renderSecProfile();
-            try {
-                setSecretaryRolePhoto(photoUrl, secName);
-                await updateDoc(doc(db, 'settings', 'admin'), { secPhoto: photoUrl, secName: secName });
-            } catch (e) {}
+            // Per-email login profile: the login page shows THIS secretary's
+            // own photo + name once their email is typed. The shared login
+            // profile (settings/admin) stays under the owner's control.
+            const mail = (u.email || '').trim().toLowerCase();
+            if (mail) {
+                try {
+                    await setDoc(doc(db, 'secretary_profiles', mail), {
+                        email: mail,
+                        name: secName || '',
+                        photoUrl: photoUrl,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                } catch (e) {}
+            }
         }
         renderModal();
         await showAlert('✅ Profile photo updated!');
