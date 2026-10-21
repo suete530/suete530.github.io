@@ -39,7 +39,10 @@ const secSearchClearBtn = document.getElementById('secSearchClearBtn');
 const secSearchInfo = document.getElementById('secSearchInfo');
 const attPresentCount = document.getElementById('attPresentCount');
 const attAbsentCount = document.getElementById('attAbsentCount');
-const attTotalCount = document.getElementById('attTotalCount');
+const attUnmarkedCount = document.getElementById('attUnmarkedCount');
+const secRosterCount = document.getElementById('secRosterCount');
+const secSaveState = document.getElementById('secSaveState');
+const secSaveHint = document.getElementById('secSaveHint');
 const secMarkAllPresentBtn = document.getElementById('secMarkAllPresentBtn');
 const secMarkAllAbsentBtn = document.getElementById('secMarkAllAbsentBtn');
 const secClearMarksBtn = document.getElementById('secClearMarksBtn');
@@ -280,7 +283,7 @@ export function enterSecretaryApp(name, photoUrl) {
     const ownerPanelBtn = document.getElementById('ownerPanelBtn');
     if (ownerPanelBtn) ownerPanelBtn.style.display = 'none';
     document.body.style.overflow = 'hidden';
-    if (secPageName) secPageName.textContent = '👤 ' + (name || 'Secretary');
+    if (secPageName) secPageName.textContent = (name || 'Secretary');
     setSecretaryProfile(name || 'Secretary', photoUrl);
     // default date = today
     const today = new Date().toISOString().split('T')[0];
@@ -377,15 +380,15 @@ function highlightName(name, query) {
 }
 
 function updateSearchUI() {
-    if (secSearchClearBtn) secSearchClearBtn.style.display = secSearchQuery ? 'block' : 'none';
+    if (secSearchClearBtn) secSearchClearBtn.style.display = secSearchQuery ? 'grid' : 'none';
     if (!secSearchInfo) return;
-    if (secSearchQuery) {
+    if (secSearchQuery.trim()) {
         const shown = secFilteredStudents().length;
-        secSearchInfo.style.display = 'block';
+        secSearchInfo.hidden = false;
         secSearchInfo.textContent = 'Showing ' + shown + ' of ' + secStudents.length + ' student' + (secStudents.length === 1 ? '' : 's')
-            + (shown === secStudents.length ? '' : ' — bulk buttons apply to these ' + shown);
+            + (shown === secStudents.length ? '' : ' - bulk buttons apply to these ' + shown);
     } else {
-        secSearchInfo.style.display = 'none';
+        secSearchInfo.hidden = true;
         secSearchInfo.textContent = '';
     }
 }
@@ -423,31 +426,37 @@ if (secSearchClearBtn) {
 function renderStudentList() {
     if (!secStudentList) return;
     if (secStudents.length === 0) {
-        secStudentList.innerHTML = '<div style="color:#6b7280;font-size:0.78rem;text-align:center;padding:16px;">No students yet. Add students above.</div>';
+        secStudentList.innerHTML = '<div class="sec-empty">No students yet - add the first one below.</div>';
         updateSearchUI();
+        renderCounts();
         return;
     }
     const rows = secFilteredStudents();
     if (rows.length === 0) {
-        secStudentList.innerHTML = '<div style="color:#6b7280;font-size:0.78rem;text-align:center;padding:16px;">No student matches “' + escapeHtml(secSearchQuery.trim()) + '”.</div>';
+        secStudentList.innerHTML = '<div class="sec-empty">No student matches "' + escapeHtml(secSearchQuery.trim()) + '".</div>';
         updateSearchUI();
+        renderCounts();
         return;
     }
     secStudentList.innerHTML = rows.map(function (row) {
         const s = row.s;
         const i = row.i;
         const status = secAttendance[s.id] || null;
-        const pActive = status === 'present' ? 'background:linear-gradient(135deg,#10b981,#059669);color:#fff;' : 'background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.4);';
-        const aActive = status === 'absent' ? 'background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;' : 'background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.4);';
-        return `<div style="display:flex;align-items:center;gap:8px;background:#0f1923;border:1px solid #1e293b;border-radius:12px;padding:10px 12px;">
-            <span style="font-size:0.7rem;color:#6b7280;font-weight:bold;min-width:20px;">${i + 1}.</span>
-            <span style="flex:1;color:#e0e0e0;font-size:0.85rem;font-weight:600;">${highlightName(s.name || '', secSearchQuery.trim())}</span>
-            <button onclick="window.__secMark('${s.id}','present')" style="padding:6px 12px;border-radius:8px;border:none;font-size:0.7rem;font-weight:bold;cursor:pointer;${pActive}">✅ Present</button>
-            <button onclick="window.__secMark('${s.id}','absent')" style="padding:6px 12px;border-radius:8px;border:none;font-size:0.7rem;font-weight:bold;cursor:pointer;${aActive}">❌ Absent</button>
-            <button onclick="window.__secRemoveStudent('${s.id}')" style="background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:0.85rem;padding:4px;" title="Remove">🗑️</button>
-        </div>`;
+        const stateCls = status === 'present' ? ' sec-row--present' : (status === 'absent' ? ' sec-row--absent' : '');
+        const onOk = status === 'present' ? ' is-on' : '';
+        const onNo = status === 'absent' ? ' is-on' : '';
+        return '<div class="sec-row' + stateCls + '">' +
+            '<span class="sec-row__index">' + (i + 1) + '</span>' +
+            '<span class="sec-row__name">' + highlightName(s.name || '', secSearchQuery.trim()) + '</span>' +
+            '<span class="sec-toggle">' +
+            '<button class="sec-toggle__btn sec-toggle__btn--ok' + onOk + '" onclick="window.__secMark(\'' + s.id + '\',\'present\')" title="Present" aria-label="Mark present"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 12.5l5 5 10-11"/></svg></button>' +
+            '<button class="sec-toggle__btn sec-toggle__btn--no' + onNo + '" onclick="window.__secMark(\'' + s.id + '\',\'absent\')" title="Absent" aria-label="Mark absent"><svg viewBox="0 0 24 24" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>' +
+            '</span>' +
+            '<button class="sec-row__del" onclick="window.__secRemoveStudent(\'' + s.id + '\')" title="Remove" aria-label="Remove student"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 7h15M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12"/></svg></button>' +
+            '</div>';
     }).join('');
     updateSearchUI();
+    renderCounts();
 }
 
 window.__secMark = async function(sid, status) {
@@ -467,9 +476,19 @@ window.__secRemoveStudent = removeSecretaryStudent;
 function renderCounts() {
     let present = 0, absent = 0;
     Object.values(secAttendance).forEach(v => { if (v === 'present') present++; else if (v === 'absent') absent++; });
+    const total = secStudents.length;
+    const unmarked = Math.max(0, total - present - absent);
     if (attPresentCount) attPresentCount.textContent = present;
     if (attAbsentCount) attAbsentCount.textContent = absent;
-    if (attTotalCount) attTotalCount.textContent = secStudents.length;
+    if (attUnmarkedCount) attUnmarkedCount.textContent = unmarked;
+    if (secRosterCount) secRosterCount.textContent = total + (total === 1 ? ' student' : ' students');
+    if (secSaveState) secSaveState.textContent = (present + absent) + ' of ' + total + ' marked';
+    if (secSaveHint) {
+        secSaveHint.textContent = total === 0 ? 'Add students to start'
+            : (unmarked > 0 ? unmarked + ' student' + (unmarked === 1 ? '' : 's') + ' still unmarked'
+            : 'Everyone is marked - ready to save');
+    }
+    if (secSaveAttBtn) secSaveAttBtn.disabled = total === 0;
 }
 
 // ================= ATTENDANCE LOAD/SAVE =================
@@ -525,7 +544,7 @@ function loadAttendanceHistory() {
 function renderHistory(list) {
     if (!secHistoryList) return;
     if (list.length === 0) {
-        secHistoryList.innerHTML = '<div style="color:#6b7280;font-size:0.78rem;text-align:center;padding:12px;">No saved attendance yet.</div>';
+        secHistoryList.innerHTML = '<div class="sec-empty">No saved attendance yet.</div>';
         return;
     }
     secHistoryList.innerHTML = list.map(h => {
@@ -533,13 +552,15 @@ function renderHistory(list) {
         let p = 0, a = 0;
         Object.values(recs).forEach(v => { if (v === 'present') p++; else if (v === 'absent') a++; });
         const total = p + a;
-        return `<div style="display:flex;align-items:center;gap:8px;background:#0f1923;border:1px solid #1e293b;border-radius:10px;padding:10px 12px;">
-            <span style="color:#e0e0e0;font-size:0.82rem;font-weight:600;">📅 ${escapeHtml(h.date || h.id)}</span>
-            <span style="margin-left:auto;font-size:0.7rem;color:#10b981;font-weight:bold;">✅ ${p}</span>
-            <span style="font-size:0.7rem;color:#ef4444;font-weight:bold;">❌ ${a}</span>
-            <span style="font-size:0.7rem;color:#9ca3af;">/${total}</span>
-            <button onclick="window.__secLoadHistory('${escapeHtml(h.date || h.id)}')" style="padding:5px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;font-size:0.65rem;font-weight:bold;cursor:pointer;">📂 Load</button>
-        </div>`;
+        return '<div class="sec-hist">' +
+            '<span class="sec-hist__date">' + escapeHtml(h.date || h.id) + '</span>' +
+            '<span class="sec-hist__counts">' +
+            '<span class="sec-hist__ok">' + p + '</span>' +
+            '<span class="sec-hist__no">' + a + '</span>' +
+            '<span class="sec-hist__total">/ ' + total + '</span>' +
+            '</span>' +
+            '<button class="sec-hist__load" onclick="window.__secLoadHistory(\'' + escapeHtml(h.date || h.id) + '\')">Load</button>' +
+            '</div>';
     }).join('');
 }
 
@@ -573,7 +594,7 @@ function clearMarks() {
 // ================= DOWNLOAD TEXT =================
 function buildAttendanceText() {
     const date = attDate.value || new Date().toISOString().split('T')[0];
-    const name = secPageName ? secPageName.textContent.replace('👤 ', '') : 'Secretary';
+    const name = secPageName ? secPageName.textContent.trim() : 'Secretary';
     let present = 0, absent = 0;
     const lines = [];
     lines.push('========================================');
@@ -616,7 +637,7 @@ function downloadText() {
 // ================= DOWNLOAD IMAGE =================
 function downloadImage() {
     const date = attDate.value || new Date().toISOString().split('T')[0];
-    const name = secPageName ? secPageName.textContent.replace('👤 ', '') : 'Secretary';
+    const name = secPageName ? secPageName.textContent.trim() : 'Secretary';
     let present = 0, absent = 0;
     secStudents.forEach(s => {
         const st = secAttendance[s.id];
