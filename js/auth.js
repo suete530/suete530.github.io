@@ -51,17 +51,20 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         // The shared secretary login identity is retired. Every secretary keeps
         // their own photo + name in secretary_profiles/{email}, so the old
         // shared value is purged once so no face or name can leak to anybody
-        // else on the 📝 login page.
+        // else on the 📝 login page. The shared admin name goes with it: the
+        // app falls back to its own default and to each account's own profile.
         let sharedSecretaryProfilePurged = false;
         export async function purgeSharedSecretaryProfile() {
             if (sharedSecretaryProfilePurged) return;
             sharedSecretaryProfilePurged = true;
             roleSecPhotoUrl = '';
             roleSecName = '';
-            try { localStorage.removeItem('fm_sec_photo'); localStorage.removeItem('fm_sec_name'); } catch (e) {}
+            try { localStorage.removeItem('fm_sec_photo'); localStorage.removeItem('fm_sec_name'); localStorage.removeItem('fm_admin_name'); } catch (e) {}
             if (!isOwnerSession()) return;
             try {
-                await updateDoc(doc(db, 'settings', 'admin'), { secName: '', secPhoto: '' });
+                await updateDoc(doc(db, 'settings', 'admin'), { secName: '', secPhoto: '', adminName: '' });
+                adminName = DEFAULT_ADMIN_NAME;
+                updateAdminNameDisplay();
             } catch (e) {}
         }
 
@@ -821,7 +824,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     const data = settingsDoc.data();
                     adminRegistered = data.adminRegistered === true;
                     adminRegisteredEmail = data.adminEmail || '';
-                    adminName = data.adminName || 'Zeraldin Cauba';
+                    adminName = data.adminName || DEFAULT_ADMIN_NAME;
                     adminPhotoUrl = data.adminPhoto || '';
                     loginBgUrl = data.loginBg || '';
                     loginBgSecUrl = data.loginBgSec || '';
@@ -851,7 +854,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 updateSetupButtonVisibility();
             } catch (e) {
                 adminRegistered = true;
-                adminName = localStorage.getItem('fm_admin_name') || 'Zeraldin Cauba';
+                adminName = localStorage.getItem('fm_admin_name') || DEFAULT_ADMIN_NAME;
                 adminPhotoUrl = localStorage.getItem('fm_admin_photo') || '';
                 gcashQRUrl = localStorage.getItem('fm_gcash_qr') || '';
                 allowStudentEdit = localStorage.getItem('fm_allow_student_edit') === 'true';
@@ -862,6 +865,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 updateAdminAvatarDisplay();
                 applyRoleSettings();
             }
+            // One-time cleanup of the retired shared identity (owner only).
+            purgeSharedSecretaryProfile();
         }
 
         export function startSettingsListener() {
@@ -871,7 +876,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     const data = settingsDoc.data();
                     adminRegistered = data.adminRegistered === true;
                     adminRegisteredEmail = data.adminEmail || '';
-                    adminName = data.adminName || 'Zeraldin Cauba';
+                    adminName = data.adminName || DEFAULT_ADMIN_NAME;
                     adminPhotoUrl = data.adminPhoto || '';
                     gcashQRUrl = data.gcashQR || '';
                     allowStudentEdit = data.allowStudentEdit || false;
@@ -1209,7 +1214,10 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 
         export let adminRegistered = false;
         export let adminRegisteredEmail = '';
-        export let adminName = 'Zeraldin Cauba';
+        // Fallback name of the class treasurer, used when no shared admin
+        // name is stored (the shared admin name is no longer editable).
+        export const DEFAULT_ADMIN_NAME = 'Zeraldin Cauba';
+        export let adminName = DEFAULT_ADMIN_NAME;
         export let adminPhotoUrl = '';
         export let gcashQRUrl = '';
         export let unsubscribeSettings = null;
