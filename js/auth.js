@@ -609,6 +609,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export function enterDevSession() {
             document.body.classList.add('dev-session');
             if (devSessionBarEl) devSessionBarEl.style.display = 'flex';
+            syncDevSessionPad();
             renderDevProfile();
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
             const adminRequestsListEl = document.getElementById('adminRequestsList');
@@ -617,11 +618,22 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         }
         export function exitDevSession() {
             document.body.classList.remove('dev-session');
+            document.body.style.paddingTop = '';
             if (devSessionBarEl) devSessionBarEl.style.display = 'none';
             if (window.closeProfileModal) window.closeProfileModal();
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
             if (adminRequestsModalEl) adminRequestsModalEl.classList.remove('active');
         }
+        // The developer bar wraps to two rows on narrow phones — measure it so
+        // the page content always starts below it.
+        function syncDevSessionPad() {
+            if (!devSessionBarEl) return;
+            const hidden = devSessionBarEl.style.display === 'none';
+            const h = hidden ? 0 : devSessionBarEl.offsetHeight;
+            document.body.style.paddingTop = h ? (h + 4) + 'px' : '';
+        }
+        window.addEventListener('resize', syncDevSessionPad);
+        window.addEventListener('orientationchange', function () { setTimeout(syncDevSessionPad, 250); });
         if (devOpenRequestsBtnEl) devOpenRequestsBtnEl.addEventListener('click', function() {
             const adminRequestsModalEl = document.getElementById('adminRequestsModal');
             if (window.switchAdminReqTab) window.switchAdminReqTab('admins');
