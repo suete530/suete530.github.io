@@ -113,7 +113,11 @@ service cloud.firestore {
       allow create: if isEmailUser();
       allow update: if (isEmailUser() && resource.data.get('adminRegistered', false) != true)
                     || visitorCountOnly()
-                    || isAdmin();
+                    || isAdmin()
+                    // A secretary may only publish their own role visuals
+                    // (login page photo + wallpaper) for the secretary login.
+                    || (isSecretary() && request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['secPhoto', 'secName', 'loginBgSec']));
       allow delete: if isAdmin();
     }
 

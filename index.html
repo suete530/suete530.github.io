@@ -37,7 +37,7 @@
                     <span id="loginAvatarInitial" style="font-size:1.6rem;color:var(--accent);">ZC</span>
                 </div>
                 <div class="admin-name-display" id="adminNameDisplay">Zeraldin Cauba</div>
-                <div class="secretary-role" id="secretaryRole">BSIS-1 Treasurer</div>
+                <div class="secretary-role" id="secretaryRole">💰 BSIS-1 Treasurer</div>
             </div>
             <p data-i18n="loginDesc">Enter treasurer email &amp; password or continue as student</p>
             <input type="email" class="login-input" id="loginEmail" placeholder="treasurer@email.com" maxlength="60" autocomplete="username" style="margin-bottom:8px;">
@@ -267,6 +267,7 @@
                 <label data-i18n="displayName">Display Name</label><input type="text" id="settingsAdminName" placeholder="e.g., Zeraldin Cauba" maxlength="50">
                 <button id="saveAdminNameBtn" data-i18n="btnSaveName">💾 Save Name</button>
                 <label data-i18n="adminPhoto" style="margin-top:10px;">🖼️ Profile Photo</label>
+                <p style="font-size:0.62rem;color:#6b7280;margin:0 0 6px;line-height:1.4;">Shown on the 💰 Treasurer login page. Developer &amp; Secretary have their own photo + wallpaper.</p>
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
                     <div style="width:56px;height:56px;border-radius:50%;background:#1a2332;border:2px solid var(--accent-a27);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto;">
                         <img id="settingsAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;">
@@ -275,6 +276,7 @@
                     <button id="adminPhotoBtn" type="button" style="flex:1;margin:0;" data-i18n="btnUploadPhoto">📷 Upload Photo</button>
                 </div>
                 <label data-i18n="loginBg">🖼️ Login Page Background</label>
+                <p style="font-size:0.62rem;color:#6b7280;margin:0 0 6px;line-height:1.4;">Background of the 💰 Treasurer login page.</p>
                 <input type="file" id="loginBgInput" accept="image/*" style="display:none;">
                 <button id="uploadBgBtn" type="button" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,#0891b2,#0e7490);" data-i18n="btnUploadBg">📷 Upload Background</button>
                 <button id="deleteBgBtn" type="button" style="width:100%;display:none;background:linear-gradient(135deg,#ef4444,#dc2626);" data-i18n="btnDeleteBg">🗑️ Remove Background</button>
@@ -417,6 +419,11 @@
             <div id="profileModalRole" style="font-size:0.72rem;font-weight:bold;margin-bottom:16px;">👑 Developer</div>
             <button id="profileUploadBtn" style="width:100%;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-weight:bold;cursor:pointer;font-size:0.85rem;">📷 Upload Photo</button>
             <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;">
+            <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
+            <div style="font-size:0.7rem;color:#9ca3af;font-weight:bold;margin-bottom:8px;line-height:1.4;">🖼️ Login Page Wallpaper<br><span style="font-size:0.62rem;opacity:0.8;">Background shown when this role opens the login page.</span></div>
+            <button id="profileWallpaperBtn" style="width:100%;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff;font-weight:bold;cursor:pointer;font-size:0.85rem;">🖼️ Upload Wallpaper</button>
+            <input type="file" id="profileWallpaperInput" accept="image/*" style="display:none;">
+            <button id="profileWallpaperRemoveBtn" style="width:100%;margin-top:8px;padding:9px;border-radius:12px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:bold;cursor:pointer;font-size:0.78rem;display:none;">🗑️ Remove Wallpaper</button>
         </div>
     </div>
 

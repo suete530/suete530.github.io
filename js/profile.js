@@ -1,7 +1,8 @@
 import { auth, db } from './firebase.js';
-import { readFileAsBase64 } from './utils.js';
-import { showAlert } from './ui.js';
-import { adminName, adminPhotoUrl } from './auth.js';
+import { readFileAsBase64, readImageAsBase64 } from './utils.js';
+import { showAlert, showConfirm } from './ui.js';
+import { adminName, adminPhotoUrl, devName, devPhotoUrl, setDeveloperPhoto, setDeveloperWallpaper, setSecretaryRolePhoto, setSecretaryWallpaper } from './auth.js';
+import { getRoleBackground, ROLE_DEVELOPER, ROLE_SECRETARY } from './roleTheme.js';
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const devProfileBtn = document.getElementById('devProfileBtn');
@@ -19,6 +20,9 @@ const profileModalName = document.getElementById('profileModalName');
 const profileModalRole = document.getElementById('profileModalRole');
 const profileUploadBtn = document.getElementById('profileUploadBtn');
 const profilePhotoInput = document.getElementById('profilePhotoInput');
+const profileWallpaperBtn = document.getElementById('profileWallpaperBtn');
+const profileWallpaperInput = document.getElementById('profileWallpaperInput');
+const profileWallpaperRemoveBtn = document.getElementById('profileWallpaperRemoveBtn');
 
 let currentRole = 'developer';
 let secName = '';
@@ -46,9 +50,9 @@ function setCircleImg(imgEl, initialEl, photoUrl, name) {
 
 export function renderDevProfile() {
     if (!devProfileName) return;
-    const name = adminName || 'Developer';
+    const name = devName || adminName || 'Developer';
     devProfileName.textContent = name;
-    setCircleImg(devProfileImg, devProfileInitial, adminPhotoUrl, name);
+    setCircleImg(devProfileImg, devProfileInitial, devPhotoUrl || adminPhotoUrl, name);
 }
 
 export function setSecretaryProfile(name, photoUrl) {
@@ -62,9 +66,17 @@ function renderSecProfile() {
     setCircleImg(secProfileImg, secProfileInitial, secPhotoUrl, secName);
 }
 
+function currentName() {
+    return currentRole === 'developer' ? (devName || adminName || 'Developer') : (secName || 'Secretary');
+}
+
+function currentPhoto() {
+    return currentRole === 'developer' ? (devPhotoUrl || adminPhotoUrl) : secPhotoUrl;
+}
+
 function renderModal() {
-    const name = currentRole === 'developer' ? (adminName || 'Developer') : (secName || 'Secretary');
-    const photo = currentRole === 'developer' ? adminPhotoUrl : secPhotoUrl;
+    const name = currentName();
+    const photo = currentPhoto();
     const roleLabel = currentRole === 'developer' ? '👑 Developer' : '📝 Secretary';
     const roleColor = currentRole === 'developer' ? '#f59e0b' : '#38bdf8';
     profileModalName.textContent = name;
@@ -73,6 +85,10 @@ function renderModal() {
     profileModalCircle.style.borderColor = roleColor;
     profileModalInitial.style.color = roleColor;
     setCircleImg(profileModalImg, profileModalInitial, photo, name);
+    const hasWallpaper = currentRole === 'developer'
+        ? !!getRoleBackground(ROLE_DEVELOPER)
+        : !!getRoleBackground(ROLE_SECRETARY);
+    if (profileWallpaperRemoveBtn) profileWallpaperRemoveBtn.style.display = hasWallpaper ? 'block' : 'none';
 }
 
 function openProfileModal(role) {
@@ -96,8 +112,8 @@ async function uploadProfilePhoto() {
     profileUploadBtn.textContent = '⏳ Saving...';
     try {
         if (currentRole === 'developer') {
-            localStorage.setItem('fm_admin_photo', photoUrl);
-            await updateDoc(doc(db, 'settings', 'admin'), { adminPhoto: photoUrl });
+            setDeveloperPhoto(photoUrl);
+            await updateDoc(doc(db, 'settings', 'admin'), { devPhoto: photoUrl });
             renderDevProfile();
         } else {
             const u = auth.currentUser;
@@ -105,6 +121,10 @@ async function uploadProfilePhoto() {
             await updateDoc(doc(db, 'secretaries', u.uid), { photoUrl });
             secPhotoUrl = photoUrl;
             renderSecProfile();
+            try {
+                setSecretaryRolePhoto(photoUrl, secName);
+                await updateDoc(doc(db, 'settings', 'admin'), { secPhoto: photoUrl, secName: secName });
+            } catch (e) {}
         }
         renderModal();
         await showAlert('✅ Profile photo updated!');
@@ -118,8 +138,54 @@ async function uploadProfilePhoto() {
     }
 }
 
+async function uploadWallpaper() {
+    const file = profileWallpaperInput.files[0];
+    profileWallpaperInput.value = '';
+    if (!file) return;
+    const dataUrl = await readImageAsBase64(file, 1600, 0.78);
+    if (!dataUrl) { await showAlert('⚠️ Could not read that image. Try another picture.'); return; }
+    if (dataUrl.length > 950000) { await showAlert('⚠️ Image is too large. Please choose a smaller or simpler picture.'); return; }
+    try {
+        if (currentRole === 'developer') {
+            setDeveloperWallpaper(dataUrl);
+            await updateDoc(doc(db, 'settings', 'admin'), { loginBgDev: dataUrl });
+        } else {
+            setSecretaryWallpaper(dataUrl);
+            await updateDoc(doc(db, 'settings', 'admin'), { loginBgSec: dataUrl });
+        }
+        renderModal();
+        await showAlert('✅ Login wallpaper updated!');
+    } catch (e) {
+        await showAlert('❌ Could not save the wallpaper. ' + (e && e.code === 'permission-denied'
+            ? 'Your account is not allowed to update this record.'
+            : 'Check your connection and try again.'));
+    }
+}
+
+async function removeWallpaper() {
+    if (!await showConfirm('Remove this role\'s login wallpaper?')) return;
+    try {
+        if (currentRole === 'developer') {
+            setDeveloperWallpaper('');
+            await updateDoc(doc(db, 'settings', 'admin'), { loginBgDev: '' });
+        } else {
+            setSecretaryWallpaper('');
+            await updateDoc(doc(db, 'settings', 'admin'), { loginBgSec: '' });
+        }
+        renderModal();
+        await showAlert('🗑️ Login wallpaper removed!');
+    } catch (e) {
+        await showAlert('❌ Could not remove the wallpaper. ' + (e && e.code === 'permission-denied'
+            ? 'Your account is not allowed to update this record.'
+            : 'Check your connection and try again.'));
+    }
+}
+
 if (devProfileBtn) devProfileBtn.addEventListener('click', () => openProfileModal('developer'));
 if (secProfileBtn) secProfileBtn.addEventListener('click', () => openProfileModal('secretary'));
 if (profileUploadBtn) profileUploadBtn.addEventListener('click', () => profilePhotoInput.click());
 if (profilePhotoInput) profilePhotoInput.addEventListener('change', uploadProfilePhoto);
+if (profileWallpaperBtn) profileWallpaperBtn.addEventListener('click', () => profileWallpaperInput.click());
+if (profileWallpaperInput) profileWallpaperInput.addEventListener('change', uploadWallpaper);
+if (profileWallpaperRemoveBtn) profileWallpaperRemoveBtn.addEventListener('click', removeWallpaper);
 if (profileModal) profileModal.addEventListener('click', (e) => { if (e.target === profileModal) closeProfileModal(); });

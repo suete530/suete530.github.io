@@ -1,4 +1,4 @@
-import { adminNameDisplay, adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginOverlay, loginAvatarCircle, loginAvatarImg, loginAvatarInitial, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
+import { adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
@@ -9,48 +9,19 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         import { sendDevEmail } from './notify.js';
         import { secretaryMode, handleSecretaryLogin, exitSecretaryApp, exitSecretaryMode, stopSecRequestsListener } from './secretary.js';
         import { renderDevProfile } from './profile.js';
+        import { setActiveRole, setRoleBackground, setRoleName, setRolePhoto, ROLE_DEVELOPER, ROLE_SECRETARY, ROLE_TREASURER } from './roleTheme.js';
 
-
-        const loginRoleLabel = document.getElementById('secretaryRole');
 
         export function updateAdminNameDisplay() {
-            if (secretaryMode) {
-                adminNameDisplay.textContent = 'Secretary';
-                if (loginRoleLabel) loginRoleLabel.textContent = '📝 Secretary';
-            } else if (developerMode) {
-                adminNameDisplay.textContent = 'Developer';
-                if (loginRoleLabel) loginRoleLabel.textContent = '👑 Developer';
-            } else {
-                adminNameDisplay.textContent = adminName;
-                if (loginRoleLabel) loginRoleLabel.textContent = 'BSIS-1 Treasurer';
-            }
+            setRoleName(ROLE_TREASURER, adminName);
+            setRoleName(ROLE_DEVELOPER, devName || adminName);
             headerAdminName.textContent = adminName;
             renderDevProfile();
         }
 
         export function updateAdminAvatarDisplay() {
-            if (secretaryMode) {
-                loginAvatarImg.style.display = 'none';
-                loginAvatarCircle.classList.remove('has-photo');
-                loginAvatarInitial.style.display = 'block';
-                loginAvatarInitial.textContent = '📝';
-            } else if (developerMode) {
-                loginAvatarImg.style.display = 'none';
-                loginAvatarCircle.classList.remove('has-photo');
-                loginAvatarInitial.style.display = 'block';
-                loginAvatarInitial.textContent = '👑';
-            } else if (adminPhotoUrl) {
-                loginAvatarImg.src = adminPhotoUrl;
-                loginAvatarImg.style.display = 'block';
-                loginAvatarInitial.style.display = 'none';
-                loginAvatarCircle.classList.add('has-photo');
-            } else {
-                loginAvatarImg.style.display = 'none';
-                loginAvatarInitial.style.display = 'block';
-                loginAvatarCircle.classList.remove('has-photo');
-                const initials = adminName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-                loginAvatarInitial.textContent = initials;
-            }
+            setRolePhoto(ROLE_TREASURER, adminPhotoUrl);
+            setRolePhoto(ROLE_DEVELOPER, devPhotoUrl || adminPhotoUrl);
             if (adminPhotoUrl) {
                 settingsAvatarImg.src = adminPhotoUrl;
                 settingsAvatarImg.style.display = 'block';
@@ -284,6 +255,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             studentModeBack.style.display = 'block';
             studentModeBtn.style.display = 'none';
             errEl.style.display = 'none';
+            setActiveRole(ROLE_TREASURER);
         }
         export function exitStudentMode() {
             studentMode = false;
@@ -297,6 +269,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             adminSignUpBtnEl.style.display = '';
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
+            setActiveRole(ROLE_TREASURER);
         }
         studentModeBtn.addEventListener('click', enterStudentMode);
         studentSignInToggle.addEventListener('click', function() {
@@ -668,6 +641,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
             devSignUpBtnEl.style.display = adminRegistered ? 'none' : '';
+            setActiveRole(ROLE_DEVELOPER);
             updateAdminNameDisplay();
             updateAdminAvatarDisplay();
             emailInput.focus();
@@ -683,6 +657,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
             setDevSignedInStatus(false);
+            setActiveRole(ROLE_TREASURER);
             updateAdminNameDisplay();
             updateAdminAvatarDisplay();
         }
@@ -724,7 +699,13 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 
         export async function loadAdminSettings() {
             loginBgUrl = localStorage.getItem('fm_login_bg') || '';
-            applyLoginBg();
+            loginBgSecUrl = localStorage.getItem('fm_login_bg_sec') || '';
+            loginBgDevUrl = localStorage.getItem('fm_login_bg_dev') || '';
+            devPhotoUrl = localStorage.getItem('fm_dev_photo') || '';
+            devName = localStorage.getItem('fm_dev_name') || '';
+            roleSecPhotoUrl = localStorage.getItem('fm_sec_photo') || '';
+            roleSecName = localStorage.getItem('fm_sec_name') || '';
+            applyRoleSettings();
             try {
                 const settingsDoc = await getDoc(doc(db, 'settings', 'admin'));
                 if (settingsDoc.exists()) {
@@ -734,8 +715,20 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     adminName = data.adminName || 'Zeraldin Cauba';
                     adminPhotoUrl = data.adminPhoto || '';
                     loginBgUrl = data.loginBg || '';
+                    loginBgSecUrl = data.loginBgSec || '';
+                    loginBgDevUrl = data.loginBgDev || '';
+                    devPhotoUrl = data.devPhoto || '';
+                    devName = data.devName || '';
+                    roleSecPhotoUrl = data.secPhoto || '';
+                    roleSecName = data.secName || '';
                     localStorage.setItem('fm_login_bg', loginBgUrl);
-                    applyLoginBg();
+                    localStorage.setItem('fm_login_bg_sec', loginBgSecUrl);
+                    localStorage.setItem('fm_login_bg_dev', loginBgDevUrl);
+                    localStorage.setItem('fm_dev_photo', devPhotoUrl);
+                    localStorage.setItem('fm_dev_name', devName);
+                    localStorage.setItem('fm_sec_photo', roleSecPhotoUrl);
+                    localStorage.setItem('fm_sec_name', roleSecName);
+                    applyRoleSettings();
                     gcashQRUrl = data.gcashQR || '';
                     allowStudentEdit = data.allowStudentEdit || false;
                     document.getElementById('allowStudentEditToggle').checked = allowStudentEdit;
@@ -760,7 +753,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 document.getElementById('visitorCountNum').textContent = visitorCount;
                 updateAdminNameDisplay();
                 updateAdminAvatarDisplay();
-                applyLoginBg();
+                applyRoleSettings();
             }
         }
 
@@ -776,8 +769,20 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     gcashQRUrl = data.gcashQR || '';
                     allowStudentEdit = data.allowStudentEdit || false;
                     loginBgUrl = data.loginBg || '';
+                    loginBgSecUrl = data.loginBgSec || '';
+                    loginBgDevUrl = data.loginBgDev || '';
+                    devPhotoUrl = data.devPhoto || '';
+                    devName = data.devName || '';
+                    roleSecPhotoUrl = data.secPhoto || '';
+                    roleSecName = data.secName || '';
                     localStorage.setItem('fm_login_bg', loginBgUrl);
-                    applyLoginBg();
+                    localStorage.setItem('fm_login_bg_sec', loginBgSecUrl);
+                    localStorage.setItem('fm_login_bg_dev', loginBgDevUrl);
+                    localStorage.setItem('fm_dev_photo', devPhotoUrl);
+                    localStorage.setItem('fm_dev_name', devName);
+                    localStorage.setItem('fm_sec_photo', roleSecPhotoUrl);
+                    localStorage.setItem('fm_sec_name', roleSecName);
+                    applyRoleSettings();
                     document.getElementById('allowStudentEditToggle').checked = allowStudentEdit;
                     updateEditProfileBtnVisibility();
                     visitorCount = data.visitorCount || 0;
@@ -1107,6 +1112,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export let allowStudentEdit = false;
         export let visitorCount = 0;
         export let loginBgUrl = '';
+        export let loginBgSecUrl = '';
+        export let loginBgDevUrl = '';
+        export let devPhotoUrl = '';
+        export let devName = '';
+        export let roleSecPhotoUrl = '';
+        export let roleSecName = '';
 
         onAuthStateChanged(auth, async (user) => {
             if (!user || user.isAnonymous || !user.email) return;
@@ -1125,26 +1136,42 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             } catch (e) {}
         });
 
+        export function applyRoleSettings() {
+            setRoleBackground(ROLE_TREASURER, loginBgUrl);
+            setRoleBackground(ROLE_SECRETARY, loginBgSecUrl);
+            setRoleBackground(ROLE_DEVELOPER, loginBgDevUrl);
+            setRolePhoto(ROLE_SECRETARY, roleSecPhotoUrl);
+            setRoleName(ROLE_SECRETARY, roleSecName);
+        }
+
+        export function setDeveloperPhoto(url) {
+            devPhotoUrl = url || '';
+            localStorage.setItem('fm_dev_photo', devPhotoUrl);
+            setRolePhoto(ROLE_DEVELOPER, devPhotoUrl || adminPhotoUrl);
+        }
+
+        export function setDeveloperWallpaper(url) {
+            loginBgDevUrl = url || '';
+            localStorage.setItem('fm_login_bg_dev', loginBgDevUrl);
+            setRoleBackground(ROLE_DEVELOPER, loginBgDevUrl);
+        }
+
+        export function setSecretaryWallpaper(url) {
+            loginBgSecUrl = url || '';
+            localStorage.setItem('fm_login_bg_sec', loginBgSecUrl);
+            setRoleBackground(ROLE_SECRETARY, loginBgSecUrl);
+        }
+
+        export function setSecretaryRolePhoto(url, name) {
+            roleSecPhotoUrl = url || '';
+            roleSecName = name || '';
+            localStorage.setItem('fm_sec_photo', roleSecPhotoUrl);
+            localStorage.setItem('fm_sec_name', roleSecName);
+            setRolePhoto(ROLE_SECRETARY, roleSecPhotoUrl);
+            setRoleName(ROLE_SECRETARY, roleSecName);
+        }
+
         export function applyLoginBg() {
-            const tint = loginBgUrl
-                ? "linear-gradient(rgba(5,8,16,0.55), rgba(5,8,16,0.55)), url('" + loginBgUrl + "')"
-                : '';
-            const overlays = [loginOverlay, customAlertOverlay, document.getElementById('welcomeOverlay')];
-            overlays.forEach(function(el) {
-                if (!el) return;
-                el.style.backgroundImage = tint;
-                el.style.backgroundSize = tint ? 'cover' : '';
-                el.style.backgroundPosition = tint ? 'center' : '';
-                el.style.backgroundRepeat = tint ? 'no-repeat' : '';
-            });
-            if (!localStorage.getItem('fm_wallpaper')) {
-                if (loginBgUrl) {
-                    document.body.style.backgroundImage = "url('" + loginBgUrl + "')";
-                    document.body.classList.add('wp');
-                } else {
-                    document.body.style.backgroundImage = '';
-                    document.body.classList.remove('wp');
-                }
-            }
+            applyRoleSettings();
             if (deleteBgBtn) deleteBgBtn.style.display = loginBgUrl ? 'block' : 'none';
         }
