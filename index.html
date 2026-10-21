@@ -477,7 +477,7 @@
                     </span>
                     <div>
                         <h1 class="sec-topbar__title">Attendance</h1>
-                        <p class="sec-topbar__sub">Class secretary</p>
+                        <p class="sec-topbar__sub">BSIS-1 &middot; Class secretary</p>
                     </div>
                 </div>
                 <div class="sec-topbar__right">
@@ -492,76 +492,98 @@
                 </div>
             </header>
 
-            <section class="sec-panel sec-toolbar">
-                <div class="sec-field">
-                    <label class="sec-label" for="attDate">Date</label>
-                    <input type="date" id="attDate" class="sec-input">
-                </div>
-                <div class="sec-toolbar__actions">
-                    <button id="secTodayBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Today</button>
-                    <button id="secLoadAttBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Load</button>
-                </div>
-            </section>
+            <div class="sec-doc">
 
-            <section class="sec-stats">
-                <div class="sec-stat">
-                    <span class="sec-label">Present</span>
-                    <span class="sec-stat__value sec-stat__value--ok" id="attPresentCount">0</span>
-                </div>
-                <div class="sec-stat">
-                    <span class="sec-label">Absent</span>
-                    <span class="sec-stat__value sec-stat__value--no" id="attAbsentCount">0</span>
-                </div>
-                <div class="sec-stat">
-                    <span class="sec-label">Unmarked</span>
-                    <span class="sec-stat__value sec-stat__value--idle" id="attUnmarkedCount">0</span>
-                </div>
-            </section>
+                <section class="sec-section sec-section--attendance">
+                    <div class="sec-section__head">
+                        <span class="sec-rail" style="--rail:#4c8dff"></span>
+                        <h2 class="sec-section__title">Sheet</h2>
+                        <span class="sec-section__meta" id="secSheetMeta">Not saved</span>
+                    </div>
+                    <div class="sec-section__body sec-section__body--tight">
+                        <div class="sec-attend">
+                            <div class="sec-attend__field">
+                                <label class="sec-label" for="attDate">Date</label>
+                                <input type="date" id="attDate" class="sec-input">
+                            </div>
+                            <div class="sec-attend__actions">
+                                <button id="secTodayBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Today</button>
+                                <button id="secLoadAttBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Load</button>
+                            </div>
+                        </div>
+                        <div class="sec-stats" style="margin-top:12px;">
+                            <div class="sec-stat">
+                                <span class="sec-stat__label">Present</span>
+                                <span class="sec-stat__value sec-stat__value--ok" id="attPresentCount">0</span>
+                            </div>
+                            <div class="sec-stat">
+                                <span class="sec-stat__label">Absent</span>
+                                <span class="sec-stat__value sec-stat__value--no" id="attAbsentCount">0</span>
+                            </div>
+                            <div class="sec-stat">
+                                <span class="sec-stat__label">Unmarked</span>
+                                <span class="sec-stat__value sec-stat__value--idle" id="attUnmarkedCount">0</span>
+                            </div>
+                        </div>
+                        <div class="sec-seg" role="group" aria-label="Mark all students">
+                            <button id="secMarkAllPresentBtn" class="sec-seg__btn sec-seg__btn--ok" type="button">All present</button>
+                            <button id="secMarkAllAbsentBtn" class="sec-seg__btn sec-seg__btn--no" type="button">All absent</button>
+                            <button id="secClearMarksBtn" class="sec-seg__btn" type="button">Reset</button>
+                        </div>
+                    </div>
+                </section>
 
-            <div class="sec-seg" role="group" aria-label="Mark all students">
-                <button id="secMarkAllPresentBtn" class="sec-seg__btn sec-seg__btn--ok" type="button">All present</button>
-                <button id="secMarkAllAbsentBtn" class="sec-seg__btn sec-seg__btn--no" type="button">All absent</button>
-                <button id="secClearMarksBtn" class="sec-seg__btn" type="button">Reset</button>
+                <section class="sec-section sec-section--roster">
+                    <div class="sec-section__head">
+                        <span class="sec-rail" style="--rail:#3ecf8e"></span>
+                        <h2 class="sec-section__title">Roster</h2>
+                        <span class="sec-section__meta" id="secRosterCount">0 students</span>
+                    </div>
+                    <div class="sec-section__body sec-section__body--tight">
+                        <div class="sec-search">
+                            <svg class="sec-search__icon" viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.3-3.3"/></svg>
+                            <input type="text" id="secSearchInput" class="sec-input sec-search__input" placeholder="Search students" maxlength="60" autocomplete="off">
+                            <button id="secSearchClearBtn" class="sec-search__clear" type="button" aria-label="Clear search">&#10005;</button>
+                        </div>
+                        <p id="secSearchInfo" class="sec-hint" hidden></p>
+                        <div id="secStudentList" class="sec-list">
+                            <div class="sec-empty">No students yet - add the first one below.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="sec-section sec-section--add">
+                    <div class="sec-section__head">
+                        <span class="sec-rail" style="--rail:#d9a441"></span>
+                        <h2 class="sec-section__title">Add student</h2>
+                    </div>
+                    <div class="sec-section__body sec-section__body--tight">
+                        <div class="sec-add">
+                            <div class="sec-field">
+                                <input type="text" id="secNewStudentName" class="sec-input" placeholder="Full name" maxlength="60">
+                            </div>
+                            <button id="secAddStudentBtn" class="sec-btn sec-btn--primary" type="button">Add</button>
+                        </div>
+                        <div class="sec-exports">
+                            <button id="secDownloadImgBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Download image</button>
+                            <button id="secDownloadTxtBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Download text</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="sec-section sec-section--history">
+                    <div class="sec-section__head">
+                        <span class="sec-rail" style="--rail:#5f6b80"></span>
+                        <h2 class="sec-section__title">History</h2>
+                        <span class="sec-section__meta">Saved sheets</span>
+                    </div>
+                    <div class="sec-section__body sec-section__body--tight">
+                        <div id="secHistoryList" class="sec-list">
+                            <div class="sec-empty">No saved attendance yet.</div>
+                        </div>
+                    </div>
+                </section>
             </div>
-
-            <section class="sec-panel sec-roster">
-                <div class="sec-roster__head">
-                    <h2 class="sec-section-title">Roster</h2>
-                    <span class="sec-meta" id="secRosterCount">0 students</span>
-                </div>
-                <div class="sec-search">
-                    <svg class="sec-search__icon" viewBox="0 0 24 24" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.3-3.3"/></svg>
-                    <input type="text" id="secSearchInput" class="sec-input sec-search__input" placeholder="Search students" maxlength="60" autocomplete="off">
-                    <button id="secSearchClearBtn" class="sec-search__clear" type="button" aria-label="Clear search">&#10005;</button>
-                </div>
-                <p id="secSearchInfo" class="sec-hint" hidden></p>
-                <div id="secStudentList" class="sec-list">
-                    <div class="sec-empty">No students yet - add the first one below.</div>
-                </div>
-            </section>
-
-            <section class="sec-panel sec-add">
-                <div class="sec-field">
-                    <label class="sec-label" for="secNewStudentName">Add student</label>
-                    <input type="text" id="secNewStudentName" class="sec-input" placeholder="Full name" maxlength="60">
-                </div>
-                <button id="secAddStudentBtn" class="sec-btn sec-btn--primary" type="button">Add</button>
-            </section>
-
-            <div class="sec-exports">
-                <button id="secDownloadImgBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Download image</button>
-                <button id="secDownloadTxtBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Download text</button>
-            </div>
-
-            <section class="sec-panel sec-history">
-                <div class="sec-roster__head">
-                    <h2 class="sec-section-title">History</h2>
-                    <span class="sec-meta">Saved sheets</span>
-                </div>
-                <div id="secHistoryList" class="sec-list">
-                    <div class="sec-empty">No saved attendance yet.</div>
-                </div>
-            </section>
         </div>
 
         <div class="sec-savebar">

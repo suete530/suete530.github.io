@@ -41,6 +41,7 @@ const attPresentCount = document.getElementById('attPresentCount');
 const attAbsentCount = document.getElementById('attAbsentCount');
 const attUnmarkedCount = document.getElementById('attUnmarkedCount');
 const secRosterCount = document.getElementById('secRosterCount');
+const secSheetMeta = document.getElementById('secSheetMeta');
 const secSaveState = document.getElementById('secSaveState');
 const secSaveHint = document.getElementById('secSaveHint');
 const secMarkAllPresentBtn = document.getElementById('secMarkAllPresentBtn');
@@ -492,11 +493,21 @@ function renderCounts() {
 }
 
 // ================= ATTENDANCE LOAD/SAVE =================
+let secSheetSaved = false;
+
+function updateSheetMeta() {
+    if (!secSheetMeta) return;
+    secSheetMeta.textContent = secSheetSaved ? 'Saved' : 'Not saved';
+    secSheetMeta.classList.toggle('sec-section__meta--ok', secSheetSaved);
+}
+
 function loadAttendanceForDate(date) {
     const u = auth.currentUser;
     if (!u) return;
     if (secUnsubAttendance) secUnsubAttendance();
     secAttendance = {};
+    secSheetSaved = false;
+    updateSheetMeta();
     renderStudentList();
     renderCounts();
     secUnsubAttendance = onSnapshot(doc(db, 'secretaries', u.uid, 'attendance', date), (snap) => {
@@ -505,6 +516,8 @@ function loadAttendanceForDate(date) {
         } else {
             secAttendance = {};
         }
+        secSheetSaved = !!snap.exists();
+        updateSheetMeta();
         renderStudentList();
         renderCounts();
     }, () => {});
@@ -522,6 +535,8 @@ async function saveAttendance() {
             savedAt: Date.now(),
             savedBy: u.email || ''
         }, { merge: true });
+        secSheetSaved = true;
+        updateSheetMeta();
         await showAlert('✅ Attendance saved for ' + date + '!');
     } catch (e) {
         await showAlert('❌ Could not save attendance. ' + (e && e.message ? e.message : ''));
