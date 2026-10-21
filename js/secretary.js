@@ -1,7 +1,7 @@
 import { auth, db } from './firebase.js';
 import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
-import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, setupMode, studentMode, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
+import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, setupMode, studentMode, toggleMobilePanelLinks, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
 import { setSecretaryProfile } from './profile.js';
 import { setActiveRole, ROLE_SECRETARY, ROLE_TREASURER } from './roleTheme.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -81,6 +81,7 @@ export function enterSecretaryMode() {
     setActiveRole(ROLE_SECRETARY);
     updateAdminNameDisplay();
     updateAdminAvatarDisplay();
+    toggleMobilePanelLinks(false);
     emailInput.focus();
 }
 
@@ -100,6 +101,7 @@ export function exitSecretaryMode() {
     setActiveRole(ROLE_TREASURER);
     updateAdminNameDisplay();
     updateAdminAvatarDisplay();
+    toggleMobilePanelLinks(true);
 }
 
 // ================= SECRETARY LOGIN =================
@@ -677,6 +679,8 @@ function roundRect(ctx, x, y, w, h, r) {
 
 // ================= EVENT LISTENERS =================
 if (secretaryPanelBtn) secretaryPanelBtn.addEventListener('click', enterSecretaryMode);
+const mobileSecretaryBtn = document.getElementById('mobileSecretaryBtn');
+if (mobileSecretaryBtn) mobileSecretaryBtn.addEventListener('click', enterSecretaryMode);
 if (backToTreasurerFromSec) backToTreasurerFromSec.addEventListener('click', exitSecretaryMode);
 if (secSignUpBtn) secSignUpBtn.addEventListener('click', function() {
     document.getElementById('customAlertOverlay').classList.add('hidden');

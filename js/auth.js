@@ -39,6 +39,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export let legacyCleanupDone = false;
         export const DEFAULT_LOGIN_LABEL = loginBtnEl.textContent;
 
+        // Phone fallback row inside the login box (Secretary / Developer).
+        export function toggleMobilePanelLinks(show) {
+            const el = document.getElementById('mobilePanelLinks');
+            if (el) el.classList.toggle('is-hidden', !show);
+        }
+
         export function authErrorMessage(e) {
             const code = (e && e.code) || '';
             if (code === 'auth/invalid-email') return 'Invalid email address.';
@@ -256,6 +262,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             studentModeBtn.style.display = 'none';
             errEl.style.display = 'none';
             setActiveRole(ROLE_TREASURER);
+            toggleMobilePanelLinks(false);
         }
         export function exitStudentMode() {
             studentMode = false;
@@ -270,6 +277,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             updateSetupButtonVisibility();
             errEl.style.display = 'none';
             setActiveRole(ROLE_TREASURER);
+            toggleMobilePanelLinks(true);
         }
         studentModeBtn.addEventListener('click', enterStudentMode);
         studentSignInToggle.addEventListener('click', function() {
@@ -648,6 +656,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             setActiveRole(ROLE_DEVELOPER);
             updateAdminNameDisplay();
             updateAdminAvatarDisplay();
+            toggleMobilePanelLinks(false);
             emailInput.focus();
         }
         export function exitDeveloperMode() {
@@ -664,8 +673,11 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             setActiveRole(ROLE_TREASURER);
             updateAdminNameDisplay();
             updateAdminAvatarDisplay();
+            toggleMobilePanelLinks(true);
         }
         if (ownerPanelBtnEl) ownerPanelBtnEl.addEventListener('click', enterDeveloperMode);
+        const mobileDeveloperBtn = document.getElementById('mobileDeveloperBtn');
+        if (mobileDeveloperBtn) mobileDeveloperBtn.addEventListener('click', enterDeveloperMode);
         if (developerModeBack) developerModeBack.addEventListener('click', exitDeveloperMode);
         const backToSecretaryFromDevEl = document.getElementById('backToSecretaryFromDev');
         if (backToSecretaryFromDevEl) backToSecretaryFromDevEl.addEventListener('click', exitDeveloperMode);
@@ -1152,6 +1164,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             devPhotoUrl = url || '';
             localStorage.setItem('fm_dev_photo', devPhotoUrl);
             setRolePhoto(ROLE_DEVELOPER, devPhotoUrl || adminPhotoUrl);
+        }
+
+        export function setDeveloperName(name) {
+            devName = (name || '').trim();
+            localStorage.setItem('fm_dev_name', devName);
+            updateAdminNameDisplay();
         }
 
         export function setDeveloperWallpaper(url) {

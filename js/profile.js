@@ -1,7 +1,7 @@
 import { auth, db } from './firebase.js';
 import { readFileAsBase64, readImageAsBase64 } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
-import { adminName, adminPhotoUrl, devName, devPhotoUrl, setDeveloperPhoto, setDeveloperWallpaper, setSecretaryRolePhoto, setSecretaryWallpaper } from './auth.js';
+import { adminName, adminPhotoUrl, devName, devPhotoUrl, setDeveloperName, setDeveloperPhoto, setDeveloperWallpaper, setSecretaryRolePhoto, setSecretaryWallpaper } from './auth.js';
 import { getRoleBackground, ROLE_DEVELOPER, ROLE_SECRETARY } from './roleTheme.js';
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -23,6 +23,9 @@ const profilePhotoInput = document.getElementById('profilePhotoInput');
 const profileWallpaperBtn = document.getElementById('profileWallpaperBtn');
 const profileWallpaperInput = document.getElementById('profileWallpaperInput');
 const profileWallpaperRemoveBtn = document.getElementById('profileWallpaperRemoveBtn');
+const profileNameRow = document.getElementById('profileNameRow');
+const profileNameInput = document.getElementById('profileNameInput');
+const profileNameSaveBtn = document.getElementById('profileNameSaveBtn');
 
 let currentRole = 'developer';
 let secName = '';
@@ -85,10 +88,30 @@ function renderModal() {
     profileModalCircle.style.borderColor = roleColor;
     profileModalInitial.style.color = roleColor;
     setCircleImg(profileModalImg, profileModalInitial, photo, name);
+    if (profileNameRow) profileNameRow.style.display = currentRole === 'developer' ? 'block' : 'none';
+    if (profileNameInput && currentRole === 'developer' && document.activeElement !== profileNameInput) {
+        profileNameInput.value = devName || adminName || '';
+    }
     const hasWallpaper = currentRole === 'developer'
         ? !!getRoleBackground(ROLE_DEVELOPER)
         : !!getRoleBackground(ROLE_SECRETARY);
     if (profileWallpaperRemoveBtn) profileWallpaperRemoveBtn.style.display = hasWallpaper ? 'block' : 'none';
+}
+
+async function saveProfileName() {
+    if (currentRole !== 'developer') return;
+    const name = (profileNameInput.value || '').trim();
+    if (!name) { await showAlert('⚠️ Please enter a display name.'); return; }
+    try {
+        await updateDoc(doc(db, 'settings', 'admin'), { devName: name });
+        setDeveloperName(name);
+        renderModal();
+        await showAlert('✅ Display name updated!');
+    } catch (e) {
+        await showAlert('❌ Could not save the name. ' + (e && e.code === 'permission-denied'
+            ? 'Your account is not allowed to update this record.'
+            : 'Check your connection and try again.'));
+    }
 }
 
 function openProfileModal(role) {
@@ -188,4 +211,6 @@ if (profilePhotoInput) profilePhotoInput.addEventListener('change', uploadProfil
 if (profileWallpaperBtn) profileWallpaperBtn.addEventListener('click', () => profileWallpaperInput.click());
 if (profileWallpaperInput) profileWallpaperInput.addEventListener('change', uploadWallpaper);
 if (profileWallpaperRemoveBtn) profileWallpaperRemoveBtn.addEventListener('click', removeWallpaper);
+if (profileNameSaveBtn) profileNameSaveBtn.addEventListener('click', saveProfileName);
+if (profileNameInput) profileNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveProfileName(); });
 if (profileModal) profileModal.addEventListener('click', (e) => { if (e.target === profileModal) closeProfileModal(); });

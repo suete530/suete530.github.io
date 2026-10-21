@@ -21,8 +21,8 @@
         </div>
     </div>
     <div class="login-overlay" id="loginOverlay">
-        <button id="secretaryPanelBtn" title="Secretary Login / Sign-up" style="position:fixed;top:50%;left:0;transform:translateY(-50%);z-index:10001;background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;writing-mode:vertical-rl;text-orientation:mixed;padding:14px 8px;border-radius:0 10px 10px 0;font-size:0.7rem;font-weight:bold;cursor:pointer;letter-spacing:1px;box-shadow:2px 2px 10px rgba(0,0,0,0.3);">📝 Secretary</button>
-        <button id="ownerPanelBtn" title="Developer Panel — Admin Requests" style="position:fixed;top:50%;right:0;transform:translateY(-50%);z-index:10001;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;writing-mode:vertical-rl;text-orientation:mixed;padding:14px 8px;border-radius:10px 0 0 10px;font-size:0.7rem;font-weight:bold;cursor:pointer;letter-spacing:1px;box-shadow:-2px 2px 10px rgba(0,0,0,0.3);">👑 Developer</button>
+        <button id="secretaryPanelBtn" class="side-tab side-tab-left" title="Secretary Login / Sign-up">📝 Secretary</button>
+        <button id="ownerPanelBtn" class="side-tab side-tab-right" title="Developer Panel — Admin Requests">👑 Developer</button>
         <div class="snake-g1"><div class="snake-segment snake-head snake-s0"></div><div class="snake-segment snake-body snake-s1"></div><div class="snake-segment snake-body snake-s2"></div><div class="snake-segment snake-body snake-s3"></div><div class="snake-segment snake-body snake-s4"></div><div class="snake-segment snake-body snake-s5"></div><div class="snake-segment snake-body snake-s6"></div><div class="snake-segment snake-body snake-s7"></div><div class="snake-segment snake-body snake-s8"></div><div class="snake-segment snake-body snake-s9"></div><div class="snake-segment snake-body snake-s10"></div><div class="snake-segment snake-body snake-s11"></div><div class="snake-segment snake-body snake-s12"></div><div class="snake-segment snake-body snake-s13"></div><div class="snake-segment snake-tail snake-s14"></div></div>
         <div class="snake-g2"><div class="snake-segment snake-head snake-s0"></div><div class="snake-segment snake-body snake-s1"></div><div class="snake-segment snake-body snake-s2"></div><div class="snake-segment snake-body snake-s3"></div><div class="snake-segment snake-body snake-s4"></div><div class="snake-segment snake-body snake-s5"></div><div class="snake-segment snake-body snake-s6"></div><div class="snake-segment snake-body snake-s7"></div><div class="snake-segment snake-body snake-s8"></div><div class="snake-segment snake-body snake-s9"></div><div class="snake-segment snake-body snake-s10"></div><div class="snake-segment snake-body snake-s11"></div><div class="snake-segment snake-body snake-s12"></div><div class="snake-segment snake-body snake-s13"></div><div class="snake-segment snake-tail snake-s14"></div></div>
         <div class="snake-g3"><div class="snake-segment snake-head snake-s0"></div><div class="snake-segment snake-body snake-s1"></div><div class="snake-segment snake-body snake-s2"></div><div class="snake-segment snake-body snake-s3"></div><div class="snake-segment snake-body snake-s4"></div><div class="snake-segment snake-body snake-s5"></div><div class="snake-segment snake-body snake-s6"></div><div class="snake-segment snake-body snake-s7"></div><div class="snake-segment snake-body snake-s8"></div><div class="snake-segment snake-body snake-s9"></div><div class="snake-segment snake-body snake-s10"></div><div class="snake-segment snake-body snake-s11"></div><div class="snake-segment snake-body snake-s12"></div><div class="snake-segment snake-body snake-s13"></div><div class="snake-segment snake-tail snake-s14"></div></div>
@@ -69,6 +69,10 @@
             <button class="login-viewer-btn" id="secSignUpBtn" style="display:none;background:linear-gradient(135deg,#0891b2,#0e7490);margin-top:8px;">📝 Secretary Sign-up</button>
             <div id="secretaryModeBack" style="display:none;text-align:center;margin-top:6px;">
                 <a id="backToTreasurerFromSec" style="font-size:0.7rem;color:#0891b2;cursor:pointer;text-decoration:underline;">← Back to Treasurer login</a>
+            </div>
+            <div id="mobilePanelLinks" class="mobile-panel-links">
+                <button id="mobileSecretaryBtn" class="login-viewer-btn" style="background:linear-gradient(135deg,#0891b2,#0e7490);margin-top:0;border-radius:12px;padding:11px 8px;text-decoration:none;font-weight:bold;">📝 Secretary</button>
+                <button id="mobileDeveloperBtn" class="login-viewer-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);margin-top:0;border-radius:12px;padding:11px 8px;text-decoration:none;font-weight:bold;">👑 Developer</button>
             </div>
         </div>
     </div>
@@ -417,6 +421,10 @@
             </div>
             <div id="profileModalName" style="color:#e0e0e0;font-size:1.05rem;font-weight:bold;margin-bottom:4px;">—</div>
             <div id="profileModalRole" style="font-size:0.72rem;font-weight:bold;margin-bottom:16px;">👑 Developer</div>
+            <div id="profileNameRow" style="margin-bottom:12px;">
+                <input type="text" id="profileNameInput" maxlength="40" placeholder="Display name" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid #1e293b;background:#0d1520;color:#e0e0e0;font-size:0.85rem;margin-bottom:8px;text-align:center;user-select:text;-webkit-user-select:text;">
+                <button id="profileNameSaveBtn" style="width:100%;padding:10px;border-radius:12px;border:none;background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff;font-weight:bold;cursor:pointer;font-size:0.82rem;">💾 Save Name</button>
+            </div>
             <button id="profileUploadBtn" style="width:100%;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-weight:bold;cursor:pointer;font-size:0.85rem;">📷 Upload Photo</button>
             <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;">
             <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
