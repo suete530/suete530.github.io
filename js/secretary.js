@@ -1,5 +1,5 @@
 import { auth, db } from './firebase.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, readImageAsBase64 } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
 import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, isOwnerSession, setupMode, studentMode, toggleMobilePanelLinks, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
 import { setSecretaryProfile } from './profile.js';
@@ -55,6 +55,83 @@ const secTodayBtn = document.getElementById('secTodayBtn');
 const secLogoutBtn = document.getElementById('secLogoutBtn');
 const secPageName = document.getElementById('secPageName');
 const secHistoryList = document.getElementById('secHistoryList');
+const secBg = document.getElementById('secBg');
+const secBgBtn = document.getElementById('secBgBtn');
+const secBgClearBtn = document.getElementById('secBgClearBtn');
+const secBgInput = document.getElementById('secBgInput');
+
+// ================= SECRETARY BACKGROUND IMAGE =================
+// The secretary interior always has the built-in mesh background. A secretary
+// can also drop in their own picture: it is stored on THEIR OWN profile doc
+// (secretary_profiles/{their email}) so nobody else is affected.
+let secBgUrl = '';
+
+function applySecBg(url) {
+    secBgUrl = url || '';
+    if (secBg) {
+        if (secBgUrl) {
+            secBg.style.backgroundImage = 'url("' + secBgUrl + '")';
+            secBg.classList.add('is-custom');
+        } else {
+            secBg.style.backgroundImage = '';
+            secBg.classList.remove('is-custom');
+        }
+    }
+    if (secBgClearBtn) secBgClearBtn.style.display = secBgUrl ? 'inline-grid' : 'none';
+    try { localStorage.setItem('fm_sec_bg', secBgUrl); } catch (e) {}
+}
+
+function loadSecBg() {
+    let cached = '';
+    try { cached = localStorage.getItem('fm_sec_bg') || ''; } catch (e) {}
+    if (cached) applySecBg(cached);
+    const u = auth.currentUser;
+    const mail = u && u.email ? u.email.trim().toLowerCase() : '';
+    if (!mail) return;
+    getDoc(doc(db, 'secretary_profiles', mail)).then(snap => {
+        if (!snap.exists()) return;
+        const data = snap.data() || {};
+        if (data.bg !== undefined) applySecBg(data.bg || '');
+    }).catch(() => {});
+}
+
+async function pickSecBg(file) {
+    if (!file) return;
+    const u = auth.currentUser;
+    if (!u || !u.email) { await showAlert('❌ No account signed in.'); return; }
+    const dataUrl = await readImageAsBase64(file, 1600, 0.78);
+    if (!dataUrl) { await showAlert('⚠️ Could not read that image. Try another picture.'); return; }
+    if (dataUrl.length > 950000) { await showAlert('⚠️ Image is too large. Please choose a smaller picture.'); return; }
+    const mail = u.email.trim().toLowerCase();
+    try {
+        await setDoc(doc(db, 'secretary_profiles', mail), {
+            email: mail,
+            bg: dataUrl,
+            updatedAt: Date.now()
+        }, { merge: true });
+        applySecBg(dataUrl);
+        await showAlert('✅ Background updated!');
+    } catch (e) {
+        await showAlert('❌ Could not save the background. ' + (e && e.code === 'permission-denied'
+            ? 'Your account is not allowed to update this record.'
+            : 'Check your connection and try again.'));
+    }
+}
+
+async function clearSecBg() {
+    const u = auth.currentUser;
+    if (!u || !u.email) return;
+    const mail = u.email.trim().toLowerCase();
+    try {
+        await setDoc(doc(db, 'secretary_profiles', mail), {
+            email: mail,
+            bg: '',
+            updatedAt: Date.now()
+        }, { merge: true });
+    } catch (e) {}
+    applySecBg('');
+    await showAlert('🗑️ Background removed.');
+}
 
 // ================= SECRETARY LOGIN PROFILE (per email) =================
 // Every secretary owns a profile doc at secretary_profiles/{their email}.
@@ -292,6 +369,7 @@ export function enterSecretaryApp(name, photoUrl) {
     loadSecretaryStudents();
     loadAttendanceForDate(today);
     loadAttendanceHistory();
+    loadSecBg();
     resetRosterSearch();
     secNewStudentName.focus();
 }
@@ -849,7 +927,14 @@ if (secTodayBtn) secTodayBtn.addEventListener('click', () => {
     attDate.value = today;
     loadAttendanceForDate(today);
 });
-if (attDate) attDate.addEventListener('change', () => loadAttendanceForDate(attDate.value));
+    if (attDate) attDate.addEventListener('change', () => loadAttendanceForDate(attDate.value));
+    if (secBgBtn) secBgBtn.addEventListener('click', () => { if (secBgInput) secBgInput.click(); });
+    if (secBgInput) secBgInput.addEventListener('change', () => {
+        const f = secBgInput.files[0];
+        secBgInput.value = '';
+        pickSecBg(f);
+    });
+    if (secBgClearBtn) secBgClearBtn.addEventListener('click', clearSecBg);
 if (secLogoutBtn) secLogoutBtn.addEventListener('click', async function() {
     if (!await showConfirm('Logout from secretary account?')) return;
     try { await signOut(auth); } catch (e) {}

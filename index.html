@@ -468,6 +468,7 @@
 
     <!-- Secretary Attendance Page -->
     <div id="secretaryPage" class="sec-app" style="display:none;">
+        <div class="sec-bg" id="secBg"></div>
         <div class="sec-shell">
 
             <header class="sec-topbar">
@@ -481,6 +482,9 @@
                     </div>
                 </div>
                 <div class="sec-topbar__right">
+                    <button id="secBgBtn" class="sec-btn-ghost sec-icon-btn" type="button" title="Change background" aria-label="Change background"><svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M3.5 17l5-5 4.5 4.5 3-2.5 4.5 4"/></svg></button>
+                    <button id="secBgClearBtn" class="sec-btn-ghost sec-icon-btn sec-icon-btn--clear" type="button" title="Remove background" aria-label="Remove background" style="display:none;"><svg viewBox="0 0 24 24" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+                    <input type="file" id="secBgInput" accept="image/*" style="display:none;">
                     <button id="secProfileBtn" class="sec-chip" type="button">
                         <span id="secProfileCircle" class="sec-avatar">
                             <img id="secProfileImg" alt="">
