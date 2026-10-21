@@ -37,13 +37,11 @@ import { escapeHtml } from './utils.js';
             const row = (s, i) => {
                 const rank = i < 3 ? medals[i] : `#${i + 1}`;
                 const w = top[0].fine > 0 ? ((s.fine || 0) / top[0].fine) * 100 : 0;
-                return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:${i < top.length - 1 ? '1px solid #1e293b' : 'none'};">
-                    <span style="font-size:0.8rem;width:28px;text-align:center;">${rank}</span>
-                    <span style="flex:1;font-size:0.75rem;font-weight:600;color:#e0e0e0;">${escapeHtml(s.name)}</span>
-                    <div style="width:60px;height:6px;background:#0d1520;border-radius:3px;overflow:hidden;">
-                        <div style="height:100%;width:${w}%;background:linear-gradient(90deg,var(--amber),var(--accent));border-radius:3px;"></div>
-                    </div>
-                    <span style="font-size:0.75rem;font-weight:bold;color:${s.status === 'paid' ? '#10b981' : '#f87171'};min-width:55px;text-align:right;font-family:monospace;">₱${(s.fine || 0).toFixed(0)}</span>
+                return `<div class="lb-row">
+                    <span class="lb-rank">${rank}</span>
+                    <span class="lb-name">${escapeHtml(s.name)}</span>
+                    <div class="lb-bar"><div class="lb-bar-fill" style="width:${w}%;"></div></div>
+                    <span class="lb-amount" style="color:${s.status === 'paid' ? '#34d399' : '#f87171'};">₱${(s.fine || 0).toFixed(0)}</span>
                 </div>`;
             };
             const top3rows = top.slice(0, 3).map((s, i) => row(s, i)).join('');

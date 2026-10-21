@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#080c14">
     <title>BSIS-1 · Fines System</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/secretary.css">
+<link rel="stylesheet" href="css/treasurer.css">
 </head>
 <body>
     <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
@@ -97,17 +99,17 @@
         <h1 data-i18n="headerTitle">📋 BSIS Fines System</h1>
         <div class="header-buttons">
             <span id="headerAdminName" style="font-size:0.75rem;color:#a78bfa;margin-right:4px;"></span>
-            <span id="roleBadge" class="viewer-badge" data-i18n="roleStudent">👨‍🎓 Student</span>
-            <button class="student-only" id="inboxBtn" style="background:transparent;border:1px solid var(--accent-a27);color:var(--accent);padding:4px 10px;border-radius:20px;font-size:0.7rem;cursor:pointer;position:relative;display:none;">📨 <span id="inboxBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.5rem;padding:1px 5px;border-radius:50%;font-weight:bold;">0</span></button>
-            <button class="student-only" id="editProfileBtn" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;border:none;padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:bold;cursor:pointer;display:none;">✏️ Edit</button>
-            <button class="dark-toggle" id="themePicker" style="background:#1a2332;color:var(--accent);font-size:0.65rem;padding:5px 8px;" title="Change Theme">🎨</button>
-            <button class="dark-toggle" id="langToggle" style="background:#1a2332;color:var(--accent);font-size:0.7rem;padding:6px 10px;">🇵🇭</button>
-            <button class="dark-toggle" id="darkToggle">🌙</button>
-            <button class="admin-btn" id="activityLogBtn" style="background:linear-gradient(135deg,#0891b2,#0e7490);" data-i18n="btnActivity">📋 Activity</button>
-            <button class="admin-btn admin-only" id="requestsBtn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);position:relative;">📥 Requests<span id="requestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
-            <button class="admin-btn admin-only" id="adminRequestsBtn" style="background:linear-gradient(135deg,#f59e0b,#d97706);position:relative;">👑 Admins<span id="adminRequestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
-            <button class="admin-btn admin-only" id="changePwBtn" data-i18n="btnPassword">🔑 Password</button>
-            <button class="logout-btn" id="logoutBtn" data-i18n="btnLogout">🚪 Logout</button>
+            <span id="roleBadge" class="chip chip-solid viewer-badge" data-i18n="roleStudent">👨‍🎓 Student</span>
+            <button class="chip chip-ghost student-only" id="inboxBtn" style="position:relative;display:none;">📨 <span id="inboxBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.5rem;padding:1px 5px;border-radius:50%;font-weight:bold;">0</span></button>
+            <button class="chip chip-violet student-only" id="editProfileBtn" style="display:none;">✏️ Edit</button>
+            <button class="chip chip-icon dark-toggle" id="themePicker" title="Change Theme">🎨</button>
+            <button class="chip chip-icon dark-toggle" id="langToggle">🇵🇭</button>
+            <button class="chip chip-icon dark-toggle" id="darkToggle">🌙</button>
+            <button class="chip chip-info admin-btn" id="activityLogBtn" data-i18n="btnActivity">📋 Activity</button>
+            <button class="chip chip-violet admin-btn admin-only" id="requestsBtn" style="position:relative;">📥 Requests<span id="requestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
+            <button class="chip chip-amber admin-btn admin-only" id="adminRequestsBtn" style="position:relative;">👑 Admins<span id="adminRequestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
+            <button class="chip chip-info admin-btn" id="changePwBtn" data-i18n="btnPassword">🔑 Password</button>
+            <button class="chip chip-danger logout-btn" id="logoutBtn" data-i18n="btnLogout">🚪 Logout</button>
         </div>
     </div>
 
@@ -121,14 +123,14 @@
             <div class="student-profile-section" id="studentProfileSection">BSIS-1</div>
             <div class="student-profile-role" data-i18n="profileRole">USER</div>
         </div>
-        <span id="studentProfileFine" style="margin-left:auto;font-size:0.8rem;font-weight:700;color:var(--amber);background:#1c1917;padding:4px 12px;border-radius:30px;white-space:nowrap;">₱0.00</span>
+        <span id="studentProfileFine">₱0.00</span>
     </div>
 
-    <div id="topAnnouncements" style="margin:0 auto 16px;display:none;background:#111827;border-radius:24px;padding:16px 20px;border:1px solid #1e293b;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <span style="font-size:0.7rem;font-weight:bold;color:var(--accent);letter-spacing:1px;">📢 ANNOUNCEMENTS</span>
-            <span id="announceDot" style="width:5px;height:5px;border-radius:50%;background:#10b981;display:none;"></span>
-            <button id="openAnnounceModalBtn" style="margin-left:auto;padding:3px 10px;border-radius:10px;border:1px solid var(--accent-a27);background:transparent;color:var(--accent);font-size:0.6rem;cursor:pointer;">View All</button>
+    <div id="topAnnouncements" class="t-panel t-announce" style="display:none;">
+        <div class="t-announce__head">
+            <span class="t-announce__title">📢 Announcements</span>
+            <span id="announceDot" class="t-announce__dot" style="display:none;"></span>
+            <button id="openAnnounceModalBtn" class="t-announce__more">View All</button>
         </div>
         <div id="topAnnounceList" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
@@ -139,12 +141,12 @@
         </div>
 
         <div class="sections-grid">
-            <div class="section-selector admin-only">
+            <div class="section-selector t-bar admin-only">
                 <label data-i18n="lblSection">📚 Section:</label>
                 <select id="sectionSelect"></select>
                 <button class="btn-add-section" id="addSectionBtn" data-i18n="btnNewSection">➕ New Section</button>
             </div>
-            <div class="section-selector" style="justify-content:center;">
+            <div class="section-selector t-bar" style="justify-content:center;">
                 <label data-i18n="lblSection">📚 Section:</label>
                 <select id="sectionSelectView"></select>
             </div>
@@ -170,35 +172,35 @@
             </div>
         </div>
 
-        <div id="collectionProgress" style="background:#1a2332;border-radius:16px;padding:14px 18px;margin:10px 0 18px;border-left:6px solid #10b981;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="font-size:0.75rem;font-weight:bold;color:#10b981;">📊 COLLECTION PROGRESS</span>
-                <span style="font-size:0.75rem;color:var(--amber);font-weight:bold;" id="collectionPercent">0%</span>
+        <div id="collectionProgress" class="t-progress">
+            <div class="t-progress__head">
+                <span class="t-progress__title">📊 Collection Progress</span>
+                <span class="t-progress__pct" id="collectionPercent">0%</span>
             </div>
-            <div style="height:18px;background:#0d1520;border-radius:10px;overflow:hidden;position:relative;">
-                <div id="progressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:10px;transition:width 0.5s ease;"></div>
+            <div class="t-progress__track">
+                <div id="progressFill" class="t-progress__fill"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:0.7rem;color:#9ca3af;">
-                <span>Collected: <b style="color:#10b981;" id="progressCollected">₱0</b></span>
-                <span>Total Fines: <b style="color:var(--amber);" id="progressTotal">₱0</b></span>
-                <span>Remaining: <b style="color:#ef4444;" id="progressRemaining">₱0</b></span>
+            <div class="t-progress__legend">
+                <span>Collected: <b style="color:#34d399;" id="progressCollected">₱0</b></span>
+                <span>Total Fines: <b style="color:var(--t-amber);" id="progressTotal">₱0</b></span>
+                <span>Remaining: <b style="color:#f87171;" id="progressRemaining">₱0</b></span>
             </div>
         </div>
 
         <div id="leaderboardBox" style="display:none;">
-            <div style="background:#1a2332;border-radius:20px;padding:16px 18px;margin:10px 0 18px;border-left:8px solid var(--amber);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <span style="font-size:0.85rem;font-weight:bold;color:var(--amber);">🏆 TOP MOST FINES</span>
-                    <span style="font-size:0.6rem;color:#6b7280;">Out of <b id="lbTotalStudents" style="color:var(--accent);">0</b> students</span>
+            <div class="t-leader">
+                <div class="t-leader__head">
+                    <span class="t-leader__title">🏆 Top Most Fines</span>
+                    <span class="t-leader__meta">Out of <b id="lbTotalStudents" style="color:var(--accent);">0</b> students</span>
                 </div>
-                <div id="lbList" style="display:flex;flex-direction:column;gap:4px;"></div>
-                <div id="lbToggleWrap" style="text-align:center;margin-top:8px;display:none;">
-                    <button id="lbToggleBtn" style="background:transparent;border:1px solid var(--accent-a27);color:var(--accent);padding:4px 16px;border-radius:20px;font-size:0.7rem;cursor:pointer;">▼ Show All</button>
+                <div id="lbList" class="lb-list"></div>
+                <div id="lbToggleWrap" style="display:none;">
+                    <button id="lbToggleBtn" class="lb-toggle">▼ Show All</button>
                 </div>
             </div>
         </div>
 
-        <div class="input-panel admin-only">
+        <div class="input-panel t-form admin-only">
             <div class="input-group">
                 <div class="field"><label data-i18n="lblFullName">👤 Full Name</label><input type="text" id="studentName" placeholder="e.g., Maria Santos"></div>
                 <div class="field"><label data-i18n="lblGender">⚥ Gender</label><select id="studentGender"><option value="male">♂ <span data-i18n="male">Male</span></option><option value="female">♀ <span data-i18n="female">Female</span></option><option value="non-binary">⚧ <span data-i18n="nb">Non-binary</span></option></select></div>
@@ -209,20 +211,20 @@
             </div>
         </div>
 
-        <div class="search-filter-bar">
+        <div class="search-filter-bar t-bar">
             <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="🔍 Search...">
             <select id="filterGender"><option value="all" data-i18n="allGenders">All Genders</option><option value="male" data-i18n="male">Male</option><option value="female" data-i18n="female">Female</option></select>
             <select id="filterStatus"><option value="all" data-i18n="allStatus">All Status</option><option value="unpaid" data-i18n="unpaid">Unpaid</option><option value="paid" data-i18n="paid">Paid</option></select>
             <select id="sortBy"><option value="name" data-i18n="name">Name</option><option value="fine-high" data-i18n="fineHigh">Fine ↓</option><option value="fine-low" data-i18n="fineLow">Fine ↑</option></select>
         </div>
 
-        <div class="fines-list-section">
+        <div class="fines-list-section t-ledger">
             <div class="list-header">
                 <span data-i18n="finesLedger">📌 FINES LEDGER</span>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <div class="list-header__actions">
                     <button class="btn-payment" id="exportPaymentsBtn" data-i18n="btnPayCSV">📥 Payments CSV</button>
                     <button class="btn-export" id="exportCsvBtn" data-i18n="btnFinesCSV">📥 Fines CSV</button>
-                    <button id="readAllBtn" style="background:linear-gradient(135deg,#a855f7,#9333ea);color:white;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;cursor:pointer;">🔊 Read All</button>
+                    <button class="chip-violet" id="readAllBtn">🔊 Read All</button>
                 </div>
             </div>
             <div class="student-list" id="studentListContainer"><div class="loading-msg" data-i18n="loading">Loading...</div></div>

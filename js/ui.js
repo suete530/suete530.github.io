@@ -293,7 +293,7 @@ import { collection, doc, getDocs, updateDoc, query, orderBy } from "https://www
                 const relBadge = `<span class="relation-badge ${relClass}">${relStatus}</span>`;
                 const statusClass = s.status === 'paid' ? 'status-paid' : 'status-unpaid';
                 const statusLabel = s.status === 'paid' ? '✓ Paid' : '✗ Unpaid';
-                const paymentInfo = totalPaid > 0 ? `<div style="font-size:0.55rem;color:#888;margin-top:2px;">Paid: ₱${totalPaid.toFixed(2)} | Remaining: ₱${remaining.toFixed(2)}</div>` : '';
+                const paymentInfo = totalPaid > 0 ? `<div style="font-size:0.62rem;color:#93a2b8;margin-top:2px;">Paid: ₱${totalPaid.toFixed(2)} | Remaining: ₱${remaining.toFixed(2)}</div>` : '';
                 const lastOnline = s.lastOnline || 0;
                 const diff = now - lastOnline;
                 const online = diff < 5 * 60 * 1000;
@@ -312,7 +312,7 @@ import { collection, doc, getDocs, updateDoc, query, orderBy } from "https://www
                 const statusIndicator = timeLabel ? `<div class="status-indicator"><span class="status-dot ${dotClass}"></span><span>${timeLabel}</span></div>` : '';
                 const avatarHtml = s.photoUrl ? `<div style="text-align:center;cursor:pointer;" onclick="window.uploadPhoto(${s.id})"><img src="${s.photoUrl}" class="student-avatar">${statusIndicator}</div>` : `<div style="text-align:center;cursor:pointer;" onclick="window.uploadPhoto(${s.id})"><div class="student-avatar-placeholder">+</div>${statusIndicator}</div>`;
                 const adminButtons = getIsAdmin() ? `<button class="icon-btn" onclick="window.openPaymentModal(${s.id})">💳 History</button><button class="icon-btn" onclick="window.editStudent(${s.id})">✏️ Edit</button><button class="icon-btn" onclick="window.openChat(${s.id})">💬</button><button class="icon-btn" onclick="window.deleteStudent(${s.id})">🗑️</button>` : `<button class="icon-btn" onclick="window.openPaymentModal(${s.id})">💳 Pay</button>`;
-                html += `<div class="student-entry"><div style="display:flex;align-items:flex-start;">${avatarHtml}<span class="student-name">${escapeHtml(s.name)}</span><span class="gender-badge">${genderLabel}</span>${relBadge}<span class="${statusClass}">${statusLabel}</span><span class="fine-amount">₱ ${(s.fine || 0).toFixed(2)}</span><span onclick="speakStudentFine(${s.id})" style="cursor:pointer;font-size:0.7rem;margin-left:4px;opacity:0.5;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">🔊</span>${paymentInfo}</div><div class="entry-actions">${adminButtons}</div></div>`;
+                html += `<div class="student-entry"><div class="student-entry__id">${avatarHtml}<span class="student-name">${escapeHtml(s.name)}</span></div><div class="student-entry__meta"><span class="gender-badge">${genderLabel}</span>${relBadge}<span class="${statusClass}">${statusLabel}</span><span class="fine-amount">₱ ${(s.fine || 0).toFixed(2)}</span><span class="student-speak" onclick="speakStudentFine(${s.id})" title="Read out">🔊</span>${paymentInfo}</div><div class="entry-actions">${adminButtons}</div></div>`;
             });
             studentListContainer.innerHTML = html;
             document.getElementById('totalAmount').textContent = '₱ ' + total.toFixed(2);
