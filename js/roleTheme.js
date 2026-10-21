@@ -22,21 +22,27 @@ const visuals = {
 };
 
 let activeRole = ROLE_TREASURER;
-// While the secretary login shows a typed email, that secretary's own
-// profile (from secretary_profiles/{email}) replaces the shared one.
-let secLoginOverride = null;
+// Per-role login profile override. When a device types an email, that
+// account's own profile (treasurer_profiles / secretary_profiles) replaces
+// the shared one for that role only, so every device shows its own account.
+const loginOverrides = {
+    [ROLE_TREASURER]: null,
+    [ROLE_SECRETARY]: null,
+    [ROLE_DEVELOPER]: null
+};
 
 const loginRoleLabel = document.getElementById('secretaryRole');
 const loginDescEl = document.getElementById('loginDesc');
 
-export function setSecretaryLoginProfile(photo, name) {
-    secLoginOverride = { photo: photo || '', name: name || '' };
+export function setLoginProfileOverride(role, photo, name) {
+    if (!visuals[role]) return;
+    loginOverrides[role] = { photo: photo || '', name: name || '' };
     applyRoleVisuals();
 }
 
-export function clearSecretaryLoginProfile() {
-    if (!secLoginOverride) return;
-    secLoginOverride = null;
+export function clearLoginProfileOverride(role) {
+    if (!loginOverrides[role]) return;
+    loginOverrides[role] = null;
     applyRoleVisuals();
 }
 
@@ -82,7 +88,7 @@ export function setActiveRole(role) {
 function renderLoginProfile() {
     const v = visuals[activeRole];
     const meta = ROLE_META[activeRole];
-    const over = (activeRole === ROLE_SECRETARY) ? secLoginOverride : null;
+    const over = loginOverrides[activeRole] || null;
     const rawName = over ? over.name : v.name;
     const photo = over ? over.photo : v.photo;
     const name = rawName || meta.defaultName;

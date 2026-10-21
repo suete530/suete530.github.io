@@ -102,3 +102,10 @@
         export const secProfilePhotoInput = document.getElementById('secProfilePhotoInput');
         export const secProfileAvatarImg = document.getElementById('secProfileAvatarImg');
         export const secProfileAvatarInitial = document.getElementById('secProfileAvatarInitial');
+        export const treasProfileNameInput = document.getElementById('treasProfileNameInput');
+        export const saveTreasProfileNameBtn = document.getElementById('saveTreasProfileNameBtn');
+        export const treasProfilePhotoBtn = document.getElementById('treasProfilePhotoBtn');
+        export const treasProfilePhotoInput = document.getElementById('treasProfilePhotoInput');
+        export const treasProfileAvatarImg = document.getElementById('treasProfileAvatarImg');
+        export const treasProfileAvatarInitial = document.getElementById('treasProfileAvatarInitial');
+        export const ownerOnlySettings = document.getElementById('ownerOnlySettings');

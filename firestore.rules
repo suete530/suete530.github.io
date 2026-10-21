@@ -98,8 +98,32 @@ service cloud.firestore {
                     || (isEmailUser() && resource.data.email.lower() == request.auth.token.email.lower());
     }
 
+    // Per-email treasurer profile used by the login screen: as soon as a
+    // treasurer types their email, the login page shows THEIR OWN photo and
+    // name. Public single-document read (same exposure as settings/admin);
+    // collection queries stay admin-only.
+    match /treasurer_profiles/{email} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isEmailUser()
+                    && request.resource.data.email.lower() == request.auth.token.email.lower();
+      allow update: if isAdmin()
+                    || (isEmailUser()
+                        && resource.data.email.lower() == request.auth.token.email.lower()
+                        && request.resource.data.email.lower() == request.auth.token.email.lower());
+      allow delete: if isAdmin()
+                    || (isEmailUser() && resource.data.email.lower() == request.auth.token.email.lower());
+    }
+
     function visitorCountOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['visitorCount']);
+    }
+
+    // Identity of the owner/developer. A delegated treasurer is an admin but
+    // must never overwrite the owner's name, photo or email.
+    function touchesOwnerIdentity() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['adminEmail', 'adminUid', 'adminName', 'adminPhoto', 'devName', 'devPhoto', 'secName', 'secPhoto']);
     }
 
     function selfEditableStudentFields() {
@@ -132,7 +156,10 @@ service cloud.firestore {
       allow create: if isEmailUser();
       allow update: if (isEmailUser() && resource.data.get('adminRegistered', false) != true)
                     || visitorCountOnly()
-                    || isAdmin()
+                    || isOwner()
+                    // Delegated treasurers may change the shared app settings
+                    // (GCash, backgrounds, toggles) but not the owner identity.
+                    || (isAdmin() && !touchesOwnerIdentity())
                     // A secretary may only publish their own login wallpaper.
                     // Their photo/name live in secretary_profiles/{email},
                     // so no secretary can overwrite the shared login profile.

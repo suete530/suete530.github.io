@@ -1,5 +1,5 @@
 import { auth, db } from './firebase.js';
-import { readFileAsBase64, readImageAsBase64 } from './utils.js';
+import { readImageAsBase64 } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
 import { adminName, adminPhotoUrl, devName, devPhotoUrl, setDeveloperName, setDeveloperPhoto, setDeveloperWallpaper, setSecretaryWallpaper } from './auth.js';
 import { getRoleBackground, ROLE_DEVELOPER, ROLE_SECRETARY } from './roleTheme.js';
@@ -88,9 +88,9 @@ function renderModal() {
     profileModalCircle.style.borderColor = roleColor;
     profileModalInitial.style.color = roleColor;
     setCircleImg(profileModalImg, profileModalInitial, photo, name);
-    if (profileNameRow) profileNameRow.style.display = currentRole === 'developer' ? 'block' : 'none';
-    if (profileNameInput && currentRole === 'developer' && document.activeElement !== profileNameInput) {
-        profileNameInput.value = devName || adminName || '';
+    if (profileNameRow) profileNameRow.style.display = 'block';
+    if (profileNameInput && document.activeElement !== profileNameInput) {
+        profileNameInput.value = currentRole === 'developer' ? (devName || adminName || 'Developer') : (secName || '');
     }
     const hasWallpaper = currentRole === 'developer'
         ? !!getRoleBackground(ROLE_DEVELOPER)
@@ -99,12 +99,36 @@ function renderModal() {
 }
 
 async function saveProfileName() {
-    if (currentRole !== 'developer') return;
+    if (currentRole === 'developer') {
+        const name = (profileNameInput.value || '').trim();
+        if (!name) { await showAlert('⚠️ Please enter a display name.'); return; }
+        try {
+            await updateDoc(doc(db, 'settings', 'admin'), { devName: name });
+            setDeveloperName(name);
+            renderModal();
+            await showAlert('✅ Display name updated!');
+        } catch (e) {
+            await showAlert('❌ Could not save the name. ' + (e && e.code === 'permission-denied'
+                ? 'Your account is not allowed to update this record.'
+                : 'Check your connection and try again.'));
+        }
+        return;
+    }
+    // Secretary: their own per-email login profile (name only).
+    const u = auth.currentUser;
+    if (!u || !u.email) { await showAlert('❌ No account signed in.'); return; }
     const name = (profileNameInput.value || '').trim();
     if (!name) { await showAlert('⚠️ Please enter a display name.'); return; }
+    const mail = u.email.trim().toLowerCase();
     try {
-        await updateDoc(doc(db, 'settings', 'admin'), { devName: name });
-        setDeveloperName(name);
+        await setDoc(doc(db, 'secretary_profiles', mail), {
+            email: mail,
+            name: name,
+            photoUrl: secPhotoUrl || '',
+            updatedAt: Date.now()
+        }, { merge: true });
+        secName = name;
+        setSecretaryProfile(name, secPhotoUrl);
         renderModal();
         await showAlert('✅ Display name updated!');
     } catch (e) {
@@ -128,7 +152,7 @@ window.closeProfileModal = closeProfileModal;
 
 async function uploadProfilePhoto() {
     if (!profilePhotoInput.files[0]) return;
-    const photoUrl = await readFileAsBase64(profilePhotoInput.files[0]);
+    const photoUrl = await readImageAsBase64(profilePhotoInput.files[0], 600, 0.8);
     profilePhotoInput.value = '';
     if (!photoUrl) { await showAlert('⚠️ Could not read that image. Try another photo.'); return; }
     profileUploadBtn.disabled = true;

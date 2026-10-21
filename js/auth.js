@@ -1,4 +1,4 @@
-import { adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginBtnEl, newPw, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, saveSecProfileNameBtn, secProfileAvatarImg, secProfileAvatarInitial, secProfileNameInput, secProfilePhotoBtn, secProfilePhotoInput, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, uploadBgBtn, uploadQrBtn } from './dom.js';
+import { adminPhotoBtn, adminPhotoInput, badge, changePwBtn, changePwModal, confirmInput, confirmPw, currentPw, customAlertBtns, customAlertClose, customAlertInput, customAlertMsg, customAlertOverlay, deleteBgBtn, deleteQrBtn, emailCurrentPw, emailInput, errEl, headerAdminName, loginBgInput, loginBtnEl, newPw, ownerOnlySettings, overlay, pwInput, qrNoPreview, qrPreviewImg, qrUploadInput, saveAdminNameBtn, saveEmailBtn, saveGcashBtn, savePwBtn, saveSecProfileNameBtn, saveTreasProfileNameBtn, secProfileAvatarImg, secProfileAvatarInitial, secProfileNameInput, secProfilePhotoBtn, secProfilePhotoInput, settingsAdminName, settingsAvatarImg, settingsAvatarInitial, settingsCurrentEmail, settingsGcashName, settingsGcashNumber, settingsNewEmail, setupBtn, setupNote, treasProfileAvatarImg, treasProfileAvatarInitial, treasProfileNameInput, treasProfilePhotoBtn, treasProfilePhotoInput, uploadBgBtn, uploadQrBtn } from './dom.js';
 import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, readFileAsBase64, readImageAsBase64 } from './utils.js';
@@ -7,29 +7,35 @@ import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, r
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { sendDevEmail } from './notify.js';
-        import { secretaryMode, handleSecretaryLogin, exitSecretaryApp, exitSecretaryMode, stopSecRequestsListener } from './secretary.js';
+        import { secretaryMode, handleSecretaryLogin, enterSecretaryMode, exitSecretaryApp, exitSecretaryMode, stopSecRequestsListener } from './secretary.js';
         import { renderDevProfile } from './profile.js';
         import { setActiveRole, setRoleBackground, setRoleName, setRolePhoto, ROLE_DEVELOPER, ROLE_SECRETARY, ROLE_TREASURER } from './roleTheme.js';
+        import { applyLoginProfileForEmail, lastLoginEmail, lastLoginRole, rememberLoginEmail, TREASURER_PROFILES } from './loginProfile.js';
 
+        // The signed-in admin's OWN profile (a delegated treasurer is not the
+        // owner, so the app header shows their own name and photo).
+        let ownAdminName = '';
+        let ownAdminPhotoUrl = '';
 
         export function updateAdminNameDisplay() {
             setRoleName(ROLE_TREASURER, adminName);
             setRoleName(ROLE_DEVELOPER, devName || adminName);
-            headerAdminName.textContent = adminName;
+            headerAdminName.textContent = ownAdminName || adminName;
             renderDevProfile();
         }
 
         export function updateAdminAvatarDisplay() {
             setRolePhoto(ROLE_TREASURER, adminPhotoUrl);
             setRolePhoto(ROLE_DEVELOPER, devPhotoUrl || adminPhotoUrl);
-            if (adminPhotoUrl) {
-                settingsAvatarImg.src = adminPhotoUrl;
+            const own = ownAdminPhotoUrl || adminPhotoUrl;
+            if (own) {
+                settingsAvatarImg.src = own;
                 settingsAvatarImg.style.display = 'block';
                 settingsAvatarInitial.style.display = 'none';
             } else {
                 settingsAvatarImg.style.display = 'none';
                 settingsAvatarInitial.style.display = 'block';
-                const initials = adminName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                const initials = (ownAdminName || adminName).split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
                 settingsAvatarInitial.textContent = initials || 'ZC';
             }
             renderDevProfile();
@@ -48,6 +54,32 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 const initials = (roleSecName || '').split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
                 secProfileAvatarInitial.textContent = initials || '📝';
             }
+        }
+
+        // Preview for the signed-in admin's OWN treasurer profile.
+        export function updateTreasProfilePreview() {
+            if (treasProfileNameInput && !treasProfileNameInput.value) {
+                treasProfileNameInput.value = ownAdminName || '';
+            }
+            if (!treasProfileAvatarImg || !treasProfileAvatarInitial) return;
+            if (ownAdminPhotoUrl) {
+                treasProfileAvatarImg.src = ownAdminPhotoUrl;
+                treasProfileAvatarImg.style.display = 'block';
+                treasProfileAvatarInitial.style.display = 'none';
+            } else {
+                treasProfileAvatarImg.style.display = 'none';
+                treasProfileAvatarInitial.style.display = 'block';
+                const initials = (ownAdminName || '').split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                treasProfileAvatarInitial.textContent = initials || '💰';
+            }
+        }
+
+        // Only the owner (developer) may change the shared login settings
+        // (admin name/photo, backgrounds, shared secretary profile).
+        export function applyOwnerOnlySettingsVisibility() {
+            if (!ownerOnlySettings) return;
+            const owner = isOwnerSession();
+            ownerOnlySettings.style.display = owner ? '' : 'none';
         }
 
         export let setupMode = false;
@@ -190,6 +222,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     window.__approvedAdmin = false;
                     window.__ownerSession = true;
                     pwInput.value = '';
+                    rememberLoginEmail(cred.user.email || email, 'developer');
                     errEl.style.display = 'none';
                     errEl.style.color = '#10b981';
                     errEl.textContent = '✅ Developer signed in successfully!';
@@ -233,6 +266,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     window.__approvedAdmin = false;
                     window.__ownerSession = true;
                     pwInput.value = '';
+                    rememberLoginEmail(cred.user.email || email, 'treasurer');
+                    loadOwnAdminProfile(cred.user.email || email, adminName);
                     enterApp(true);
                     return;
                 }
@@ -242,6 +277,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     window.__approvedAdmin = true;
                     window.__ownerSession = false;
                     pwInput.value = '';
+                    rememberLoginEmail(cred.user.email || email, 'treasurer');
+                    loadOwnAdminProfile(cred.user.email || email, adminSnap.data().name || '');
                     enterApp(true);
                     return;
                 }
@@ -320,9 +357,10 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             try {
                 if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
                 const cred = await signInWithEmailAndPassword(auth, email, password);
-                if (isAdminSession()) { pwInput.value = ''; if (studentMode) exitStudentMode(); enterApp(true); return; }
+                if (isAdminSession()) { pwInput.value = ''; rememberLoginEmail(cred.user.email || email, 'treasurer'); if (studentMode) exitStudentMode(); enterApp(true); return; }
                 const userSnap = await getDoc(doc(db, 'users', cred.user.uid));
                 if (userSnap.exists() && userSnap.data().role === 'student' && userSnap.data().studentId) {
+                    rememberLoginEmail(cred.user.email || email, 'student');
                     finishStudentLogin(String(userSnap.data().studentId));
                     return;
                 }
@@ -603,6 +641,19 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                         status: 'pending',
                         requestedAt: Date.now()
                     });
+                    // Per-account login profile: the login page shows this
+                    // applicant's own name (and later their photo) once they
+                    // type this email on any device.
+                    try {
+                        const mail = (cred.user.email || email).trim().toLowerCase();
+                        await setDoc(doc(db, TREASURER_PROFILES, mail), {
+                            email: mail,
+                            name: name,
+                            photoUrl: '',
+                            updatedAt: Date.now()
+                        }, { merge: true });
+                    } catch (e) {}
+                    rememberLoginEmail(cred.user.email || email, 'treasurer');
                     watchOwnAdminRequest();
                 } catch (e) {
                     btn.disabled = false; btn.textContent = '📩 Send Request';
@@ -734,6 +785,10 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             window.__isAdmin = false;
             window.__ownerSession = false;
             window.__approvedAdmin = false;
+            ownAdminName = '';
+            ownAdminPhotoUrl = '';
+            updateAdminNameDisplay();
+            updateAdminAvatarDisplay();
             document.body.classList.remove('is-admin');
             if (window.__unsubscribeAll) window.__unsubscribeAll();
             if (window._inboxUnsub) { window._inboxUnsub(); window._inboxUnsub = null; }
@@ -866,6 +921,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         }
 
         saveAdminNameBtn.addEventListener('click', async function() {
+            if (!isOwnerSession()) { await showAlert('⛔ Only the owner (developer) can change the shared admin profile.'); return; }
             const newName = settingsAdminName.value.trim();
             if (!newName) { await showAlert('Please enter a name!'); return; }
             adminName = newName;
@@ -932,12 +988,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         });
 
         adminPhotoBtn.addEventListener('click', function() {
-            if (!isAdminSession()) return;
+            if (!isOwnerSession()) return;
             adminPhotoInput.click();
         });
 
         adminPhotoInput.addEventListener('change', async function() {
-            if (!isAdminSession()) { adminPhotoInput.value = ''; return; }
+            if (!isOwnerSession()) { adminPhotoInput.value = ''; return; }
             if (!adminPhotoInput.files[0]) return;
             const photoUrl = await readFileAsBase64(adminPhotoInput.files[0]);
             adminPhotoUrl = photoUrl;
@@ -949,7 +1005,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 
         // Shared Secretary login profile (owner controlled fallback).
         if (saveSecProfileNameBtn) saveSecProfileNameBtn.addEventListener('click', async function() {
-            if (!isAdminSession()) return;
+            if (!isOwnerSession()) { await showAlert('⛔ Only the owner (developer) can change the shared login profile.'); return; }
             const name = (secProfileNameInput.value || '').trim();
             setSecretaryRolePhoto(roleSecPhotoUrl, name);
             updateSecProfilePreview();
@@ -962,12 +1018,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         });
 
         if (secProfilePhotoBtn) secProfilePhotoBtn.addEventListener('click', function() {
-            if (!isAdminSession()) return;
+            if (!isOwnerSession()) return;
             secProfilePhotoInput.click();
         });
 
         if (secProfilePhotoInput) secProfilePhotoInput.addEventListener('change', async function() {
-            if (!isAdminSession()) { secProfilePhotoInput.value = ''; return; }
+            if (!isOwnerSession()) { secProfilePhotoInput.value = ''; return; }
             if (!secProfilePhotoInput.files[0]) return;
             const photoUrl = await readFileAsBase64(secProfilePhotoInput.files[0]);
             setSecretaryRolePhoto(photoUrl, roleSecName);
@@ -981,13 +1037,69 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             secProfilePhotoInput.value = '';
         });
 
-        uploadBgBtn.addEventListener('click', function() {
+        // ================= OWN TREASURER PROFILE (per account) =================
+        // Every treasurer keeps their own profile doc (treasurer_profiles/{email})
+        // so the 💰 login page shows THAT account's picture + name.
+        if (saveTreasProfileNameBtn) saveTreasProfileNameBtn.addEventListener('click', async function() {
             if (!isAdminSession()) return;
+            const u = auth.currentUser;
+            if (!u || !u.email) { await showAlert('⛔ No account signed in.'); return; }
+            const name = (treasProfileNameInput.value || '').trim();
+            if (!name) { await showAlert('⛔ Name cannot be empty.'); return; }
+            const mail = u.email.trim().toLowerCase();
+            try {
+                await setDoc(doc(db, TREASURER_PROFILES, mail), {
+                    email: mail,
+                    name: name,
+                    photoUrl: ownAdminPhotoUrl || '',
+                    updatedAt: Date.now()
+                }, { merge: true });
+                ownAdminName = name;
+                updateAdminNameDisplay();
+                updateTreasProfilePreview();
+                await showAlert('✅ Your treasurer profile name was saved!');
+            } catch (e) {
+                await showAlert('⛔ Could not save: ' + (e && e.message ? e.message : 'error'));
+            }
+        });
+
+        if (treasProfilePhotoBtn) treasProfilePhotoBtn.addEventListener('click', function() {
+            if (!isAdminSession()) return;
+            treasProfilePhotoInput.click();
+        });
+
+        if (treasProfilePhotoInput) treasProfilePhotoInput.addEventListener('change', async function() {
+            if (!isAdminSession()) { treasProfilePhotoInput.value = ''; return; }
+            const u = auth.currentUser;
+            if (!u || !u.email) { treasProfilePhotoInput.value = ''; return; }
+            if (!treasProfilePhotoInput.files[0]) return;
+            const photoUrl = await readImageAsBase64(treasProfilePhotoInput.files[0], 600, 0.8);
+            treasProfilePhotoInput.value = '';
+            if (!photoUrl) { await showAlert('⛔ Could not read that image. Try another photo.'); return; }
+            const mail = u.email.trim().toLowerCase();
+            try {
+                await setDoc(doc(db, TREASURER_PROFILES, mail), {
+                    email: mail,
+                    name: ownAdminName || (treasProfileNameInput.value || '').trim(),
+                    photoUrl: photoUrl,
+                    updatedAt: Date.now()
+                }, { merge: true });
+                ownAdminPhotoUrl = photoUrl;
+                updateAdminAvatarDisplay();
+                updateTreasProfilePreview();
+                await showAlert('✅ Your treasurer profile photo was saved!');
+            } catch (e) {
+                await showAlert('⛔ Could not save: ' + (e && e.message ? e.message : 'error'));
+            }
+        });
+
+        uploadBgBtn.addEventListener('click', function() {
+            if (!isOwnerSession()) return;
             loginBgInput.click();
         });
 
         loginBgInput.addEventListener('change', async function() {
-            if (!isAdminSession()) { loginBgInput.value = ''; return; }
+            if (!isOwnerSession()) { loginBgInput.value = ''; return; }
             if (!loginBgInput.files[0]) return;
             const dataUrl = await readImageAsBase64(loginBgInput.files[0], 1600, 0.78);
             loginBgInput.value = '';
@@ -1037,6 +1149,9 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             settingsGcashName.value = localStorage.getItem('fm_gcash_name') || '';
             if (secProfileNameInput) secProfileNameInput.value = roleSecName;
             updateSecProfilePreview();
+            if (treasProfileNameInput) treasProfileNameInput.value = ownAdminName || '';
+            updateTreasProfilePreview();
+            applyOwnerOnlySettingsVisibility();
             updateQRPreview();
             renderThemeSwatches();
             renderPresetsManager();
@@ -1276,4 +1391,75 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export function applyLoginBg() {
             applyRoleSettings();
             if (deleteBgBtn) deleteBgBtn.style.display = loginBgUrl ? 'block' : 'none';
+        }
+
+        // ================= PER-ACCOUNT LOGIN PROFILE =================
+        // Every device shows the profile of the account it logs in as: typing
+        // an email swaps the shared (owner controlled) login profile for that
+        // account's own document (treasurer_profiles / secretary_profiles).
+        let loginProfileLookupTimer = null;
+
+        function currentLoginProfileRole() {
+            if (studentMode) return '';
+            if (developerMode) return '';
+            return secretaryMode ? ROLE_SECRETARY : ROLE_TREASURER;
+        }
+
+        if (emailInput) {
+            emailInput.addEventListener('input', function () {
+                const role = currentLoginProfileRole();
+                if (!role) return;
+                clearTimeout(loginProfileLookupTimer);
+                loginProfileLookupTimer = setTimeout(function () {
+                    applyLoginProfileForEmail(emailInput.value, role);
+                }, 400);
+            });
+        }
+
+        // The account last used on THIS device is restored, so two devices
+        // show two different accounts on the login page.
+        (function restoreLastLoginProfile() {
+            try {
+                const last = lastLoginEmail();
+                const role = lastLoginRole();
+                if (!last || (role !== 'treasurer' && role !== 'secretary')) return;
+                if (emailInput) emailInput.value = last;
+                if (role === 'secretary') {
+                    enterSecretaryMode();
+                    if (emailInput) emailInput.blur();
+                } else {
+                    applyLoginProfileForEmail(last, ROLE_TREASURER);
+                }
+            } catch (e) {}
+        })();
+
+        // Loads the signed-in admin's OWN profile (name + photo). A delegated
+        // treasurer is not the owner, so the app shows their own identity.
+        export async function loadOwnAdminProfile(email, fallbackName) {
+            const mail = (email || '').trim().toLowerCase();
+            if (!mail) return;
+            let name = fallbackName || '';
+            let photo = '';
+            try {
+                const snap = await getDoc(doc(db, TREASURER_PROFILES, mail));
+                if (snap.exists()) {
+                    const data = snap.data() || {};
+                    if (data.name) name = data.name;
+                    photo = data.photoUrl || '';
+                } else {
+                    // Older accounts have no profile doc yet — create one so
+                    // their own name shows on the login page.
+                    await setDoc(doc(db, TREASURER_PROFILES, mail), {
+                        email: mail,
+                        name: name,
+                        photoUrl: '',
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                }
+            } catch (e) {}
+            ownAdminName = name || '';
+            ownAdminPhotoUrl = photo || '';
+            updateAdminNameDisplay();
+            updateAdminAvatarDisplay();
+            updateTreasProfilePreview();
         }

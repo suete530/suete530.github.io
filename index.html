@@ -267,6 +267,21 @@
             <button class="modal-close" onclick="closeChangePwModal()">✕</button>
             <h3 data-i18n="settings">🔑 Settings</h3>
             <div class="pw-form">
+                <h4 style="font-size:0.85rem;margin-bottom:8px;color:#34d399;">💼 My Treasurer Profile</h4>
+                <p style="font-size:0.62rem;color:#6b7280;margin:0 0 6px;line-height:1.4;">Your own picture + name for the 💰 Treasurer login page. Type your email on the login page and this profile appears — on any device you use.</p>
+                <label>Display Name</label><input type="text" id="treasProfileNameInput" placeholder="Your full name" maxlength="50">
+                <button id="saveTreasProfileNameBtn">💾 Save Name</button>
+                <label style="margin-top:10px;">🖼️ My Photo</label>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <div style="width:56px;height:56px;border-radius:50%;background:#1a2332;border:2px solid var(--accent-a27);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto;">
+                        <img id="treasProfileAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+                        <span id="treasProfileAvatarInitial" style="font-size:1.2rem;font-weight:700;color:var(--accent);">💰</span>
+                    </div>
+                    <button id="treasProfilePhotoBtn" type="button" style="flex:1;margin:0;">📷 Upload Photo</button>
+                </div>
+                <input type="file" id="treasProfilePhotoInput" accept="image/*" style="display:none;">
+                <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
+                <div id="ownerOnlySettings">
                 <h4 style="font-size:0.85rem;margin-bottom:8px;color:var(--accent);" data-i18n="adminName">👤 Admin Name</h4>
                 <label data-i18n="displayName">Display Name</label><input type="text" id="settingsAdminName" placeholder="e.g., Zeraldin Cauba" maxlength="50">
                 <button id="saveAdminNameBtn" data-i18n="btnSaveName">💾 Save Name</button>
@@ -304,6 +319,7 @@
                     <span>Allow students to edit their own name, gender &amp; status</span>
                     <input type="checkbox" id="allowStudentEditToggle" style="width:18px;height:18px;accent-color:var(--accent);">
                 </label>
+                </div>
                 <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
                 <h4 style="font-size:0.85rem;margin-bottom:8px;color:var(--amber);" data-i18n="passwordSection">🔐 Password</h4>
                 <label data-i18n="currentPw">Current Password</label><input type="password" id="currentPw" placeholder="••••••••">
