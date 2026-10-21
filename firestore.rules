@@ -81,47 +81,21 @@ service cloud.firestore {
       }
     }
 
-    // A treasurer is paired with ONE secretary. The pairing is stored in
-    // treasurer_pairs/{their uid} (the treasurer also keeps a copy of the
-    // linked email in their own profile doc), so the rules can read it and
-    // enforce "your secretary only".
-    function isPairedTreasurerOf(email) {
-      if (!isEmailUser()) return false;
-      if (!exists(/databases/$(database)/documents/treasurer_pairs/$(request.auth.uid))) return false;
-      let linked = get(/databases/$(database)/documents/treasurer_pairs/$(request.auth.uid)).data.get('secretaryEmail', '');
-      return linked != '' && linked.lower() == email.lower();
-    }
-
-    // The pairing record itself: only the treasurer who owns the uid (or the
-    // owner) may write it.
-    match /treasurer_pairs/{uid} {
-      allow get: if isOwner() || (isEmailUser() && request.auth.uid == uid);
-      allow list: if isAdmin();
-      allow create, update: if isEmailUser() && request.auth.uid == uid;
-      allow delete: if isOwner() || (isEmailUser() && request.auth.uid == uid);
-    }
-
     // Per-email secretary profile used by the login screen: as soon as a
     // secretary types their email, the login page shows THEIR OWN photo and
     // name. Public single-document read (same exposure as settings/admin);
-    // collection queries stay admin-only.
-    // The owner may edit any secretary profile. A delegated treasurer may
-    // ONLY edit the secretary they are paired with, and only the display
-    // name, the picture and the timestamp.
+    // collection queries stay owner-only.
+    // A secretary's profile is CONFIDENTIAL: only the owner (developer) and
+    // the secretary themselves may write it. No treasurer, no other admin.
     match /secretary_profiles/{email} {
       allow get: if true;
-      allow list: if isAdmin();
-      allow create: if (isEmailUser()
-                        && request.resource.data.get('email','').lower() == request.auth.token.email.lower())
-                    || (isPairedTreasurerOf(email)
-                        && request.resource.data.get('email','').lower() == email.lower());
+      allow list: if isOwner();
+      allow create: if isEmailUser()
+                    && request.resource.data.get('email','').lower() == request.auth.token.email.lower();
       allow update: if isOwner()
                     || (isEmailUser()
                         && resource.data.get('email','').lower() == request.auth.token.email.lower()
-                        && request.resource.data.get('email','').lower() == request.auth.token.email.lower())
-                    || (isPairedTreasurerOf(email)
-                        && request.resource.data.diff(resource.data).affectedKeys()
-                            .hasOnly(['name', 'photoUrl', 'updatedAt']));
+                        && request.resource.data.get('email','').lower() == request.auth.token.email.lower());
       allow delete: if isOwner()
                     || (isEmailUser() && resource.data.get('email','').lower() == request.auth.token.email.lower());
     }
@@ -132,15 +106,15 @@ service cloud.firestore {
     // collection queries stay admin-only.
     match /treasurer_profiles/{email} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isOwner();
       allow create: if isEmailUser()
-                    && request.resource.data.email.lower() == request.auth.token.email.lower();
-      allow update: if isAdmin()
+                    && request.resource.data.get('email','').lower() == request.auth.token.email.lower();
+      allow update: if isOwner()
                     || (isEmailUser()
-                        && resource.data.email.lower() == request.auth.token.email.lower()
-                        && request.resource.data.email.lower() == request.auth.token.email.lower());
-      allow delete: if isAdmin()
-                    || (isEmailUser() && resource.data.email.lower() == request.auth.token.email.lower());
+                        && resource.data.get('email','').lower() == request.auth.token.email.lower()
+                        && request.resource.data.get('email','').lower() == request.auth.token.email.lower());
+      allow delete: if isOwner()
+                    || (isEmailUser() && resource.data.get('email','').lower() == request.auth.token.email.lower());
     }
 
     function visitorCountOnly() {

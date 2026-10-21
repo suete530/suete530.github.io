@@ -7,13 +7,11 @@ import './accounts.js';
 import './profile.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';
 import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js';
-import { initSecretaryPair, loadMySecretary } from './secretaryPair.js';
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         initPasswordToggles();
-        initSecretaryPair();
 
         await new Promise((resolve) => {
             const un = onAuthStateChanged(auth, () => { un(); resolve(); });
@@ -113,7 +111,6 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
                 // (developer), so only the owner listens for them.
                 if (isOwnerSession()) startSecRequestsListener();
                 updateSecReqTabVisibility();
-                loadMySecretary();
             }
             if (!getIsAdmin()) updateStudentLastOnline();
         }
