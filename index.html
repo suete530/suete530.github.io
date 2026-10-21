@@ -285,38 +285,6 @@
                 <input type="file" id="treasProfilePhotoInput" accept="image/*" style="display:none;">
                 <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
                 <div id="ownerOnlySettings">
-                <h4 style="font-size:0.85rem;margin-bottom:8px;color:var(--accent);" data-i18n="adminName">👤 Admin Name</h4>
-                <label data-i18n="displayName">Display Name</label><input type="text" id="settingsAdminName" placeholder="e.g., Zeraldin Cauba" maxlength="50">
-                <button id="saveAdminNameBtn" data-i18n="btnSaveName">💾 Save Name</button>
-                <label data-i18n="adminPhoto" style="margin-top:10px;">🖼️ Profile Photo</label>
-                <p style="font-size:0.62rem;color:#6b7280;margin:0 0 6px;line-height:1.4;">Shown on the 💰 Treasurer login page. Developer &amp; Secretary have their own photo + wallpaper.</p>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                    <div style="width:56px;height:56px;border-radius:50%;background:#1a2332;border:2px solid var(--accent-a27);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto;">
-                        <img id="settingsAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-                        <span id="settingsAvatarInitial" style="font-size:1.2rem;font-weight:700;color:var(--accent);">ZC</span>
-                    </div>
-                    <button id="adminPhotoBtn" type="button" style="flex:1;margin:0;" data-i18n="btnUploadPhoto">📷 Upload Photo</button>
-                </div>
-                <label data-i18n="loginBg">🖼️ Login Page Background</label>
-                <p style="font-size:0.62rem;color:#6b7280;margin:0 0 6px;line-height:1.4;">Background of the 💰 Treasurer login page.</p>
-                <input type="file" id="loginBgInput" accept="image/*" style="display:none;">
-                <button id="uploadBgBtn" type="button" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,#0891b2,#0e7490);" data-i18n="btnUploadBg">📷 Upload Background</button>
-                <button id="deleteBgBtn" type="button" style="width:100%;display:none;background:linear-gradient(135deg,#ef4444,#dc2626);" data-i18n="btnDeleteBg">🗑️ Remove Background</button>
-                <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
-                <h4 style="font-size:0.85rem;margin-bottom:8px;color:#a78bfa;">📝 Secretary Login Profile</h4>
-                <p style="font-size:0.62rem;color:#6b7280;margin:0 0 6px;line-height:1.4;">Fallback picture + name shown on the 📝 Secretary login page when the typed email has no profile of its own. Every secretary keeps their own picture — it appears as soon as they type their email.</p>
-                <label>Display Name</label><input type="text" id="secProfileNameInput" placeholder="e.g., Maria Santos" maxlength="50">
-                <button id="saveSecProfileNameBtn">💾 Save Name</button>
-                <label style="margin-top:10px;">🖼️ Profile Photo</label>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                    <div style="width:56px;height:56px;border-radius:50%;background:#1a2332;border:2px solid var(--accent-a27);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto;">
-                        <img id="secProfileAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-                        <span id="secProfileAvatarInitial" style="font-size:1.2rem;font-weight:700;color:var(--accent);">📝</span>
-                    </div>
-                    <button id="secProfilePhotoBtn" type="button" style="flex:1;margin:0;">📷 Upload Photo</button>
-                </div>
-                <input type="file" id="secProfilePhotoInput" accept="image/*" style="display:none;">
-                <div style="border-top:2px dashed #1e293b;margin:14px 0;"></div>
                 <h4 style="font-size:0.85rem;margin-bottom:8px;color:#f472b6;">👤 Student Self-Edit</h4>
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.8rem;color:#e0e0e0;padding:6px 0;">
                     <span>Allow students to edit their own name, gender &amp; status</span>
@@ -691,7 +659,6 @@
     </div>
 
     <input type="file" id="photoUploadInput" accept="image/*" style="display:none;">
-    <input type="file" id="adminPhotoInput" accept="image/*" style="display:none;">
     <button id="chat-bubble" onclick="toggleChatWeb()">⚡</button>
     <div id="chat-panel">
         <div id="chat-header">

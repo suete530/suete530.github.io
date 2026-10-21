@@ -125,7 +125,22 @@ service cloud.firestore {
     // must never overwrite the owner's name, photo or email.
     function touchesOwnerIdentity() {
       return request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny(['adminEmail', 'adminUid', 'adminName', 'adminPhoto', 'devName', 'devPhoto', 'secName', 'secPhoto']);
+        .hasAny(['adminEmail', 'adminUid', 'adminName', 'adminPhoto', 'devName', 'devPhoto', 'secName', 'secPhoto', 'loginBg']);
+    }
+
+    // The shared secretary login identity was retired: every secretary keeps
+    // their own photo + name in secretary_profiles/{email}, so the shared
+    // value can only be CLEARED, never set again (no leaked face or name).
+    function sharedSecretaryProfileCleared() {
+      return request.resource.data.get('secName','') == ''
+          && request.resource.data.get('secPhoto','') == '';
+    }
+
+    // True when a write leaves the shared secretary fields alone, or empties
+    // them. Any write that would restore a shared photo/name is rejected.
+    function sharedSecretaryProfileNotRestored() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['secName', 'secPhoto'])
+          || sharedSecretaryProfileCleared();
     }
 
     function selfEditableStudentFields() {
@@ -155,18 +170,19 @@ service cloud.firestore {
       allow read: if true;
       // First-time setup: a brand-new email/password account bootstraps the
       // doc. After adminRegistered is true, only the registered admin can write.
-      allow create: if isEmailUser();
-      allow update: if (isEmailUser() && resource.data.get('adminRegistered', false) != true)
+      allow create: if isEmailUser() && sharedSecretaryProfileCleared();
+      allow update: if ((isEmailUser() && resource.data.get('adminRegistered', false) != true)
                     || visitorCountOnly()
                     || isOwner()
                     // Delegated treasurers may change the shared app settings
-                    // (GCash, backgrounds, toggles) but not the owner identity.
+                    // (GCash, toggles) but not the owner identity.
                     || (isAdmin() && !touchesOwnerIdentity())
                     // A secretary may only publish their own login wallpaper.
                     // Their photo/name live in secretary_profiles/{email},
                     // so no secretary can overwrite the shared login profile.
                     || (isSecretary() && request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['loginBgSec']));
+                        .hasOnly(['loginBgSec'])))
+                    && sharedSecretaryProfileNotRestored();
       allow delete: if isAdmin();
     }
 
