@@ -1,7 +1,7 @@
 import { auth, db } from './firebase.js';
 import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui.js';
-import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, setupMode, studentMode, toggleMobilePanelLinks, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
+import { DEFAULT_LOGIN_LABEL, developerMode, exitDeveloperMode, exitSetupMode, exitStudentMode, isOwnerSession, setupMode, studentMode, toggleMobilePanelLinks, updateAdminAvatarDisplay, updateAdminNameDisplay, updateSetupButtonVisibility } from './auth.js';
 import { setSecretaryProfile } from './profile.js';
 import { setActiveRole, ROLE_SECRETARY, ROLE_TREASURER } from './roleTheme.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -746,6 +746,10 @@ function updateSecRequestsBadge() {
 export function renderSecRequestsList() {
     const secList = document.getElementById('secRequestsList');
     if (!secList) return;
+    if (!isOwnerSession()) {
+        secList.innerHTML = '<div class="no-results">&#128274; Only the developer (owner) can approve or reject secretary accounts. Ask the developer to review this request.</div>';
+        return;
+    }
     if (pendingSecRequests.length === 0) {
         secList.innerHTML = '<div class="no-results">No pending secretary requests.</div>';
         return;
@@ -765,6 +769,10 @@ export function renderSecRequestsList() {
 }
 
 window.__acceptSecReq = async function(reqId) {
+    if (!isOwnerSession()) {
+        await showAlert('&#128274; Only the developer (owner) can approve secretary accounts.');
+        return;
+    }
     const req = pendingSecRequests.find(r => String(r.id) === String(reqId));
     if (!req) return;
     if (!await showConfirm('Approve secretary access for "' + req.name + '" (' + req.email + ')?')) return;
@@ -782,6 +790,10 @@ window.__acceptSecReq = async function(reqId) {
 };
 
 window.__rejectSecReq = async function(reqId) {
+    if (!isOwnerSession()) {
+        await showAlert('&#128274; Only the developer (owner) can reject secretary accounts.');
+        return;
+    }
     const req = pendingSecRequests.find(r => String(r.id) === String(reqId));
     if (!req) return;
     if (!await showConfirm('Reject secretary request from "' + req.name + '"?')) return;
@@ -795,12 +807,26 @@ window.__rejectSecReq = async function(reqId) {
     } catch (e) {}
 };
 
+// The Secretaries tab only exists for the owner (developer). A delegated
+// treasurer must not be able to approve staff accounts, so the tab is
+// hidden for them and the list shows a locked notice instead.
+export function updateSecReqTabVisibility() {
+    const tabSecs = document.getElementById('adminReqTabSecs');
+    if (!tabSecs) return;
+    tabSecs.style.display = isOwnerSession() ? '' : 'none';
+}
+
 // Tab switching for admin requests modal
 window.switchAdminReqTab = function(tab) {
     const tabAdmins = document.getElementById('adminReqTabAdmins');
     const tabSecs = document.getElementById('adminReqTabSecs');
     const listAdmins = document.getElementById('adminRequestsList');
     const listSecs = document.getElementById('secRequestsList');
+    updateSecReqTabVisibility();
+    if (tab === 'secs' && !isOwnerSession()) {
+        showAlert('&#128274; Only the developer (owner) can approve or reject secretary accounts.');
+        tab = 'admins';
+    }
     if (tab === 'admins') {
         tabAdmins.classList.add('active');
         tabAdmins.style.background = 'var(--accent-a13)';

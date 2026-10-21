@@ -72,6 +72,15 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             if (adminRegisteredEmail) return u.email === adminRegisteredEmail || window.__approvedAdmin === true;
             return true;
         }
+        // The OWNER (developer) is the only account registered in
+        // settings/admin. Delegated treasurers (admins/{uid}) are admins but
+        // never owners — they cannot approve staff accounts.
+        export function isOwnerSession() {
+            const u = auth.currentUser;
+            if (!u || u.isAnonymous || !u.email) return false;
+            if (window.__ownerSession === true) return true;
+            return !!adminRegisteredEmail && u.email.toLowerCase() === adminRegisteredEmail.toLowerCase();
+        }
         export function updateSetupButtonVisibility() {
             setupBtn.style.display = adminRegistered ? 'none' : '';
         }
@@ -132,6 +141,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                     await setDoc(doc(db, 'settings', 'admin'), { adminRegistered: true, adminEmail: cred.user.email, adminUid: cred.user.uid }, { merge: true });
                     adminRegistered = true;
                     adminRegisteredEmail = cred.user.email;
+                    window.__ownerSession = true;
                     sendDevEmail('account_created', cred.user.email);
                     updateSetupButtonVisibility();
                     exitSetupMode();
@@ -163,6 +173,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                         throw { code: 'auth/not-admin' };
                     }
                     window.__approvedAdmin = false;
+                    window.__ownerSession = true;
                     pwInput.value = '';
                     errEl.style.display = 'none';
                     errEl.style.color = '#10b981';
@@ -205,6 +216,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 // Owner check first
                 if (adminRegisteredEmail && cred.user.email === adminRegisteredEmail) {
                     window.__approvedAdmin = false;
+                    window.__ownerSession = true;
                     pwInput.value = '';
                     enterApp(true);
                     return;
@@ -213,12 +225,14 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 const adminSnap = await getDoc(doc(db, 'admins', cred.user.uid));
                 if (adminSnap.exists() && adminSnap.data().status === 'approved') {
                     window.__approvedAdmin = true;
+                    window.__ownerSession = false;
                     pwInput.value = '';
                     enterApp(true);
                     return;
                 }
                 if (adminSnap.exists() && adminSnap.data().status === 'pending') {
                     window.__approvedAdmin = false;
+                    window.__ownerSession = false;
                     watchOwnAdminRequest();
                     showLoginError('⏳ Your admin account is still pending owner approval. Keep this page open — you will enter automatically once approved.');
                     pwInput.value = '';
@@ -226,6 +240,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
                 }
                 // Not an admin at all
                 window.__approvedAdmin = false;
+                window.__ownerSession = false;
                 throw { code: 'auth/not-admin' };
             } catch (e) {
                 showLoginError(authErrorMessage(e));
@@ -702,6 +717,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             try { await signOut(auth); } catch (e) {}
             window.__isAdmin = false;
+            window.__ownerSession = false;
+            window.__approvedAdmin = false;
             document.body.classList.remove('is-admin');
             if (window.__unsubscribeAll) window.__unsubscribeAll();
             if (window._inboxUnsub) { window._inboxUnsub(); window._inboxUnsub = null; }

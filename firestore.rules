@@ -55,19 +55,21 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/secretaries/$(request.auth.uid)).data.get('status', '') == 'approved';
     }
 
-    // Secretary accounts: self-register as pending; admin/owner approves.
+    // Secretary accounts: self-register as pending; ONLY the owner (developer)
+    // may approve, reject or remove a secretary account. Delegated treasurers
+    // (admins/{uid}) are admins but never owners.
     match /secretaries/{secUid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == secUid);
       allow create: if isEmailUser()
                     && request.auth.uid == secUid
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.status == 'pending';
-      // Owner/approved admin manages status; the secretary may only change
+      // Owner manages the account status; the secretary may only change
       // their own profile photo.
-      allow update: if isAdmin()
+      allow update: if isOwner()
                     || (isEmailUser() && request.auth.uid == secUid
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoUrl']));
-      allow delete: if isAdmin() || (signedIn() && request.auth.uid == secUid);
+      allow delete: if isOwner() || (signedIn() && request.auth.uid == secUid);
 
       // Secretary's own student roster (attendance page).
       match /students/{studentId} {

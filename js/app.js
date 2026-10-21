@@ -1,8 +1,8 @@
 import './i18n.js';
 import { getIsAdmin, students } from './state.js';
 import { auth, db } from './firebase.js';
-import { enterApp, isAdminSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
-import { enterSecretaryApp, startSecRequestsListener, watchOwnSecretaryRequest } from './secretary.js';
+import { enterApp, isAdminSession, isOwnerSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
+import { enterSecretaryApp, startSecRequestsListener, updateSecReqTabVisibility, watchOwnSecretaryRequest } from './secretary.js';
 import './accounts.js';
 import './profile.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';
@@ -107,7 +107,10 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-
             if (getIsAdmin()) {
                 startRequestsListener();
                 startAdminRequestsListener();
-                startSecRequestsListener();
+                // Secretary requests can only be approved by the owner
+                // (developer), so only the owner listens for them.
+                if (isOwnerSession()) startSecRequestsListener();
+                updateSecReqTabVisibility();
             }
             if (!getIsAdmin()) updateStudentLastOnline();
         }

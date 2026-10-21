@@ -2,7 +2,7 @@
 import { currentSectionId, getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, studentPrompted, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, nextId } from './utils.js';
-import { adminName, startHeartbeat, stopHeartbeat } from './auth.js';
+import { adminName, isOwnerSession, startHeartbeat, stopHeartbeat } from './auth.js';
 import { getSmsSettings, playSound, renderStudentList, sendSms, showAlert, showConfirm, showPrompt, showStudentProfile } from './ui.js';
 import { updateStats } from './stats.js';
 import { sendDevEmail } from './notify.js';
@@ -478,6 +478,10 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
 
         function renderAdminRequestsList() {
             if (!adminRequestsList) return;
+            if (!isOwnerSession()) {
+                adminRequestsList.innerHTML = '<div class="no-results">&#128274; Only the developer (owner) can approve or reject other treasurer accounts.</div>';
+                return;
+            }
             if (pendingAdminRequests.length === 0) {
                 adminRequestsList.innerHTML = '<div class="no-results">No pending admin requests.</div>';
                 return;
@@ -500,7 +504,10 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
         window.closeAdminRequestsModal = closeAdminRequestsModal;
 
         window.__acceptAdminReq = async function(reqId) {
-            if (!getIsAdmin()) return;
+            if (!isOwnerSession()) {
+                await showAlert('&#128274; Only the developer (owner) can approve treasurer accounts.');
+                return;
+            }
             const req = pendingAdminRequests.find(r => String(r.id) === String(reqId));
             if (!req) return;
             if (!await showConfirm('Approve admin access for "' + req.name + '" (' + req.email + ')?')) return;
@@ -521,7 +528,10 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
         };
 
         window.__rejectAdminReq = async function(reqId) {
-            if (!getIsAdmin()) return;
+            if (!isOwnerSession()) {
+                await showAlert('&#128274; Only the developer (owner) can reject treasurer accounts.');
+                return;
+            }
             const req = pendingAdminRequests.find(r => String(r.id) === String(reqId));
             if (!req) return;
             if (!await showConfirm('Reject admin request from "' + req.name + '"?')) return;
