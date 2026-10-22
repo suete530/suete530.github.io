@@ -2,7 +2,7 @@ import './i18n.js';
 import { getIsAdmin, students } from './state.js';
 import { auth, db } from './firebase.js';
 import { enterApp, isAdminSession, isOwnerSession, loadAdminSettings, startSettingsListener, trackVisitor, updateStudentLastOnline, watchOwnAdminRequest, watchOwnRequest } from './auth.js';
-import { enterSecretaryApp, startSecRequestsListener, updateSecReqTabVisibility, watchOwnSecretaryRequest } from './secretary.js?v=20261022i';
+import { enterSecretaryApp, startSecRequestsListener, updateSecReqTabVisibility, watchOwnSecretaryRequest } from './secretary.js?v=20261022j';
 import './accounts.js';
 import './profile.js';
 import { deleteAnnounce, deletePayment, deleteStudent, deleteSuggestion, editStudent, loadAnnouncements, loadSections, openPaymentModal, startAdminRequestsListener, startRequestsListener } from './db.js';

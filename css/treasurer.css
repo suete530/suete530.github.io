@@ -44,6 +44,28 @@ body {
     overscroll-behavior-y: none;
 }
 
+/* Android / touch devices: let the document itself scroll smoothly again.
+   Some Android Chrome builds refuse to chain scrolling out of a capped
+   .student-list, so the page appears stuck. */
+@media (pointer: coarse) {
+    html, body {
+        height: auto;
+        min-height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+        overscroll-behavior-y: auto;
+    }
+
+    .student-list {
+        max-height: none;
+        overflow: visible;
+        overscroll-behavior: auto;
+    }
+}
+
 /* Kill the 300ms tap delay + the blue flash on Android Chrome */
 button, a, input, select, textarea, .chip, .icon-btn, .student-entry, .tab-btn {
     touch-action: manipulation;

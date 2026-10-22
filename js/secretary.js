@@ -1036,7 +1036,10 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 // ================= EVENT LISTENERS =================
-if (secretaryPanelBtn) secretaryPanelBtn.addEventListener('click', enterSecretaryMode);
+if (secretaryPanelBtn) secretaryPanelBtn.addEventListener('click', function() {
+    enterSecretaryMode();
+    if (overlay) overlay.classList.remove('hidden');
+});
 const mobileSecretaryBtn = document.getElementById('mobileSecretaryBtn');
 if (mobileSecretaryBtn) mobileSecretaryBtn.addEventListener('click', enterSecretaryMode);
 if (backToTreasurerFromSec) backToTreasurerFromSec.addEventListener('click', exitSecretaryMode);

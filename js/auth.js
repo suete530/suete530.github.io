@@ -160,6 +160,9 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
         export function enterApp(admin) {
             window.__isAdmin = admin;
             overlay.classList.add('hidden');
+            // Android safety: never leave the page scroll-locked after login.
+            document.body.classList.remove('login-open');
+            document.body.style.overflow = '';
             badge.className = admin ? 'admin-badge' : 'viewer-badge';
             badge.textContent = admin ? '👑 Admin' : '👨‍🎓 Student';
             errEl.style.display = 'none';

@@ -346,8 +346,10 @@
            scroll inside the overlay when the keyboard opens. */
         body.login-open { overflow: hidden !important; height: 100dvh; }
         body.login-open .header-bar,
-        body.login-open .student-profile-bar,
-        body.login-open .notebook-container { visibility: hidden !important; }
+        body.login-open .student-profile-bar { visibility: hidden !important; }
+        /* Hide only the page content, never the modal overlays that live
+           inside .notebook-container — otherwise Settings opens empty. */
+        body.login-open .notebook-container > *:not(.modal-overlay) { visibility: hidden !important; }
     .login-box {
         background: rgba(17,24,39,0.92); border-radius: 28px; padding: 36px 28px;
         max-width: 380px; width: 100%; text-align: center;
@@ -545,7 +547,8 @@
             background: #111827; border-radius: 24px;
             /* extra top padding keeps the pinned ✕ clear of the content */
             padding: 44px 24px 24px;
-            max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;
+            max-width: 500px; width: 100%; max-height: 90vh; max-height: 90dvh; overflow-y: auto;
+            -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
             /* margin:auto centres the modal but keeps the top reachable when
                the content is taller than the phone screen */
             margin: auto; position: relative;
@@ -565,7 +568,7 @@
         .modal-close:hover { filter: brightness(1.1); }
         @media (max-width: 600px) {
             .modal-overlay { padding: 12px; }
-            .modal { padding: 48px 16px 20px; border-radius: 20px; max-height: calc(100vh - 24px); }
+            .modal { padding: 48px 16px 20px; border-radius: 20px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
             .modal-close { width: 42px; height: 42px; font-size: 1.25rem; top: 8px; right: 8px; }
         }
         .payment-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
