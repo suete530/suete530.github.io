@@ -541,6 +541,7 @@
             z-index: 12000;
             justify-content: center; align-items: flex-start; padding: 20px;
             overflow-y: auto; -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         .modal-overlay.active { display: flex; }
         .modal {
@@ -549,9 +550,9 @@
             padding: 44px 24px 24px;
             max-width: 500px; width: 100%; max-height: 90vh; max-height: 90dvh; overflow-y: auto;
             -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-            /* margin:auto centres the modal but keeps the top reachable when
-               the content is taller than the phone screen */
-            margin: auto; position: relative;
+            /* Top-align (not vertical auto-centre) so the title bar / close
+               button is always visible on Android, even for long modals. */
+            margin: 0 auto; position: relative;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 1px solid #1e293b;
         }
         body.dark .modal { background: #0c1222; border-color: #1a2332; }

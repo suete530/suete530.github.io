@@ -259,8 +259,9 @@ img, svg, video, table, pre {
     max-width: 820px;
     margin: 0 auto;
     background: linear-gradient(180deg, rgba(19, 27, 40, .88) 0%, rgba(13, 19, 29, .92) 45%, rgba(11, 16, 25, .94) 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    /* No backdrop-filter here: it turns this box into the containing block
+       for the fixed-position modals inside it, which pushed their title bar
+       below the Android viewport. */
     border: 1px solid var(--t-line);
     border-radius: 22px;
     padding: 22px 24px 34px;

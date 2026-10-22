@@ -23,6 +23,21 @@ if (loginOverlayEl) {
     new MutationObserver(syncLoginLock).observe(loginOverlayEl, { attributes: true, attributeFilter: ['class'] });
 }
 
+// Android: header buttons open their modal below the fold once the modal has
+// been scrolled before. Reset both the overlay and the box to the top so the
+// title / close bar is visible immediately.
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.header-bar button, #secQuickSettings');
+    if (!btn) return;
+    setTimeout(() => {
+        document.querySelectorAll('.modal-overlay.active').forEach((el) => {
+            el.scrollTop = 0;
+            const box = el.querySelector('.modal');
+            if (box) box.scrollTop = 0;
+        });
+    }, 0);
+}, true);
+
         initPasswordToggles();
 
         await new Promise((resolve) => {
