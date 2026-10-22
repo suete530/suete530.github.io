@@ -1396,3 +1396,7 @@
             .sec-hero-role { margin-left: 0; }
         }
     
+/* ================= DEVELOPER VOICE GREETING ================= */
+#devVoiceModal audio { background:#0d1520;border-radius:10px; }
+#devVoiceModal input[type="file"] { background:#0d1520;border:1px solid #1e293b;border-radius:10px;padding:8px 10px; }
+#devVoiceModal button:disabled { opacity:0.6;cursor:not-allowed; }

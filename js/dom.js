@@ -100,3 +100,13 @@
         export const secStudentReqCount = document.getElementById('secStudentReqCount');
         export const secAdminReqCount = document.getElementById('secAdminReqCount');
         export const secHeroName = document.getElementById('secHeroName');
+export const devVoiceBtn = document.getElementById('devVoiceBtn');
+export const devVoiceModal = document.getElementById('devVoiceModal');
+export const devVoiceFile = document.getElementById('devVoiceFile');
+export const devVoiceRecordBtn = document.getElementById('devVoiceRecordBtn');
+export const devVoiceStopBtn = document.getElementById('devVoiceStopBtn');
+export const devVoicePreview = document.getElementById('devVoicePreview');
+export const devVoiceStatus = document.getElementById('devVoiceStatus');
+export const devVoiceSaveBtn = document.getElementById('devVoiceSaveBtn');
+export const devVoiceDeleteBtn = document.getElementById('devVoiceDeleteBtn');
+export const devVoiceTimer = document.getElementById('devVoiceTimer');

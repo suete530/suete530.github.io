@@ -92,6 +92,7 @@
         <span id="devReqCount" style="display:none;background:#ef4444;color:#fff;font-size:0.65rem;padding:2px 8px;border-radius:20px;font-weight:bold;">0</span>
         <button id="devOpenRequestsBtn" style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">📥 Requests</button>
         <button id="devAccountsBtn" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">👥 Accounts</button>
+                <button id="devVoiceBtn" style="background:linear-gradient(135deg,#db2777,#9d174d);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">🎙 Voice</button>
         <button id="devLogoutBtn" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.7rem;font-weight:bold;cursor:pointer;">Logout</button>
     </div>
 
@@ -470,6 +471,25 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="devVoiceModal">
+        <div class="modal" style="max-width:520px;">
+            <button class="modal-close" onclick="window.closeDevVoiceModal()">✕</button>
+            <h3>🎙 Developer Voice Greeting</h3>
+            <p style="font-size:0.72rem;color:#9ca3af;margin:0 0 12px;line-height:1.5;">Upload a short clip or record your voice here. It plays automatically when the Fines System opens. Maximum 480 KB (about 60 seconds when recorded).</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+                <input type="file" id="devVoiceFile" accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm" style="flex:1;min-width:170px;font-size:0.75rem;color:#e0e0e0;">
+                <button id="devVoiceRecordBtn" style="padding:8px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:bold;cursor:pointer;font-size:0.75rem;">● Record</button>
+                <button id="devVoiceStopBtn" style="display:none;padding:8px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,#475569,#334155);color:#fff;font-weight:bold;cursor:pointer;font-size:0.75rem;">■ Stop</button>
+                <span id="devVoiceTimer" style="font-family:monospace;font-size:0.75rem;color:#f59e0b;">00:00</span>
+            </div>
+            <audio id="devVoicePreview" controls style="display:none;width:100%;margin-bottom:10px;"></audio>
+            <div id="devVoiceStatus" style="font-size:0.72rem;color:#94a3b8;margin-bottom:12px;min-height:1em;"></div>
+            <div style="display:flex;gap:8px;">
+                <button id="devVoiceSaveBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:bold;cursor:pointer;font-size:0.78rem;">💾 Save Voice</button>
+                <button id="devVoiceDeleteBtn" style="flex:0;padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:bold;cursor:pointer;font-size:0.78rem;">🗑 Remove</button>
+            </div>
+        </div>
+    </div>
     <!-- Profile View Modal (Developer / Secretary) -->
     <div class="modal-overlay" id="profileModal" style="z-index:13000;">
         <div class="modal" style="max-width:340px;text-align:center;">
