@@ -327,14 +327,31 @@
         .loading-msg { text-align: center; padding: 20px; color: var(--accent); font-size: 1rem; }
     .login-overlay {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
         background: #050810;
         z-index: 2000;
-        display: flex; justify-content: center; align-items: center; padding: 20px;
+        display: flex; flex-direction: column;
+        justify-content: flex-start; align-items: center;
+        overflow-x: hidden; overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding: 20px;
+        padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
     }
         .login-overlay.hidden { display: none; }
+        /* Lock the page behind the login screen so it cannot be scrolled to
+           reveal the dashboard on Android. The password fields can still
+           scroll inside the overlay when the keyboard opens. */
+        body.login-open { overflow: hidden !important; height: 100dvh; }
+        body.login-open .header-bar,
+        body.login-open .student-profile-bar,
+        body.login-open .notebook-container { visibility: hidden !important; }
     .login-box {
         background: rgba(17,24,39,0.92); border-radius: 28px; padding: 36px 28px;
         max-width: 380px; width: 100%; text-align: center;
+        flex-shrink: 0; margin: auto 0;
         box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.15);
         border: 1px solid rgba(124,58,237,0.25);
         animation: loginSlideIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;

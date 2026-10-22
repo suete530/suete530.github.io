@@ -12,6 +12,17 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/fi
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { playVoiceOnOpen } from './voice.js?v=20261022e';
 
+// Keep the page behind the login screen locked (Android Chrome can otherwise
+// scroll the dashboard into view while the login overlay is open).
+const loginOverlayEl = document.getElementById('loginOverlay');
+if (loginOverlayEl) {
+    const syncLoginLock = () => {
+        document.body.classList.toggle('login-open', !loginOverlayEl.classList.contains('hidden'));
+    };
+    syncLoginLock();
+    new MutationObserver(syncLoginLock).observe(loginOverlayEl, { attributes: true, attributeFilter: ['class'] });
+}
+
         initPasswordToggles();
 
         await new Promise((resolve) => {
