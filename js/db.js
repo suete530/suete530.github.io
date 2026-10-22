@@ -1,9 +1,9 @@
-﻿        import { addBtn, addSectionBtn, adminRequestsBadge, adminRequestsBtn, adminRequestsList, adminRequestsModal, clearFormBtn, fineInput, gcashName, gcashNumber, genderSelect, nameInput, openSuggestionsBtn, paymentAmount, paymentDate, paymentHistoryList, paymentModal, paymentModalTitle, paymentNote, paymentRef, relationStatusSelect, requestsBadge, requestsBtn, requestsList, requestsModal, sectionSelect, sectionSelectView, statusSelect, studentListContainer, submitPaymentBtn, submitSuggestionBtn, suggestionModal, suggestionName, suggestionText, suggestionsList } from './dom.js';
+﻿        import { addBtn, addSectionBtn, adminRequestsBadge, adminRequestsBtn, adminRequestsList, adminRequestsModal, clearFormBtn, fineInput, gcashName, gcashNumber, genderSelect, nameInput, openSuggestionsBtn, paymentAmount, paymentDate, paymentHistoryList, paymentModal, paymentModalTitle, paymentNote, paymentRef, relationStatusSelect, requestsBadge, requestsBtn, requestsList, requestsModal, secAdminReqCount, secTabAdminRequestsList, secTabRequestsList, secStudentReqCount, secTabReqBadge, sectionSelect, sectionSelectView, statusSelect, studentListContainer, submitPaymentBtn, submitSuggestionBtn, suggestionModal, suggestionName, suggestionText, suggestionsList } from './dom.js';
 import { currentSectionId, getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPrompted, setStudents, setUnsubscribeStudents, studentPrompted, students, unsubscribeStudents } from './state.js';
 import { auth, db } from './firebase.js';
 import { escapeHtml, nextId } from './utils.js';
 import { adminName, isOwnerSession, startHeartbeat, stopHeartbeat } from './auth.js';
-import { getSmsSettings, playSound, renderStudentList, sendSms, showAlert, showConfirm, showPrompt, showStudentProfile } from './ui.js';
+import { getSmsSettings, playSound, renderStudentList, sendSms, showAlert, showConfirm, showPrompt, showStudentProfile, switchSecretaryTab } from './ui.js';
 import { updateStats } from './stats.js';
 import { sendDevEmail } from './notify.js';
 import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -76,13 +76,13 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 const existing = students.find(s => s.id === editModeId);
                 if (existing && existing.photoUrl) data.photoUrl = existing.photoUrl;
                 await updateDoc(doc(db, 'students', String(editModeId)), data);
-                logActivity('fine_edit', `Fine updated to â‚±${data.fine}`, existing?.name || name, data.fine);
-                editModeId = null; addBtn.textContent = 'âž• ADD';
+                logActivity('fine_edit', `Fine updated to ₱${data.fine}`, existing?.name || name, data.fine);
+                editModeId = null; addBtn.textContent = '➕ ADD';
             } else {
                 const newId = nextId(students);
                 data.id = newId; data.totalPaid = 0; data.order = newId;
                 await setDoc(doc(db, 'students', String(newId)), data);
-                logActivity('student_add', `Student added with fine â‚±${data.fine}`, name, data.fine);
+                logActivity('student_add', `Student added with fine ₱${data.fine}`, name, data.fine);
                 playSound('add');
             }
             clearForm();
@@ -94,7 +94,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             if (student) {
                 nameInput.value = student.name; genderSelect.value = student.gender; relationStatusSelect.value = student.relationStatus || 'Single';
                 fineInput.value = student.fine; statusSelect.value = student.status;
-                editModeId = id; addBtn.textContent = 'âœï¸ UPDATE';
+                editModeId = id; addBtn.textContent = '✏️ UPDATE';
             }
         }
 
@@ -110,7 +110,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
         }
 
         export function clearForm() {
-            nameInput.value = ''; genderSelect.value = 'male'; relationStatusSelect.value = 'Single'; fineInput.value = '0'; statusSelect.value = 'unpaid'; editModeId = null; addBtn.textContent = 'âž• ADD';
+            nameInput.value = ''; genderSelect.value = 'male'; relationStatusSelect.value = 'Single'; fineInput.value = '0'; statusSelect.value = 'unpaid'; editModeId = null; addBtn.textContent = '➕ ADD';
         }
 
         export async function addNewSection() {
@@ -125,7 +125,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             if (!student) return;
             const totalPaid = student.totalPaid || 0;
             const remaining = Math.max(0, (student.fine || 0) - totalPaid);
-            paymentModalTitle.textContent = `ðŸ’³ ${student.name} â€” Remaining: â‚±${remaining.toFixed(2)}`;
+            paymentModalTitle.textContent = `💳 ${student.name} — Remaining: ₱${remaining.toFixed(2)}`;
             paymentAmount.value = remaining > 0 ? remaining.toFixed(2) : '0';
             paymentRef.value = ''; paymentDate.value = new Date().toISOString().split('T')[0]; paymentNote.value = '';
             gcashNumber.textContent = localStorage.getItem('fm_gcash_number') || 'Not set';
@@ -158,9 +158,9 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             payments.forEach((p) => {
                 const typeClass = p.type === 'full' ? '' : 'partial';
                 const typeLabel = p.type === 'full' ? 'Full' : 'Partial';
-                const deleteBtn = getIsAdmin() ? `<button class="btn-delete-payment" onclick="window.deletePayment(${studentId}, '${p.id}')">âœ•</button>` : '';
-                const refDisplay = p.refNum ? `<div style="font-size:0.7rem;color:#4682b4;font-family:monospace;">ðŸ“± Ref#: ${escapeHtml(p.refNum)}</div>` : '';
-                html += `<div class="payment-history-entry"><div><span class="payment-amount">â‚±${(p.amount || 0).toFixed(2)}</span><span class="payment-type ${typeClass}">${typeLabel}</span>${refDisplay}${p.note ? `<div style="font-size:0.7rem;color:#888;">${escapeHtml(p.note)}</div>` : ''}<div class="payment-date">${p.date || ''}</div></div>${deleteBtn}</div>`;
+                const deleteBtn = getIsAdmin() ? `<button class="btn-delete-payment" onclick="window.deletePayment(${studentId}, '${p.id}')">✕</button>` : '';
+                const refDisplay = p.refNum ? `<div style="font-size:0.7rem;color:#4682b4;font-family:monospace;">📱 Ref#: ${escapeHtml(p.refNum)}</div>` : '';
+                html += `<div class="payment-history-entry"><div><span class="payment-amount">₱${(p.amount || 0).toFixed(2)}</span><span class="payment-type ${typeClass}">${typeLabel}</span>${refDisplay}${p.note ? `<div style="font-size:0.7rem;color:#888;">${escapeHtml(p.note)}</div>` : ''}<div class="payment-date">${p.date || ''}</div></div>${deleteBtn}</div>`;
             });
             paymentHistoryList.innerHTML = html;
         }
@@ -175,18 +175,18 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             if (!refNum) { await showAlert('Enter the GCash Reference Number'); return; }
             const totalPaid = student.totalPaid || 0;
             const remaining = (student.fine || 0) - totalPaid;
-            if (amount > remaining + 0.01) { await showAlert('Amount exceeds remaining balance (â‚±' + remaining.toFixed(2) + ')'); return; }
+            if (amount > remaining + 0.01) { await showAlert('Amount exceeds remaining balance (₱' + remaining.toFixed(2) + ')'); return; }
             const paymentType = Math.abs(amount - remaining) < 0.01 ? 'full' : 'partial';
             const paymentData = { amount, date: paymentDate.value || new Date().toISOString().split('T')[0], note: paymentNote.value.trim(), type: paymentType, refNum, gcashNumber: localStorage.getItem('fm_gcash_number') || '' };
             await setDoc(doc(collection(db, 'students', String(currentPaymentStudentId), 'payments')), paymentData);
             const updateData = { totalPaid: totalPaid + amount };
             if (paymentType === 'full') updateData.status = 'paid';
             await updateDoc(doc(db, 'students', String(currentPaymentStudentId)), updateData);
-            logActivity('payment', `Payment â‚±${amount} (${paymentType}) Ref#${refNum}`, student.name, amount);
+            logActivity('payment', `Payment ₱${amount} (${paymentType}) Ref#${refNum}`, student.name, amount);
             playSound('payment');
             const smsSettings = getSmsSettings();
             if (smsSettings.enabled && smsSettings.phone) {
-                const msg = `[BSIS-1] Payment of â‚±${amount} received from ${student.name}. Ref#${refNum}. ${paymentType === 'full' ? 'Fully paid!' : 'Partial payment.'}`;
+                const msg = `[BSIS-1] Payment of ₱${amount} received from ${student.name}. Ref#${refNum}. ${paymentType === 'full' ? 'Fully paid!' : 'Partial payment.'}`;
                 sendSms(smsSettings.phone, msg);
             }
             openPaymentModal(currentPaymentStudentId);
@@ -208,7 +208,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 if (wasFull && newTotal < (student.fine || 0)) updateData.status = 'unpaid';
                 await updateDoc(doc(db, 'students', String(studentId)), updateData);
             }
-            logActivity('payment_delete', `Payment â‚±${amount} deleted`, student?.name || 'Unknown', amount);
+            logActivity('payment_delete', `Payment ₱${amount} deleted`, student?.name || 'Unknown', amount);
             playSound('delete');
             openPaymentModal(studentId);
         }
@@ -254,16 +254,16 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
             }
             container.innerHTML = '';
             announcements.forEach(a => {
-                const del = getIsAdmin() ? `<button class="announce-delete" onclick="deleteAnnounce('${a.id}')">âœ•</button>` : '';
+                const del = getIsAdmin() ? `<button class="announce-delete" onclick="deleteAnnounce('${a.id}')">✕</button>` : '';
                 const card = document.createElement('div');
                 card.className = 'announce-card';
-                card.innerHTML = `<div class="announce-text">${escapeHtml(a.text)}</div><div class="announce-meta"><span><span class="announce-author">${escapeHtml(a.author || 'Secretary')}</span> Â· ${a.date || ''}</span>${del}</div>`;
+                card.innerHTML = `<div class="announce-text">${escapeHtml(a.text)}</div><div class="announce-meta"><span><span class="announce-author">${escapeHtml(a.author || 'Secretary')}</span> · ${a.date || ''}</span>${del}</div>`;
                 container.appendChild(card);
             });
             if (topContainer && topList) {
                 const latest = announcements.slice(0, 2);
                 topList.innerHTML = latest.map(a =>
-                    `<div style="background:#0d1520;border-radius:10px;padding:10px 14px;border-left:3px solid var(--accent);font-size:0.78rem;"><div style="color:#e0e0e0;line-height:1.4;">${escapeHtml(a.text)}</div><div style="font-size:0.6rem;color:#6b7280;margin-top:4px;">â€” ${escapeHtml(a.author || 'Secretary')} Â· ${a.date || ''}</div></div>`
+                    `<div style="background:#0d1520;border-radius:10px;padding:10px 14px;border-left:3px solid var(--accent);font-size:0.78rem;"><div style="color:#e0e0e0;line-height:1.4;">${escapeHtml(a.text)}</div><div style="font-size:0.6rem;color:#6b7280;margin-top:4px;">— ${escapeHtml(a.author || 'Secretary')} · ${a.date || ''}</div></div>`
                 ).join('');
                 topContainer.style.display = 'block';
                 if (dot) dot.style.display = announcements.length > 0 ? 'block' : 'none';
@@ -307,11 +307,11 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
         }
 
         export function renderSuggestions() {
-            if (suggestions.length === 0) { suggestionsList.innerHTML = '<div class="no-results">No suggestions yet. Be the first! ðŸ’¡</div>'; return; }
+            if (suggestions.length === 0) { suggestionsList.innerHTML = '<div class="no-results">No suggestions yet. Be the first! 💡</div>'; return; }
             let html = '';
             suggestions.forEach((s) => {
-                const deleteBtn = getIsAdmin() ? `<button class="btn-delete-payment" onclick="window.deleteSuggestion(${s.id})" style="float:right;">âœ•</button>` : '';
-                html += `<div class="suggestion-card">${deleteBtn}<div class="suggestion-author">ðŸ‘¤ ${escapeHtml(s.name || 'Anonymous')}</div><div class="suggestion-text">${escapeHtml(s.text)}</div><div class="suggestion-meta">ðŸ“… ${s.date || ''}</div></div>`;
+                const deleteBtn = getIsAdmin() ? `<button class="btn-delete-payment" onclick="window.deleteSuggestion(${s.id})" style="float:right;">✕</button>` : '';
+                html += `<div class="suggestion-card">${deleteBtn}<div class="suggestion-author">👤 ${escapeHtml(s.name || 'Anonymous')}</div><div class="suggestion-text">${escapeHtml(s.text)}</div><div class="suggestion-meta">📅 ${s.date || ''}</div></div>`;
             });
             suggestionsList.innerHTML = html;
         }
@@ -343,7 +343,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 pendingRequests = [];
                 snapshot.forEach(d => pendingRequests.push({ id: d.id, ...d.data() }));
                 updateRequestsBadge();
-                if (requestsModal && requestsModal.classList.contains('active')) renderRequestsList();
+                renderRequestsList();
             }, () => {});
         }
 
@@ -359,26 +359,36 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 requestsBadge.style.display = n > 0 ? 'inline-block' : 'none';
                 requestsBadge.textContent = n;
             }
+            if (secStudentReqCount) secStudentReqCount.textContent = n;
+            updateSecretaryTabBadge();
+        }
+
+        export function updateSecretaryTabBadge() {
+            const total = pendingRequests.length + pendingAdminRequests.length;
+            if (secTabReqBadge) {
+                secTabReqBadge.style.display = total > 0 ? 'inline-block' : 'none';
+                secTabReqBadge.textContent = total;
+            }
         }
 
         export function renderRequestsList() {
-            if (!requestsList) return;
-            if (pendingRequests.length === 0) {
-                requestsList.innerHTML = '<div class="no-results">No pending requests.</div>';
-                return;
-            }
-            requestsList.innerHTML = pendingRequests.map(r => {
-                const when = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : '';
-                return `<div style="background:#0f1923;border:1px solid #1e293b;border-radius:14px;padding:12px;">
-                    <div style="font-weight:bold;font-size:0.9rem;color:#e0e0e0;">${escapeHtml(r.name || 'Unknown')}</div>
-                    <div style="font-size:0.72rem;color:#9ca3af;margin-top:2px;">ðŸ“š ${escapeHtml(r.sectionName || 'No section')}</div>
-                    <div style="font-size:0.65rem;color:#6b7280;margin-top:2px;">ðŸ•’ ${escapeHtml(when)}</div>
-                    <div style="display:flex;gap:8px;margin-top:10px;">
-                        <button onclick="window.__acceptReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">âœ… Accept</button>
-                        <button onclick="window.__rejectReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">âŒ Reject</button>
-                    </div>
-                </div>`;
-            }).join('');
+            const targets = [requestsList, secTabRequestsList];
+            if (!targets.some(t => t)) return;
+            const html = pendingRequests.length === 0
+                ? '<div class="no-results">No pending requests.</div>'
+                : pendingRequests.map(r => {
+                    const when = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : '';
+                    return `<div class="sec-req-card">
+                        <div class="sec-req-name">${escapeHtml(r.name || 'Unknown')}</div>
+                        <div class="sec-req-meta">📚 ${escapeHtml(r.sectionName || 'No section')}</div>
+                        <div class="sec-req-time">🕐 ${escapeHtml(when)}</div>
+                        <div class="sec-req-actions">
+                            <button class="sec-req-btn accept" onclick="window.__acceptReq('${r.id}')">✅ Accept</button>
+                            <button class="sec-req-btn reject" onclick="window.__rejectReq('${r.id}')">❌ Reject</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            targets.forEach(t => { if (t) t.innerHTML = html; });
         }
 
         export function closeRequestsModal() { if (requestsModal) requestsModal.classList.remove('active'); }
@@ -418,9 +428,9 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 playSound('add');
                 renderRequestsList();
                 sendDevEmail('student_approved', req.email, req.email);
-                await showAlert('âœ… Account approved for ' + req.name + '!');
+                await showAlert('✅ Account approved for ' + req.name + '!');
             } catch (e) {
-                await showAlert('âŒ Could not approve this request. ' + (e && e.message ? e.message : ''));
+                await showAlert('❌ Could not approve this request. ' + (e && e.message ? e.message : ''));
             }
         };
         window.__rejectReq = async function(reqId) {
@@ -451,7 +461,7 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                     if (data.status === 'pending') pendingAdminRequests.push({ id: d.id, ...data });
                 });
                 updateAdminRequestsBadge();
-                if ((adminRequestsModal && adminRequestsModal.classList.contains('active')) || document.body.classList.contains('dev-session')) renderAdminRequestsList();
+                renderAdminRequestsList();
             }, () => {});
         }
 
@@ -474,30 +484,33 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
                 devCount.style.display = total > 0 ? 'inline-block' : 'none';
                 devCount.textContent = total;
             }
+            if (secAdminReqCount) secAdminReqCount.textContent = n;
+            updateSecretaryTabBadge();
         }
 
-        function renderAdminRequestsList() {
-            if (!adminRequestsList) return;
+        export function renderAdminRequestsList() {
+            const targets = [adminRequestsList, secTabAdminRequestsList];
+            if (!targets.some(t => t)) return;
             if (!isOwnerSession()) {
-                adminRequestsList.innerHTML = '<div class="no-results">&#128274; Only the developer (owner) can approve or reject other treasurer accounts.</div>';
+                const msg = '<div class="no-results">&#128274; Only the developer (owner) can approve or reject other treasurer accounts.</div>';
+                targets.forEach(t => { if (t) t.innerHTML = msg; });
                 return;
             }
-            if (pendingAdminRequests.length === 0) {
-                adminRequestsList.innerHTML = '<div class="no-results">No pending admin requests.</div>';
-                return;
-            }
-            adminRequestsList.innerHTML = pendingAdminRequests.map(r => {
-                const when = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : '';
-                return `<div style="background:#0f1923;border:1px solid #1e293b;border-radius:14px;padding:12px;">
-                    <div style="font-weight:bold;font-size:0.9rem;color:#e0e0e0;">👑 ${escapeHtml(r.name || 'Unknown')}</div>
-                    <div style="font-size:0.72rem;color:#9ca3af;margin-top:2px;">📧 ${escapeHtml(r.email || '')}</div>
-                    <div style="font-size:0.65rem;color:#6b7280;margin-top:2px;">🕐 ${escapeHtml(when)}</div>
-                    <div style="display:flex;gap:8px;margin-top:10px;">
-                        <button onclick="window.__acceptAdminReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">✅ Approve</button>
-                        <button onclick="window.__rejectAdminReq('${r.id}')" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:8px;border-radius:10px;font-size:0.75rem;font-weight:bold;cursor:pointer;">❌ Reject</button>
-                    </div>
-                </div>`;
-            }).join('');
+            const html = pendingAdminRequests.length === 0
+                ? '<div class="no-results">No pending admin requests.</div>'
+                : pendingAdminRequests.map(r => {
+                    const when = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : '';
+                    return `<div class="sec-req-card">
+                        <div class="sec-req-name">👑 ${escapeHtml(r.name || 'Unknown')}</div>
+                        <div class="sec-req-meta">📧 ${escapeHtml(r.email || '')}</div>
+                        <div class="sec-req-time">🕐 ${escapeHtml(when)}</div>
+                        <div class="sec-req-actions">
+                            <button class="sec-req-btn accept" onclick="window.__acceptAdminReq('${r.id}')">✅ Approve</button>
+                            <button class="sec-req-btn reject" onclick="window.__rejectAdminReq('${r.id}')">❌ Reject</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            targets.forEach(t => { if (t) t.innerHTML = html; });
         }
 
         function closeAdminRequestsModal() { if (adminRequestsModal) adminRequestsModal.classList.remove('active'); }
@@ -547,3 +560,8 @@ import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
 
         if (adminRequestsBtn) adminRequestsBtn.addEventListener('click', () => { renderAdminRequestsList(); if (window.switchAdminReqTab) window.switchAdminReqTab('admins'); adminRequestsModal.classList.add('active'); });
         if (adminRequestsModal) adminRequestsModal.addEventListener('click', (e) => { if (e.target === adminRequestsModal) closeAdminRequestsModal(); });
+
+        function scrollToSecList(el) {
+            if (!el) return;
+            setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+        }

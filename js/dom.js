@@ -94,3 +94,9 @@
         export const treasProfileAvatarImg = document.getElementById('treasProfileAvatarImg');
         export const treasProfileAvatarInitial = document.getElementById('treasProfileAvatarInitial');
         export const ownerOnlySettings = document.getElementById('ownerOnlySettings');
+        export const secTabRequestsList = document.getElementById('secTabRequestsList');
+        export const secTabAdminRequestsList = document.getElementById('secTabAdminRequestsList');
+        export const secTabReqBadge = document.getElementById('secTabReqBadge');
+        export const secStudentReqCount = document.getElementById('secStudentReqCount');
+        export const secAdminReqCount = document.getElementById('secAdminReqCount');
+        export const secHeroName = document.getElementById('secHeroName');

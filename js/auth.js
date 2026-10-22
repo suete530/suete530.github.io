@@ -3,7 +3,7 @@ import { getIsAdmin, sections, setCurrentSectionId, setSections, setStudentPromp
 import { auth, db } from './firebase.js';
 import { escapeHtml, readImageAsBase64 } from './utils.js';
         import { unsubscribeSections, unsubscribeSuggestions, stopAdminRequestsListener, stopRequestsListener } from './db.js';
-import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash } from './ui.js';
+import { hideStudentProfile, isSoundOn, loadSmsSettings, renderPresetsManager, renderStudentList, renderThemeSwatches, showAlert, showConfirm, showStudentProfile, showWelcome, updateMainGcash , setSecretaryHeroName } from './ui.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, onSnapshot, increment, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { sendDevEmail } from './notify.js';
@@ -21,6 +21,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             setRoleName(ROLE_TREASURER, adminName);
             setRoleName(ROLE_DEVELOPER, devName || adminName);
             headerAdminName.textContent = ownAdminName || adminName;
+            setSecretaryHeroName(ownAdminName || adminName);
             renderDevProfile();
         }
 

@@ -3,10 +3,63 @@ import { currentSectionId, getIsAdmin, sections, setCurrentSectionId, students }
 import { db } from './firebase.js';
 import { escapeHtml, readFileAsBase64 } from './utils.js';
 import { updateEditProfileBtnVisibility } from './auth.js';
-import { loadStudents } from './db.js';
+import { loadStudents, renderRequestsList, renderAdminRequestsList } from './db.js';
 import { collection, doc, getDocs, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        /* ============================================================
+           SECRETARY DASHBOARD — tabbed, admin (Treasurer) lamang.
+           Hindi napepekeha ang student view o ang developer panel.
+           ============================================================ */
+        export let currentSecretaryTab = 'overview';
+
+        export function switchSecretaryTab(tab) {
+            if (!getIsAdmin()) return;
+            const panel = document.querySelector('[data-sec-panel="' + tab + '"]');
+            if (!panel) return;
+            document.querySelectorAll('.sec-tab').forEach(b => {
+                const on = b.getAttribute('data-sec-tab') === tab;
+                b.classList.toggle('sec-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            document.querySelectorAll('.sec-panel').forEach(p => {
+                p.classList.toggle('sec-active', p.getAttribute('data-sec-panel') === tab);
+            });
+            currentSecretaryTab = tab;            if (tab === 'requests') refreshRequestLists();
+            const container = document.querySelector('.notebook-container');
+            if (container) {
+                const top = container.getBoundingClientRect().top + window.scrollY - 16;
+                if (window.scrollY > top) window.scrollTo({ top: top, behavior: 'smooth' });
+            }
+        }
+        window.switchSecretaryTab = switchSecretaryTab;
+
+        function refreshRequestLists() {
+            renderRequestsList();
+            renderAdminRequestsList();
+        }
+
+        export function setSecretaryHeroName(name) {
+            const el = document.getElementById('secHeroName');
+            if (el) el.textContent = name || '';
+        }
+
+        document.getElementById('secTabs')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.sec-tab');
+            if (!btn) return;
+            const tab = btn.getAttribute('data-sec-tab');
+            if (tab) switchSecretaryTab(tab);
+        });
+
+        document.getElementById('secQuickStudents')?.addEventListener('click', () => switchSecretaryTab('students'));
+        document.getElementById('secQuickRequests')?.addEventListener('click', () => switchSecretaryTab('requests'));
+        document.getElementById('secQuickSettings')?.addEventListener('click', () => {
+            document.getElementById('changePwBtn')?.click();
+        });
+        document.getElementById('secQuickAnnounce')?.addEventListener('click', () => {
+            document.getElementById('openAnnounceModalBtn')?.click();
+        });
 
         // Use getIsAdmin() from inline script
         export function showAlert(msg) {

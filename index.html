@@ -108,7 +108,7 @@
             <button class="chip chip-info admin-btn" id="activityLogBtn" data-i18n="btnActivity">📋 Activity</button>
             <button class="chip chip-violet admin-btn admin-only" id="requestsBtn" style="position:relative;">📥 Requests<span id="requestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
             <button class="chip chip-amber admin-btn admin-only" id="adminRequestsBtn" style="position:relative;">👑 Admins<span id="adminRequestsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:bold;">0</span></button>
-            <button class="chip chip-info admin-btn" id="changePwBtn" data-i18n="btnPassword">🔑 Password</button>
+            <button class="chip chip-info admin-btn admin-only" id="changePwBtn" data-i18n="btnTreasurerSettings">⚙️ Settings</button>
             <button class="chip chip-danger logout-btn" id="logoutBtn" data-i18n="btnLogout">🚪 Logout</button>
         </div>
     </div>
@@ -146,32 +146,68 @@
                 <select id="sectionSelect"></select>
                 <button class="btn-add-section" id="addSectionBtn" data-i18n="btnNewSection">➕ New Section</button>
             </div>
-            <div class="section-selector t-bar" style="justify-content:center;">
+            <div class="section-selector t-bar" id="sectionViewSelector" style="justify-content:center;">
                 <label data-i18n="lblSection">📚 Section:</label>
                 <select id="sectionSelectView"></select>
             </div>
         </div>
 
-        <div class="top-grid">
-            <div class="gcash-info-main" id="mainGcashBox">
-                <div class="gcash-label" data-i18n="gcashLabel">💳 Bayad gamit GCash!!</div>
-                <div class="gcash-number" id="mainGcashNumber">09XXXXXXXXX</div>
-                <div class="gcash-name" id="mainGcashName">Secretary</div>
-                <div id="mainGcashQR" style="margin:8px auto 0;background:#fff;padding:8px;border-radius:10px;width:110px;height:110px;display:flex;align-items:center;justify-content:center;"></div>
-                <div style="font-size:0.7rem;margin-top:4px;opacity:0.85;" data-i18n="gcashScan">📷 Scan QR to get GCash number</div>
-                <div style="font-size:0.75rem;margin-top:5px;opacity:0.9;" data-i18n="gcashSteps">Send payment → Copy Ref# → Show to Secretary</div>
-            </div>
-
-            <div class="stats-panel" id="statsPanel">
-                <div class="stat-card"><div class="stat-label" data-i18n="statStudents">Students</div><div class="stat-value" id="statTotalStudents">0</div></div>
-                <div class="stat-card"><div class="stat-label" data-i18n="statTotalFines">Total Fines</div><div class="stat-value" id="statTotalFines">₱0</div></div>
-                <div class="stat-card"><div class="stat-label" data-i18n="statAverage">Average</div><div class="stat-value" id="statAvgFine">₱0</div></div>
-                <div class="stat-card"><div class="stat-label" data-i18n="statHighest">Highest</div><div class="stat-value" id="statHighestFine">₱0</div></div>
-                <div class="stat-card"><div class="stat-label" data-i18n="statPaidUnpaid">Paid/Unpaid</div><div class="stat-value" id="statPaidUnpaid">0/0</div></div>
-                <div class="stat-card"><div class="stat-label" data-i18n="statCollected">Collected</div><div class="stat-value" id="statCollected">₱0</div></div>
-            </div>
+        <!-- ================= SECRETARY DASHBOARD TABS (admin lamang) ================= -->
+        <div id="secTabs" role="tablist">
+            <button class="sec-tab sec-active" type="button" role="tab" data-sec-tab="overview" aria-selected="true">📊 <span data-i18n="secTabOverview">Overview</span></button>
+            <button class="sec-tab" type="button" role="tab" data-sec-tab="students" aria-selected="false">👥 <span data-i18n="secTabStudents">Students</span></button>
+            <button class="sec-tab" type="button" role="tab" data-sec-tab="requests" aria-selected="false">📥 <span data-i18n="secTabRequests">Requests</span><span class="sec-tab-badge" id="secTabReqBadge" style="display:none;">0</span></button>
         </div>
 
+        <!-- ================= OVERVIEW ================= -->
+        <div class="sec-panel sec-active" data-sec-panel="overview">
+            <div class="sec-hero">
+                <span class="sec-hero-icon">🔐</span>
+                <div class="sec-hero-text">
+                    <h3 data-i18n="secHeroTitle">BSIS-1 Treasurer Dashboard</h3>
+                    <p><span id="secHeroName">—</span> · <span data-i18n="secHeroSub">Fines, payments and student accounts in one place</span></p>
+                </div>
+                <span class="sec-hero-role" data-i18n="secHeroRole">Secretary</span>
+            </div>
+
+            <div class="sec-quick-actions">
+                <button class="sec-quick-btn" type="button" id="secQuickStudents">
+                    <span class="sec-quick-icon">👥</span>
+                    <span><span data-i18n="secQuickStudents">Manage Students</span><small data-i18n="secQuickStudentsSub">Add fines, edit records, log payments</small></span>
+                </button>
+                <button class="sec-quick-btn" type="button" id="secQuickAnnounce">
+                    <span class="sec-quick-icon">📢</span>
+                    <span><span data-i18n="secQuickAnnounce">Post Announcement</span><small data-i18n="secQuickAnnounceSub">Notify the whole class</small></span>
+                </button>
+                <button class="sec-quick-btn" type="button" id="secQuickRequests">
+                    <span class="sec-quick-icon">📥</span>
+                    <span><span data-i18n="secQuickRequests">Review Requests</span><small data-i18n="secQuickRequestsSub">Approve student &amp; admin access</small></span>
+                </button>
+                <button class="sec-quick-btn" type="button" id="secQuickSettings">
+                    <span class="sec-quick-icon">⚙️</span>
+                    <span><span data-i18n="secQuickSettings">Treasurer Settings</span><small data-i18n="secQuickSettingsSub">Profile, GCash, theme</small></span>
+                </button>
+            </div>
+
+            <div class="top-grid">
+                <div class="gcash-info-main" id="mainGcashBox">
+                    <div class="gcash-label" data-i18n="gcashLabel">💳 Bayad gamit GCash!!</div>
+                    <div class="gcash-number" id="mainGcashNumber">09XXXXXXXXX</div>
+                    <div class="gcash-name" id="mainGcashName">Secretary</div>
+                    <div id="mainGcashQR" style="margin:8px auto 0;background:#fff;padding:8px;border-radius:10px;width:110px;height:110px;display:flex;align-items:center;justify-content:center;"></div>
+                    <div style="font-size:0.7rem;margin-top:4px;opacity:0.85;" data-i18n="gcashScan">📷 Scan QR to get GCash number</div>
+                    <div style="font-size:0.75rem;margin-top:5px;opacity:0.9;" data-i18n="gcashSteps">Send payment → Copy Ref# → Show to Secretary</div>
+                </div>
+
+                <div class="stats-panel" id="statsPanel">
+                    <div class="stat-card"><div class="stat-label" data-i18n="statStudents">Students</div><div class="stat-value" id="statTotalStudents">0</div></div>
+                    <div class="stat-card"><div class="stat-label" data-i18n="statTotalFines">Total Fines</div><div class="stat-value" id="statTotalFines">₱0</div></div>
+                    <div class="stat-card"><div class="stat-label" data-i18n="statAverage">Average</div><div class="stat-value" id="statAvgFine">₱0</div></div>
+                    <div class="stat-card"><div class="stat-label" data-i18n="statHighest">Highest</div><div class="stat-value" id="statHighestFine">₱0</div></div>
+                    <div class="stat-card"><div class="stat-label" data-i18n="statPaidUnpaid">Paid/Unpaid</div><div class="stat-value" id="statPaidUnpaid">0/0</div></div>
+                    <div class="stat-card"><div class="stat-label" data-i18n="statCollected">Collected</div><div class="stat-value" id="statCollected">₱0</div></div>
+                </div>
+            </div>
         <div id="collectionProgress" class="t-progress">
             <div class="t-progress__head">
                 <span class="t-progress__title">📊 Collection Progress</span>
@@ -200,6 +236,8 @@
             </div>
         </div>
 
+        <!-- ================= STUDENTS ================= -->
+        <div class="sec-panel" data-sec-panel="students">
         <div class="input-panel t-form admin-only">
             <div class="input-group">
                 <div class="field"><label data-i18n="lblFullName">👤 Full Name</label><input type="text" id="studentName" placeholder="e.g., Maria Santos"></div>
@@ -227,13 +265,33 @@
                     <button class="chip-violet" id="readAllBtn">🔊 Read All</button>
                 </div>
             </div>
-            <div class="student-list" id="studentListContainer"><div class="loading-msg" data-i18n="loading">Loading...</div></div>
-            <div class="total-fines"><span data-i18n="totalFines">💰 TOTAL FINES</span><span id="totalAmount">₱ 0.00</span></div>
-            <div style="text-align:center;margin-top:14px;">
-                <button class="btn-payment" id="openSuggestionsBtn" style="font-size:0.85rem;padding:10px 22px;" data-i18n="btnSuggestions">💡 Feature Suggestions</button>
+                <div class="student-list" id="studentListContainer"><div class="loading-msg" data-i18n="loading">Loading...</div></div>
+                <div class="total-fines"><span data-i18n="totalFines">💰 TOTAL FINES</span><span id="totalAmount">₱ 0.00</span></div>
+                <div style="text-align:center;margin-top:14px;">
+                    <button class="btn-payment" id="openSuggestionsBtn" style="font-size:0.85rem;padding:10px 22px;" data-i18n="btnSuggestions">💡 Feature Suggestions</button>
+                </div>
+                <div class="credits" data-i18n="credits">Credits: Website Developer: <span>Jonard Suete</span> · <span>Kenneth Panyo</span></div>
             </div>
-            <div class="credits" data-i18n="credits">Credits: Website Developer: <span>Jonard Suete</span> · <span>Kenneth Panyo</span></div>
         </div>
+
+        <!-- ================= REQUESTS ================= -->
+        <div class="sec-panel" data-sec-panel="requests">
+            <div class="sec-panel-head">
+                <h3 data-i18n="secRequestsTitle">📥 Pending Requests</h3>
+                <p data-i18n="secRequestsSub">Approve student sign-ups and other treasurer accounts</p>
+            </div>
+            <div class="sec-settings-grid">
+                <div class="sec-card">
+                    <div class="sec-card-title">🎓 <span data-i18n="secStudentReqTitle">Student Account Requests</span><span class="sec-count" id="secStudentReqCount">0</span></div>
+                    <div id="secTabRequestsList" class="sec-req-list"><div class="no-results" data-i18n="noRequests">No pending requests.</div></div>
+                </div>
+                <div class="sec-card">
+                    <div class="sec-card-title">👑 <span data-i18n="secAdminReqTitle">Admin Access Requests</span><span class="sec-count" id="secAdminReqCount">0</span></div>
+                    <div id="secTabAdminRequestsList" class="sec-req-list"><div class="no-results">No pending admin requests.</div></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="modal-overlay" id="paymentModal">
