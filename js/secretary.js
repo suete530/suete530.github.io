@@ -357,6 +357,7 @@ export function enterSecretaryApp(name, photoUrl) {
     secretaryMode = false;
     overlay.classList.add('hidden');
     secretaryPage.style.display = 'block';
+    document.body.classList.add('secretary-session');
     if (secretaryPanelBtn) secretaryPanelBtn.style.display = 'none';
     const ownerPanelBtn = document.getElementById('ownerPanelBtn');
     if (ownerPanelBtn) ownerPanelBtn.style.display = 'none';
@@ -377,6 +378,7 @@ export function enterSecretaryApp(name, photoUrl) {
 export function exitSecretaryApp() {
     secretarySession = false;
     secretaryPage.style.display = 'none';
+    document.body.classList.remove('secretary-session');
     if (window.closeProfileModal) window.closeProfileModal();
     if (secretaryPanelBtn) secretaryPanelBtn.style.display = '';
     const ownerPanelBtn = document.getElementById('ownerPanelBtn');
