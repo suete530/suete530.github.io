@@ -7,7 +7,7 @@
     <title>BSIS-1 · Fines System</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="css/styles.css?v=20261022d">
-<link rel="stylesheet" href="css/secretary.css?v=20261022e">
+<link rel="stylesheet" href="css/secretary.css?v=20261022f">
 <link rel="stylesheet" href="css/treasurer.css">
 </head>
 <body>
@@ -615,6 +615,12 @@
                             <button id="secAddStudentBtn" class="sec-btn sec-btn--primary" type="button">Add</button>
                         </div>
                         <div class="sec-exports">
+                            <select id="secImgStyle" class="sec-input sec-img-style" title="Image style" aria-label="Download image style">
+                                <option value="dark">Dark</option>
+                                <option value="paper">Bond paper</option>
+                                <option value="notebook">Notebook</option>
+                                <option value="graph">Graph paper</option>
+                            </select>
                             <button id="secDownloadImgBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Download image</button>
                             <button id="secDownloadTxtBtn" class="sec-btn sec-btn--ghost sec-btn--sm" type="button">Download text</button>
                         </div>
@@ -772,7 +778,7 @@
         </div>
     </div>
 
-    <script type="module" src="js/app.js?v=20261022h"></script>
+    <script type="module" src="js/app.js?v=20261022i"></script>
     <script>
         (function() {
             var box = document.getElementById('loginBox');

@@ -60,6 +60,7 @@ const secBgBtn = document.getElementById('secBgBtn');
 const secBgClearBtn = document.getElementById('secBgClearBtn');
 const secBgInput = document.getElementById('secBgInput');
 const secDensityBtn = document.getElementById('secDensityBtn');
+const secImgStyle = document.getElementById('secImgStyle');
 
 // ================= VIEW DENSITY (compact / comfortable) =================
 // Android users get tighter spacing by default so the whole sheet fits on
@@ -89,6 +90,72 @@ function loadSecDensity() {
         mode = (isAndroid || isSmallScreen) ? 'compact' : 'comfortable';
     }
     applySecDensity(mode, false);
+}
+
+// ================= DOWNLOAD IMAGE STYLES =================
+// Each style controls the colours and texture used when the attendance
+// report is exported as a PNG from the secretary page.
+const SEC_IMG_STYLE_KEY = 'fm_sec_img_style';
+const SEC_IMG_THEMES = {
+    dark: {
+        mode: 'dark',
+        bg1: '#0a1628', bg2: '#050810',
+        titleBar: '#38bdf8', titleText: '#050810',
+        text: '#e0e0e0', muted: '#9ca3af', faint: '#6b7280',
+        headBg: '#1a2332', headText: '#9ca3af',
+        rowA: 'rgba(26,35,50,0.6)', rowB: 'rgba(15,25,35,0.6)',
+        line: '#1e293b', footer: '#6b7280',
+        ok: '#10b981', no: '#ef4444', total: '#38bdf8',
+        okFill: 'rgba(16,185,129,0.15)', noFill: 'rgba(239,68,68,0.15)', totalFill: 'rgba(56,189,248,0.15)',
+        idleFill: 'rgba(107,114,128,0.25)', idleText: '#9ca3af',
+        frame: null
+    },
+    paper: {
+        mode: 'paper',
+        bg1: '#fdfaf2', bg2: '#f3ead8',
+        titleBar: '#e7dcc4', titleText: '#4b3f2c',
+        text: '#3b342a', muted: '#7a6d58', faint: '#8b7e69',
+        headBg: '#e9dfca', headText: '#6a5b44',
+        rowA: '#fdfaf3', rowB: '#f6efe1',
+        line: '#d8cbb2', footer: '#8b7e69',
+        ok: '#128a5e', no: '#c53b3b', total: '#2f6f9f',
+        okFill: 'rgba(18,138,94,0.12)', noFill: 'rgba(197,59,59,0.12)', totalFill: 'rgba(47,111,159,0.12)',
+        idleFill: 'rgba(120,110,90,0.15)', idleText: '#8b7e69',
+        frame: '#d8cbb2'
+    },
+    notebook: {
+        mode: 'ruled',
+        bg1: '#fdfbf4', bg2: '#f7f1e3',
+        titleBar: '#e8ddc4', titleText: '#4a3f2c',
+        text: '#38414e', muted: '#6d7686', faint: '#8a93a1',
+        headBg: '#e6dcc6', headText: '#5f5a4a',
+        rowA: 'rgba(255,255,255,0.45)', rowB: 'rgba(246,239,225,0.55)',
+        line: '#d5cab4', footer: '#8a93a1',
+        ok: '#128a5e', no: '#c53b3b', total: '#2f6f9f',
+        okFill: 'rgba(18,138,94,0.12)', noFill: 'rgba(197,59,59,0.12)', totalFill: 'rgba(47,111,159,0.12)',
+        idleFill: 'rgba(120,110,90,0.15)', idleText: '#8a93a1',
+        frame: null
+    },
+    graph: {
+        mode: 'grid',
+        bg1: '#f6f9fc', bg2: '#eaf1f7',
+        titleBar: '#d9e7f1', titleText: '#2f4a63',
+        text: '#31404f', muted: '#66788a', faint: '#8293a3',
+        headBg: '#dfe9f2', headText: '#4a6277',
+        rowA: 'rgba(255,255,255,0.55)', rowB: 'rgba(234,241,247,0.6)',
+        line: '#c9d7e2', footer: '#8293a3',
+        ok: '#128a5e', no: '#c53b3b', total: '#2f6f9f',
+        okFill: 'rgba(18,138,94,0.12)', noFill: 'rgba(197,59,59,0.12)', totalFill: 'rgba(47,111,159,0.12)',
+        idleFill: 'rgba(100,120,140,0.15)', idleText: '#8293a3',
+        frame: '#c9d7e2'
+    }
+};
+
+function loadSecImgStyle() {
+    if (!secImgStyle) return;
+    let v = '';
+    try { v = localStorage.getItem(SEC_IMG_STYLE_KEY) || ''; } catch (e) {}
+    if (v && SEC_IMG_THEMES[v]) secImgStyle.value = v;
 }
 
 // ================= SECRETARY BACKGROUND IMAGE =================
@@ -403,6 +470,7 @@ export function enterSecretaryApp(name, photoUrl) {
     loadAttendanceHistory();
     loadSecBg();
     loadSecDensity();
+    loadSecImgStyle();
     resetRosterSearch();
     secNewStudentName.focus();
 }
@@ -777,45 +845,68 @@ function downloadImage() {
     const padBottom = 80;
     const W = 620;
     const H = padTop + secStudents.length * rowH + padBottom;
+    const themeKey = secImgStyle ? secImgStyle.value : 'dark';
+    const th = SEC_IMG_THEMES[themeKey] || SEC_IMG_THEMES.dark;
+    const canvasH = Math.max(H, 300);
     const canvas = document.createElement('canvas');
     canvas.width = W * 2;
-    canvas.height = Math.max(H, 300) * 2;
+    canvas.height = canvasH * 2;
     const ctx = canvas.getContext('2d');
     ctx.scale(2, 2);
 
     // background
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, '#0a1628');
-    grad.addColorStop(1, '#050810');
+    const grad = ctx.createLinearGradient(0, 0, W, canvasH);
+    grad.addColorStop(0, th.bg1);
+    grad.addColorStop(1, th.bg2);
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, Math.max(H, 300));
+    ctx.fillRect(0, 0, W, canvasH);
 
-    // title bar
-    ctx.fillStyle = '#38bdf8';
+    // paper textures
+    if (th.mode === 'ruled') {
+        ctx.strokeStyle = 'rgba(96,132,176,.20)';
+        ctx.lineWidth = 1;
+        for (let y = 72; y < canvasH; y += 26) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+        ctx.strokeStyle = 'rgba(200,92,92,.38)';
+        ctx.beginPath(); ctx.moveTo(54, 0); ctx.lineTo(54, canvasH); ctx.stroke();
+    } else if (th.mode === 'grid') {
+        ctx.strokeStyle = 'rgba(78,120,160,.13)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < W; x += 22) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvasH); ctx.stroke();
+        }
+        for (let y = 0; y < canvasH; y += 22) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+    }
+
+        // title bar
+    ctx.fillStyle = th.titleBar;
     ctx.fillRect(0, 0, W, 50);
-    ctx.fillStyle = '#050810';
+    ctx.fillStyle = th.titleText;
     ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('📝 ATTENDANCE REPORT', W / 2, 33);
 
     // info
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#e0e0e0';
+    ctx.fillStyle = th.text;
     ctx.font = 'bold 14px monospace';
     ctx.fillText('Date: ' + date, 20, 78);
-    ctx.fillStyle = '#9ca3af';
+    ctx.fillStyle = th.muted;
     ctx.font = '13px monospace';
     ctx.fillText('Secretary: ' + name, 20, 100);
 
     // summary boxes
     const boxW = 110, boxY = 65;
     // Present
-    ctx.fillStyle = 'rgba(16,185,129,0.15)';
-    ctx.strokeStyle = '#10b981';
+    ctx.fillStyle = th.okFill;
+    ctx.strokeStyle = th.ok;
     ctx.lineWidth = 1.5;
     roundRect(ctx, W - 20 - boxW * 3 - 20, boxY, boxW, 42, 8);
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = th.ok;
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('PRESENT', W - 20 - boxW * 3 - 20 + boxW / 2, boxY + 16);
@@ -823,22 +914,22 @@ function downloadImage() {
     ctx.fillText(String(present), W - 20 - boxW * 3 - 20 + boxW / 2, boxY + 34);
 
     // Absent
-    ctx.fillStyle = 'rgba(239,68,68,0.15)';
-    ctx.strokeStyle = '#ef4444';
+    ctx.fillStyle = th.noFill;
+    ctx.strokeStyle = th.no;
     roundRect(ctx, W - 20 - boxW * 2 - 10, boxY, boxW, 42, 8);
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#ef4444';
+    ctx.fillStyle = th.no;
     ctx.font = 'bold 11px monospace';
     ctx.fillText('ABSENT', W - 20 - boxW * 2 - 10 + boxW / 2, boxY + 16);
     ctx.font = 'bold 16px monospace';
     ctx.fillText(String(absent), W - 20 - boxW * 2 - 10 + boxW / 2, boxY + 34);
 
     // Total
-    ctx.fillStyle = 'rgba(56,189,248,0.15)';
-    ctx.strokeStyle = '#38bdf8';
+    ctx.fillStyle = th.totalFill;
+    ctx.strokeStyle = th.total;
     roundRect(ctx, W - 20 - boxW, boxY, boxW, 42, 8);
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = th.total;
     ctx.font = 'bold 11px monospace';
     ctx.fillText('TOTAL', W - 20 - boxW / 2, boxY + 16);
     ctx.font = 'bold 16px monospace';
@@ -846,10 +937,10 @@ function downloadImage() {
 
     // table header
     const tableY = padTop - 10;
-    ctx.fillStyle = '#1a2332';
+    ctx.fillStyle = th.headBg;
     roundRect(ctx, 15, tableY, W - 30, 30, 6);
     ctx.fill();
-    ctx.fillStyle = '#9ca3af';
+    ctx.fillStyle = th.headText;
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('#', 28, tableY + 20);
@@ -860,7 +951,7 @@ function downloadImage() {
     // rows
     if (secStudents.length === 0) {
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#6b7280';
+        ctx.fillStyle = th.faint;
         ctx.font = '13px monospace';
         ctx.fillText('(no students in roster)', W / 2, tableY + 70);
     } else {
@@ -868,16 +959,16 @@ function downloadImage() {
             const y = padTop + i * rowH;
             const st = secAttendance[s.id] || 'unmarked';
             // row bg
-            ctx.fillStyle = i % 2 === 0 ? 'rgba(26,35,50,0.6)' : 'rgba(15,25,35,0.6)';
+            ctx.fillStyle = i % 2 === 0 ? th.rowA : th.rowB;
             roundRect(ctx, 15, y, W - 30, rowH - 4, 6);
             ctx.fill();
             // number
-            ctx.fillStyle = '#6b7280';
+            ctx.fillStyle = th.faint;
             ctx.font = '12px monospace';
             ctx.textAlign = 'left';
             ctx.fillText(String(i + 1) + '.', 28, y + 22);
             // name
-            ctx.fillStyle = '#e0e0e0';
+            ctx.fillStyle = th.text;
             ctx.font = 'bold 13px monospace';
             ctx.fillText(s.name || '', 60, y + 22);
             // status pill
@@ -893,10 +984,10 @@ function downloadImage() {
                 ctx.fill();
                 ctx.fillStyle = '#fff';
             } else {
-                ctx.fillStyle = 'rgba(107,114,128,0.25)';
+                ctx.fillStyle = th.idleFill;
                 roundRect(ctx, pillX, pillY, pillW, pillH, 11);
                 ctx.fill();
-                ctx.fillStyle = '#9ca3af';
+                ctx.fillStyle = th.idleText;
             }
             ctx.font = 'bold 11px monospace';
             ctx.textAlign = 'center';
@@ -905,20 +996,26 @@ function downloadImage() {
     }
 
     // footer
-    const footY = Math.max(H, 300) - 40;
-    ctx.fillStyle = '#1e293b';
+    const footY = canvasH - 40;
+    ctx.fillStyle = th.line;
     ctx.fillRect(15, footY - 5, W - 30, 1);
-    ctx.fillStyle = '#6b7280';
+    ctx.fillStyle = th.footer;
     ctx.font = '11px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('Generated: ' + new Date().toLocaleString(), 20, footY + 18);
     ctx.textAlign = 'right';
     ctx.fillText('BSIS-1 Fines System', W - 20, footY + 18);
 
+    if (th.frame) {
+        ctx.strokeStyle = th.frame;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(9, 9, W - 18, canvasH - 18);
+    }
+
     // download
     const a = document.createElement('a');
     a.href = canvas.toDataURL('image/png');
-    a.download = 'attendance-' + date + '.png';
+    a.download = 'attendance-' + date + '-' + themeKey + '.png';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -971,6 +1068,9 @@ if (secTodayBtn) secTodayBtn.addEventListener('click', () => {
     if (secBgClearBtn) secBgClearBtn.addEventListener('click', clearSecBg);
 if (secDensityBtn) secDensityBtn.addEventListener('click', function() {
     applySecDensity(secretaryPage.classList.contains('sec-compact') ? 'comfortable' : 'compact', true);
+});
+if (secImgStyle) secImgStyle.addEventListener('change', function() {
+    try { localStorage.setItem(SEC_IMG_STYLE_KEY, secImgStyle.value); } catch (e) {}
 });
 if (secLogoutBtn) secLogoutBtn.addEventListener('click', async function() {
     if (!await showConfirm('Logout from secretary account?')) return;
