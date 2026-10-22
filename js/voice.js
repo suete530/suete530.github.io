@@ -1,7 +1,7 @@
 // Developer voice greeting.
 // Upload a short clip or record straight from the browser; it is stored in
-// settings/admin (the same doc the app already reads for GCash details) and
-// plays automatically when the Fines System opens.
+// settings/admin (the same doc the app already writes for the developer
+// profile picture and wallpaper) and plays when the Fines System opens.
 import { db } from './firebase.js';
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { showAlert } from './ui.js';
@@ -12,8 +12,10 @@ const PLAYED_KEY = 'fm_voice_played';
 
 let pending = null;                // { dataUrl, mime, name }
 let recorder = null;
+let micStream = null;
 let chunks = [];
 let timerId = null;
+let armedForGesture = false;
 
 function setStatus(msg, isError) {
     if (!devVoiceStatus) return;
@@ -36,6 +38,13 @@ function showPreview(dataUrl) {
     devVoicePreview.style.display = 'block';
 }
 
+function releaseMic() {
+    if (micStream) {
+        micStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+        micStream = null;
+    }
+}
+
 export async function openVoiceModal() {
     if (!devVoiceModal) return;
     devVoiceModal.classList.add('active');
@@ -45,7 +54,10 @@ export async function openVoiceModal() {
     await loadCurrentVoice();
 }
 window.openDevVoiceModal = openVoiceModal;
-window.closeDevVoiceModal = () => { if (devVoiceModal) devVoiceModal.classList.remove('active'); };
+window.closeDevVoiceModal = () => {
+    stopRecording();
+    if (devVoiceModal) devVoiceModal.classList.remove('active');
+};
 
 async function loadCurrentVoice() {
     try {
@@ -64,23 +76,29 @@ async function loadCurrentVoice() {
 }
 
 async function acceptFile(file) {
-    if (!file) return;
+    if (!file) return false;
     if (!/^audio\//.test(file.type) && !/\.(mp3|m4a|wav|ogg|webm|aac)$/i.test(file.name)) {
         setStatus('Please pick an audio file (mp3, m4a, wav, ogg, webm).', true);
-        return;
+        return false;
     }
     if (file.size > MAX_BYTES) {
         setStatus('Too big (' + Math.round(file.size / 1024) + ' KB). Limit is ' + Math.round(MAX_BYTES / 1024) + ' KB - use the Record button or a smaller file.', true);
-        return;
+        await showAlert('🎙 That clip is too big (' + Math.round(file.size / 1024) + ' KB). Keep it under ' + Math.round(MAX_BYTES / 1024) + ' KB.');
+        return false;
     }
     const dataUrl = await fileToDataUrl(file);
     pending = { dataUrl, mime: file.type || 'audio/mpeg', name: file.name };
     showPreview(dataUrl);
     setStatus('Ready to save: ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)');
+    return true;
 }
 
-export async function saveVoice() {
-    if (!pending || !pending.dataUrl) { setStatus('Nothing to save yet.', true); return; }
+export async function saveVoice(isAuto) {
+    if (!pending || !pending.dataUrl) {
+        setStatus('Nothing to save yet.', true);
+        if (!isAuto) await showAlert('🎙 Nothing to save yet. Record a clip or pick a file first.');
+        return false;
+    }
     try {
         await updateDoc(doc(db, 'settings', 'admin'), {
             voiceData: pending.dataUrl,
@@ -91,8 +109,14 @@ export async function saveVoice() {
         try { sessionStorage.removeItem(PLAYED_KEY); } catch (e) {}
         setStatus('Saved. It will play when the Fines System opens.');
         await showAlert('🎙 Voice saved! It will play when the Fines System opens.');
+        return true;
     } catch (e) {
-        setStatus('Could not save: ' + (e && e.message ? e.message : 'error'), true);
+        const msg = (e && e.code === 'permission-denied')
+            ? 'the Firestore rules blocked this write'
+            : (e && e.message ? e.message : 'error');
+        setStatus('Could not save: ' + msg, true);
+        await showAlert('❌ Could not save the voice: ' + msg);
+        return false;
     }
 }
 
@@ -102,44 +126,90 @@ export async function deleteVoice() {
         pending = null;
         if (devVoicePreview) { devVoicePreview.removeAttribute('src'); devVoicePreview.style.display = 'none'; }
         setStatus('Voice removed.');
+        await showAlert('🗑 Voice removed.');
     } catch (e) {
         setStatus('Could not remove the voice.', true);
+        await showAlert('❌ Could not remove the voice.');
     }
 }
 
 export async function startRecording() {
+    if (recorder && recorder.state !== 'inactive') {
+        setStatus('Already recording - press Stop first.', true);
+        return;
+    }
+    if (!window.isSecureContext) {
+        setStatus('Recording needs a secure (https) connection.', true);
+        await showAlert('🎙 Recording needs https. Open the site with the https:// link.');
+        return;
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setStatus('Recording is not supported in this browser.', true);
+        await showAlert('🎙 This browser cannot record audio. Try Chrome or Safari.');
+        return;
+    }
+    // This is the browser permission prompt.
+    try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+        const name = e && e.name;
+        if (name === 'NotAllowedError' || name === 'SecurityError') {
+            setStatus('Microphone permission was denied. Allow the mic for this site, then try again.', true);
+            await showAlert('🎙 Microphone blocked. Tap "Allow" on the browser prompt (or enable the mic in the site settings), then press Record again.');
+        } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+            setStatus('No microphone found on this device.', true);
+            await showAlert('🎙 No microphone found on this device.');
+        } else {
+            setStatus('Microphone error: ' + (e && e.message ? e.message : name || 'unknown'), true);
+            await showAlert('🎙 Microphone error: ' + (e && e.message ? e.message : name || 'unknown'));
+        }
         return;
     }
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         chunks = [];
-        const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+        const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/ogg;codecs=opus'];
         const mime = (typeof MediaRecorder !== 'undefined' && types.find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m))) || '';
-        recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-        recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
-        recorder.onstop = async () => {
-            stream.getTracks().forEach(t => t.stop());
-            const type = recorder.mimeType || 'audio/webm';
+        const rec = new MediaRecorder(micStream, mime ? { mimeType: mime } : undefined);
+        recorder = rec;
+        const recMime = rec.mimeType || mime || 'audio/webm';
+        rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = async () => {
+            releaseMic();
+            const type = recMime;
             const blob = new Blob(chunks, { type });
+            chunks = [];
+            if (!blob.size) {
+                setStatus('Nothing was recorded - please try again.', true);
+                return;
+            }
             const ext = type.indexOf('mp4') >= 0 ? 'm4a' : (type.indexOf('ogg') >= 0 ? 'ogg' : 'webm');
-            await acceptFile(new File([blob], 'voice-recording.' + ext, { type }));
+            const file = new File([blob], 'voice-recording.' + ext, { type });
+            const ok = await acceptFile(file);
+            if (!ok) return;
+            setStatus('Recorded ' + Math.round(blob.size / 1024) + ' KB - saving...');
+            await saveVoice(true);
         };
-        recorder.start();
+        rec.onerror = (e) => {
+            releaseMic();
+            setStatus('Recording failed: ' + (e && e.error ? e.error.name : 'unknown'), true);
+        };
+        rec.start();
         startTimer();
         if (devVoiceRecordBtn) devVoiceRecordBtn.style.display = 'none';
         if (devVoiceStopBtn) devVoiceStopBtn.style.display = 'inline-block';
-        setStatus('Recording...');
+        setStatus('Recording... press Stop when done.');
     } catch (e) {
-        setStatus('Microphone was blocked or is unavailable.', true);
+        releaseMic();
+        setStatus('Could not start recording: ' + (e && e.message ? e.message : 'error'), true);
+        await showAlert('🎙 Could not start recording: ' + (e && e.message ? e.message : 'error'));
     }
 }
 
 export function stopRecording() {
-    if (recorder && recorder.state !== 'inactive') recorder.stop();
+    const rec = recorder;
     recorder = null;
     stopTimer();
+    if (rec && rec.state !== 'inactive') { try { rec.stop(); } catch (e) {} }
     if (devVoiceRecordBtn) devVoiceRecordBtn.style.display = '';
     if (devVoiceStopBtn) devVoiceStopBtn.style.display = 'none';
 }
@@ -162,16 +232,45 @@ function stopTimer() {
     if (timerId) { clearInterval(timerId); timerId = null; }
 }
 
+function playClip(dataUrl) {
+    return new Promise((resolve) => {
+        const audio = new Audio();
+        audio.src = dataUrl;
+        audio.onended = () => resolve(true);
+        audio.onerror = () => resolve(false);
+        const p = audio.play();
+        if (p && p.catch) p.catch(() => resolve(false));
+    });
+}
+
+// Browsers block sound until the page is touched, so try again on the very
+// first click / tap if the automatic play was refused.
+function playOnFirstGesture(dataUrl) {
+    if (armedForGesture) return;
+    armedForGesture = true;
+    const tryIt = () => {
+        document.removeEventListener('pointerdown', tryIt);
+        document.removeEventListener('touchstart', tryIt);
+        document.removeEventListener('keydown', tryIt);
+        playClip(dataUrl);
+    };
+    document.addEventListener('pointerdown', tryIt);
+    document.addEventListener('touchstart', tryIt);
+    document.addEventListener('keydown', tryIt);
+}
+
 export async function playVoiceOnOpen() {
     try {
         if (sessionStorage.getItem(PLAYED_KEY) === '1') return;
         const snap = await getDoc(doc(db, 'settings', 'admin'));
         const d = snap.data();
         if (!d || !d.voiceData) return;
-        const audio = new Audio();
-        audio.src = d.voiceData;
-        await audio.play();
-        try { sessionStorage.setItem(PLAYED_KEY, '1'); } catch (e) {}
+        const played = await playClip(d.voiceData);
+        if (played) {
+            try { sessionStorage.setItem(PLAYED_KEY, '1'); } catch (e) {}
+        } else {
+            playOnFirstGesture(d.voiceData);
+        }
     } catch (e) {
         // autoplay blocked or nothing saved - stay silent
     }
@@ -181,6 +280,6 @@ if (devVoiceBtn) devVoiceBtn.addEventListener('click', openVoiceModal);
 if (devVoiceFile) devVoiceFile.addEventListener('change', (e) => acceptFile(e.target.files && e.target.files[0]));
 if (devVoiceRecordBtn) devVoiceRecordBtn.addEventListener('click', startRecording);
 if (devVoiceStopBtn) devVoiceStopBtn.addEventListener('click', stopRecording);
-if (devVoiceSaveBtn) devVoiceSaveBtn.addEventListener('click', saveVoice);
+if (devVoiceSaveBtn) devVoiceSaveBtn.addEventListener('click', () => saveVoice(false));
 if (devVoiceDeleteBtn) devVoiceDeleteBtn.addEventListener('click', deleteVoice);
-if (devVoiceModal) devVoiceModal.addEventListener('click', (e) => { if (e.target === devVoiceModal) devVoiceModal.classList.remove('active'); });
+if (devVoiceModal) devVoiceModal.addEventListener('click', (e) => { if (e.target === devVoiceModal) { stopRecording(); devVoiceModal.classList.remove('active'); } });
