@@ -707,6 +707,9 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
             const hidden = devSessionBarEl.style.display === 'none';
             const h = hidden ? 0 : devSessionBarEl.offsetHeight;
             document.body.style.paddingTop = h ? (h + 4) + 'px' : '';
+            // Every modal overlay starts below the developer bar so the
+            // developer buttons stay clickable while a modal is open.
+            document.documentElement.style.setProperty('--devbar-h', (h || 0) + 'px');
         }
         window.addEventListener('resize', syncDevSessionPad);
         window.addEventListener('orientationchange', function () { setTimeout(syncDevSessionPad, 250); });

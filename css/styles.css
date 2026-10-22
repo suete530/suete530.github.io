@@ -70,7 +70,7 @@
         @media (max-width: 600px) {
             #devSessionBar { padding: 8px 10px !important; gap: 6px !important; }
             #devSessionBar > span:nth-of-type(1) { font-size: 0.7rem !important; }
-            #devSessionBar button { font-size: 0.62rem !important; padding: 6px 10px !important; }
+            #devSessionBar button { font-size: 0.62rem !important; padding: 8px 12px !important; min-height: 38px !important; }
             #devSessionBar > div:first-child { flex: 1 1 auto; }
         }
         body::before {
@@ -515,7 +515,7 @@
             margin-top: 16px; cursor: pointer; text-decoration: underline;
         }
         .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            display: none; position: fixed; top: var(--devbar-h, 0px); /* start below the developer bar so its buttons stay clickable */ left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.7);
             /* Above the dev bar (1600), secretary page (1500) and chat bubble
                (10000) so the close button is never covered on Android. */
@@ -601,11 +601,22 @@
         .student-only { display: inherit !important; }
         body.is-admin .student-only { display: none !important; }
         body.dev-session .header-bar,
-        body.dev-session .notebook-container,
         body.dev-session .student-profile-bar,
         body.dev-session #topAnnouncements,
         body.dev-session #chat-bubble,
         body.dev-session #chat-panel { display: none !important; }
+        /* Every modal overlay (.modal-overlay) lives INSIDE .notebook-container.
+           Hiding the whole container in developer mode made those modals
+           invisible, so every developer button looked dead. Keep the container
+           in the layout but hide only its content, and drop its backdrop
+           filter so the fixed overlays are positioned against the viewport. */
+        body.dev-session .notebook-container {
+            display: block !important;
+            max-width: none !important; margin: 0 !important; padding: 0 !important;
+            background: none !important; border: 0 !important; box-shadow: none !important;
+            backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+        }
+        body.dev-session .notebook-container > *:not(.modal-overlay) { display: none !important; }
         body.dev-session { padding-top: 52px; }
         .student-only.active { display: flex !important; }
         .suggestion-card {
@@ -658,7 +669,7 @@
         }
         body.dark .ref-input { background: #0f1923; color: #e0e0e0; border-color: #1a2332; }
         .custom-alert-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            position: fixed; top: var(--devbar-h, 0px); left: 0; right: 0; bottom: 0;
             /* above every modal (12000 / 13000) so alerts are never hidden */
             background: #050810; z-index: 14000;
             display: flex; justify-content: center; align-items: center; padding: 20px;
