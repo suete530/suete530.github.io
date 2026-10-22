@@ -59,6 +59,37 @@ const secBg = document.getElementById('secBg');
 const secBgBtn = document.getElementById('secBgBtn');
 const secBgClearBtn = document.getElementById('secBgClearBtn');
 const secBgInput = document.getElementById('secBgInput');
+const secDensityBtn = document.getElementById('secDensityBtn');
+
+// ================= VIEW DENSITY (compact / comfortable) =================
+// Android users get tighter spacing by default so the whole sheet fits on
+// small screens without excessive scrolling. The choice is remembered per
+// device (localStorage) and can be toggled from the header button.
+const SEC_DENSITY_KEY = 'fm_sec_density';
+
+function applySecDensity(mode, persist) {
+    const compact = mode === 'compact';
+    if (secretaryPage) secretaryPage.classList.toggle('sec-compact', compact);
+    if (secDensityBtn) {
+        secDensityBtn.title = compact ? 'Compact view — tap for comfortable' : 'Comfortable view — tap for compact';
+        secDensityBtn.setAttribute('aria-label', compact ? 'Switch to comfortable view' : 'Switch to compact view');
+        secDensityBtn.setAttribute('aria-pressed', compact ? 'true' : 'false');
+    }
+    if (persist) {
+        try { localStorage.setItem(SEC_DENSITY_KEY, compact ? 'compact' : 'comfortable'); } catch (e) {}
+    }
+}
+
+function loadSecDensity() {
+    let mode = '';
+    try { mode = localStorage.getItem(SEC_DENSITY_KEY) || ''; } catch (e) {}
+    if (!mode) {
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 480px)').matches;
+        mode = (isAndroid || isSmallScreen) ? 'compact' : 'comfortable';
+    }
+    applySecDensity(mode, false);
+}
 
 // ================= SECRETARY BACKGROUND IMAGE =================
 // The secretary interior always has the built-in mesh background. A secretary
@@ -371,6 +402,7 @@ export function enterSecretaryApp(name, photoUrl) {
     loadAttendanceForDate(today);
     loadAttendanceHistory();
     loadSecBg();
+    loadSecDensity();
     resetRosterSearch();
     secNewStudentName.focus();
 }
@@ -937,6 +969,9 @@ if (secTodayBtn) secTodayBtn.addEventListener('click', () => {
         pickSecBg(f);
     });
     if (secBgClearBtn) secBgClearBtn.addEventListener('click', clearSecBg);
+if (secDensityBtn) secDensityBtn.addEventListener('click', function() {
+    applySecDensity(secretaryPage.classList.contains('sec-compact') ? 'comfortable' : 'compact', true);
+});
 if (secLogoutBtn) secLogoutBtn.addEventListener('click', async function() {
     if (!await showConfirm('Logout from secretary account?')) return;
     try { await signOut(auth); } catch (e) {}

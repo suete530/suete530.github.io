@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#080c14">
     <title>BSIS-1 · Fines System</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css?v=20261022c">
-<link rel="stylesheet" href="css/secretary.css">
+    <link rel="stylesheet" href="css/styles.css?v=20261022d">
+<link rel="stylesheet" href="css/secretary.css?v=20261022a">
 <link rel="stylesheet" href="css/treasurer.css">
 </head>
 <body>
@@ -533,6 +533,7 @@
                     <button id="secBgBtn" class="sec-btn-ghost sec-icon-btn" type="button" title="Change background" aria-label="Change background"><svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M3.5 17l5-5 4.5 4.5 3-2.5 4.5 4"/></svg></button>
                     <button id="secBgClearBtn" class="sec-btn-ghost sec-icon-btn sec-icon-btn--clear" type="button" title="Remove background" aria-label="Remove background" style="display:none;"><svg viewBox="0 0 24 24" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
                     <input type="file" id="secBgInput" accept="image/*" style="display:none;">
+                    <button id="secDensityBtn" class="sec-btn-ghost sec-icon-btn" type="button" title="Comfortable view — tap for compact" aria-label="Switch to compact view" aria-pressed="false"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
                     <button id="secProfileBtn" class="sec-chip" type="button">
                         <span id="secProfileCircle" class="sec-avatar">
                             <img id="secProfileImg" alt="">
@@ -771,7 +772,7 @@
         </div>
     </div>
 
-    <script type="module" src="js/app.js?v=20261022e"></script>
+    <script type="module" src="js/app.js?v=20261022f"></script>
     <script>
         (function() {
             var box = document.getElementById('loginBox');
