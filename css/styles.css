@@ -62,7 +62,10 @@
         }
         /* Developer bar: wrap the row so no button is pushed off-screen on
            narrow Android phones. */
-        #devSessionBar { flex-wrap: wrap !important; row-gap: 8px !important; }
+        #devSessionBar { flex-wrap: wrap !important; row-gap: 8px !important; z-index: 13000 !important; }
+        /* Keep the developer buttons clickable even while a modal overlay
+           (z-index 12000) is open on top of the page. */
+        #devSessionBar button { position: relative; z-index: 1; }
         #devSessionBar > span { min-width: 0; }
         @media (max-width: 600px) {
             #devSessionBar { padding: 8px 10px !important; gap: 6px !important; }
