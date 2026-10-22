@@ -8,14 +8,17 @@ import { showAlert } from './ui.js';
 import { devVoiceBtn, devVoiceDeleteBtn, devVoiceFile, devVoiceModal, devVoicePreview, devVoiceRecordBtn, devVoiceSaveBtn, devVoiceStatus, devVoiceStopBtn, devVoiceTimer } from './dom.js';
 
 const MAX_BYTES = 480 * 1024;      // Firestore doc limit is 1 MiB and base64 adds ~33%
-const PLAYED_KEY = 'fm_voice_played';
 
 let pending = null;                // { dataUrl, mime, name }
 let recorder = null;
 let micStream = null;
 let chunks = [];
 let timerId = null;
-let armedForGesture = false;
+
+// Once per visit (per page load): the greeting plays on the login screen and
+// again on the dashboard, but never twice for the same screen.
+const playedScenes = {};
+let gesture = null;                // { scene, dataUrl, handler }
 
 function setStatus(msg, isError) {
     if (!devVoiceStatus) return;
@@ -106,9 +109,9 @@ export async function saveVoice(isAuto) {
             voiceName: pending.name,
             voiceUpdatedAt: Date.now()
         });
-        try { sessionStorage.removeItem(PLAYED_KEY); } catch (e) {}
         setStatus('Saved. It will play when the Fines System opens.');
         await showAlert('🎙 Voice saved! It will play when the Fines System opens.');
+        playClip(pending.dataUrl);
         return true;
     } catch (e) {
         const msg = (e && e.code === 'permission-denied')
@@ -245,35 +248,72 @@ function playClip(dataUrl) {
 
 // Browsers block sound until the page is touched, so try again on the very
 // first click / tap if the automatic play was refused.
-function playOnFirstGesture(dataUrl) {
-    if (armedForGesture) return;
-    armedForGesture = true;
-    const tryIt = () => {
-        document.removeEventListener('pointerdown', tryIt);
-        document.removeEventListener('touchstart', tryIt);
-        document.removeEventListener('keydown', tryIt);
-        playClip(dataUrl);
-    };
-    document.addEventListener('pointerdown', tryIt);
-    document.addEventListener('touchstart', tryIt);
-    document.addEventListener('keydown', tryIt);
+function cancelGesture() {
+    if (!gesture) return;
+    document.removeEventListener('pointerdown', gesture.handler);
+    document.removeEventListener('touchstart', gesture.handler);
+    document.removeEventListener('keydown', gesture.handler);
+    gesture = null;
 }
 
-export async function playVoiceOnOpen() {
+function armGesture(scene, dataUrl) {
+    cancelGesture();
+    const handler = (e) => {
+        const g = gesture;
+        if (!g) return;
+        // Clicking the login button means the dashboard greeting is coming
+        // right after - do not play both back to back.
+        const onLoginBtn = e && e.target && e.target.closest && e.target.closest('#loginBtn');
+        if (g.scene === 'login' && onLoginBtn) { cancelGesture(); return; }
+        cancelGesture();
+        playClip(g.dataUrl);
+    };
+    gesture = { scene, dataUrl, handler };
+    document.addEventListener('pointerdown', handler);
+    document.addEventListener('touchstart', handler);
+    document.addEventListener('keydown', handler);
+}
+
+// The login screen and the dashboard each get the greeting once per visit.
+export async function playVoiceOnOpen(scene) {
+    const key = scene === 'login' ? 'login' : 'app';
+    if (playedScenes[key]) return;
     try {
-        if (sessionStorage.getItem(PLAYED_KEY) === '1') return;
         const snap = await getDoc(doc(db, 'settings', 'admin'));
         const d = snap.data();
         if (!d || !d.voiceData) return;
+        playedScenes[key] = 'pending';
         const played = await playClip(d.voiceData);
         if (played) {
-            try { sessionStorage.setItem(PLAYED_KEY, '1'); } catch (e) {}
-        } else {
-            playOnFirstGesture(d.voiceData);
+            playedScenes[key] = 'done';
+            return;
         }
+        armGesture(key, d.voiceData);
     } catch (e) {
-        // autoplay blocked or nothing saved - stay silent
+        // nothing saved / offline - stay silent
     }
+}
+
+// Play on the login screen whenever it appears (first visit, sign out,
+// expired session) and cancel a pending greeting once the app opens.
+function watchLoginScreen() {
+    const ov = document.getElementById('loginOverlay');
+    if (!ov) return;
+    let lastHidden = ov.classList.contains('hidden');
+    const check = () => {
+        const hidden = ov.classList.contains('hidden');
+        if (hidden) {
+            if (!lastHidden && gesture && gesture.scene === 'login') cancelGesture();
+        } else if (lastHidden) {
+            // the login screen just appeared (new visit, sign out, expired session)
+            delete playedScenes['login'];
+            delete playedScenes['app'];
+            playVoiceOnOpen('login');
+        }
+        lastHidden = hidden;
+    };
+    new MutationObserver(check).observe(ov, { attributes: true, attributeFilter: ['class'] });
+    if (!lastHidden) playVoiceOnOpen('login');
 }
 
 if (devVoiceBtn) devVoiceBtn.addEventListener('click', openVoiceModal);
@@ -283,3 +323,5 @@ if (devVoiceStopBtn) devVoiceStopBtn.addEventListener('click', stopRecording);
 if (devVoiceSaveBtn) devVoiceSaveBtn.addEventListener('click', () => saveVoice(false));
 if (devVoiceDeleteBtn) devVoiceDeleteBtn.addEventListener('click', deleteVoice);
 if (devVoiceModal) devVoiceModal.addEventListener('click', (e) => { if (e.target === devVoiceModal) { stopRecording(); devVoiceModal.classList.remove('active'); } });
+
+watchLoginScreen();

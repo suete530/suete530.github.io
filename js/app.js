@@ -10,7 +10,7 @@ import { initPasswordToggles, renderFinePresets, updateMainGcash } from './ui.js
 import { appendMessage, quickChat, toggleChatWeb, updateInboxBadge } from './chat.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { playVoiceOnOpen } from './voice.js?v=20261022d';
+import { playVoiceOnOpen } from './voice.js?v=20261022e';
 
         initPasswordToggles();
 
@@ -105,7 +105,7 @@ import { playVoiceOnOpen } from './voice.js?v=20261022d';
             renderFinePresets();
             loadAnnouncements();
             updateInboxBadge();
-            playVoiceOnOpen();
+            playVoiceOnOpen('app');
             if (getIsAdmin()) {
                 startRequestsListener();
                 startAdminRequestsListener();
