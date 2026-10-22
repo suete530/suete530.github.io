@@ -562,8 +562,8 @@ function renderStudentList() {
             '<span class="sec-row__index">' + (i + 1) + '</span>' +
             '<span class="sec-row__name">' + highlightName(s.name || '', secSearchQuery.trim()) + '</span>' +
             '<span class="sec-toggle">' +
-            '<button class="sec-toggle__btn sec-toggle__btn--ok' + onOk + '" onclick="window.__secMark(\'' + s.id + '\',\'present\')" title="Present" aria-label="Mark present"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 12.5l5 5 10-11"/></svg></button>' +
-            '<button class="sec-toggle__btn sec-toggle__btn--no' + onNo + '" onclick="window.__secMark(\'' + s.id + '\',\'absent\')" title="Absent" aria-label="Mark absent"><svg viewBox="0 0 24 24" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>' +
+            '<button class="sec-toggle__btn sec-toggle__btn--ok' + onOk + '" onclick="window.__secMark(\'' + s.id + '\',\'present\')" title="Present" aria-label="Mark present"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 12.5l5 5 10-11"/></svg><span class="sec-toggle__lbl">Present</span></button>' +
+            '<button class="sec-toggle__btn sec-toggle__btn--no' + onNo + '" onclick="window.__secMark(\'' + s.id + '\',\'absent\')" title="Absent" aria-label="Mark absent"><svg viewBox="0 0 24 24" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg><span class="sec-toggle__lbl">Absent</span></button>' +
             '</span>' +
             '<button class="sec-row__del" onclick="window.__secRemoveStudent(\'' + s.id + '\')" title="Remove" aria-label="Remove student"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 7h15M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12"/></svg></button>' +
             '</div>';
