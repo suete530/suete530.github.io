@@ -613,6 +613,38 @@ function renderStudentList() {
         return;
     }
     const rows = secFilteredStudents();
+    // If search is active but no matches, clear it to avoid hiding all students unexpectedly
+    if (rows.length === 0 && secSearchQuery && secSearchQuery.trim()) {
+        secSearchQuery = '';
+        if (secSearchInput) secSearchInput.value = '';
+        const allRows = secFilteredStudents();
+        if (allRows.length > 0) {
+            secStudentList.innerHTML = allRows.map(function (row) {
+                const s = row.s;
+                const i = row.i;
+                const status = secAttendance[s.id] || null;
+                const stateCls = status === 'present' ? ' sec-row--present' : (status === 'absent' ? ' sec-row--absent' : '');
+                const onOk = status === 'present' ? ' is-on' : '';
+                const onNo = status === 'absent' ? ' is-on' : '';
+                return '<div class="sec-row' + stateCls + '">' +
+                    '<span class="sec-row__index">' + (i + 1) + '</span>' +
+                    '<span class="sec-row__name">' + highlightName(s.name || '', '') + '</span>' +
+                    '<span class="sec-toggle">' +
+                    '<button class="sec-toggle__btn sec-toggle__btn--ok' + onOk + '" onclick="window.__secMark(\'' + escapeHtml(s.id || '') + '\',\'present\')" title="Present" aria-label="Mark present"><span class="sec-toggle__lbl">Present</span></button>' +
+                    '<button class="sec-toggle__btn sec-toggle__btn--no' + onNo + '" onclick="window.__secMark(\'' + escapeHtml(s.id || '') + '\',\'absent\')" title="Absent" aria-label="Mark absent"><span class="sec-toggle__lbl">Absent</span></button>' +
+                    '</span>' +
+                    '<button class="sec-row__del" onclick="window.__secRemoveStudent(\'' + escapeHtml(s.id || '') + '\')" title="Remove" aria-label="Remove student"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 7h15M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12"/></svg></button>' +
+                    '</div>';
+            }).join('');
+            updateSearchUI();
+            renderCounts();
+            return;
+        }
+        secStudentList.innerHTML = '<div class="sec-empty">No student matches "' + escapeHtml(secSearchQuery.trim()) + '".</div>';
+        updateSearchUI();
+        renderCounts();
+        return;
+    }
     if (rows.length === 0) {
         secStudentList.innerHTML = '<div class="sec-empty">No student matches "' + escapeHtml(secSearchQuery.trim()) + '".</div>';
         updateSearchUI();
@@ -626,14 +658,15 @@ function renderStudentList() {
         const stateCls = status === 'present' ? ' sec-row--present' : (status === 'absent' ? ' sec-row--absent' : '');
         const onOk = status === 'present' ? ' is-on' : '';
         const onNo = status === 'absent' ? ' is-on' : '';
+        const sid = String(s.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         return '<div class="sec-row' + stateCls + '">' +
             '<span class="sec-row__index">' + (i + 1) + '</span>' +
-            '<span class="sec-row__name">' + highlightName(s.name || '', secSearchQuery.trim()) + '</span>' +
+            '<span class="sec-row__name">' + highlightName(s.name || '', secSearchQuery ? secSearchQuery.trim() : '') + '</span>' +
             '<span class="sec-toggle">' +
-            '<button class="sec-toggle__btn sec-toggle__btn--ok' + onOk + '" onclick="window.__secMark(\'' + s.id + '\',\'present\')" title="Present" aria-label="Mark present"><span class="sec-toggle__lbl">Present</span></button>' +
-            '<button class="sec-toggle__btn sec-toggle__btn--no' + onNo + '" onclick="window.__secMark(\'' + s.id + '\',\'absent\')" title="Absent" aria-label="Mark absent"><span class="sec-toggle__lbl">Absent</span></button>' +
+            '<button class="sec-toggle__btn sec-toggle__btn--ok' + onOk + '" onclick="window.__secMark(\'' + sid + '\',\'present\')" title="Present" aria-label="Mark present"><span class="sec-toggle__lbl">Present</span></button>' +
+            '<button class="sec-toggle__btn sec-toggle__btn--no' + onNo + '" onclick="window.__secMark(\'' + sid + '\',\'absent\')" title="Absent" aria-label="Mark absent"><span class="sec-toggle__lbl">Absent</span></button>' +
             '</span>' +
-            '<button class="sec-row__del" onclick="window.__secRemoveStudent(\'' + s.id + '\')" title="Remove" aria-label="Remove student"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 7h15M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12"/></svg></button>' +
+            '<button class="sec-row__del" onclick="window.__secRemoveStudent(\'' + sid + '\')" title="Remove" aria-label="Remove student"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 7h15M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12"/></svg></button>' +
             '</div>';
     }).join('');
     updateSearchUI();
@@ -647,6 +680,11 @@ window.__secMark = async function(sid, status) {
         delete secAttendance[sid];
     } else {
         secAttendance[sid] = status;
+    }
+    // Clear any active search so all students remain visible after marking
+    if (secSearchQuery && secSearchQuery.trim()) {
+        secSearchQuery = '';
+        if (secSearchInput) secSearchInput.value = '';
     }
     renderStudentList();
     renderCounts();
